@@ -22,7 +22,7 @@ import com.kakarote.finance.common.admin.UploadTypeEnum;
 import com.kakarote.finance.entity.PO.AdminFile;
 import com.kakarote.finance.mapper.AdminFileMapper;
 import com.kakarote.finance.service.AdminFileService;
-import com.kakarote.ids.provider.utils.UserCacheUtil;
+import com.kakarote.finance.utils.LocalUserCacheUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -169,7 +169,7 @@ public class AdminFileServiceImpl extends BaseServiceImpl<AdminFileMapper, Admin
         vo.setUrl(this.getUrl(fileEntity.getFileId()));
         vo.setFileId(fileEntity.getFileId());
         vo.setName(fileEntity.getName());
-        vo.setCreateUserName(UserCacheUtil.getUserName(fileEntity.getCreateUserId()));
+        vo.setCreateUserName(LocalUserCacheUtil.getUserName(fileEntity.getCreateUserId()));
         vo.setSize(fileEntity.getSize());
         vo.setBatchId(fileEntity.getBatchId());
         vo.setFileType(fileEntity.getFileType());
@@ -262,7 +262,7 @@ public class AdminFileServiceImpl extends BaseServiceImpl<AdminFileMapper, Admin
             return entity;
         }
         BeanUtil.copyProperties(adminFile, entity);
-        entity.setCreateUserName(UserCacheUtil.getUserName(adminFile.getCreateUserId()));
+        entity.setCreateUserName(LocalUserCacheUtil.getUserName(adminFile.getCreateUserId()));
         return entity;
     }
 }

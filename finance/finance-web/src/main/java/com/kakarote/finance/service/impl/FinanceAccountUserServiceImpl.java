@@ -51,12 +51,10 @@ public class FinanceAccountUserServiceImpl extends BaseServiceImpl<FinanceAccoun
      */
     @Override
     public JSONObject financeAuth() {
-/*        List<AdminMenu> adminMenus = queryMenuListByAdmin();
-        if (CollUtil.isEmpty(adminMenus)) {
+        List<AdminMenu> menus = queryMenuListByAdmin();
+        if (CollUtil.isEmpty(menus)) {
             return new JSONObject();
-        }*/
-        //查询所有菜单
-        List<AdminMenu> menus = adminMenuService.queryMenuList(UserUtil.getUserId());
+        }
         JSONObject jsonObject = createMenu(new HashSet<>(menus), 0L);
         JSONObject result = new JSONObject();
         result.put(FinanceConst.FINANCE_SERVICE, jsonObject.getJSONObject(FinanceConst.FINANCE_SERVICE));

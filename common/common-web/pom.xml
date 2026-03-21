@@ -103,13 +103,7 @@
             <scope>system</scope>
             <systemPath>${basedir}/src/main/resources/lib/wk_common_web-1.0.6.jar</systemPath>
         </dependency>
-        <dependency>
-            <groupId>com.kakarote.ids</groupId>
-            <artifactId>provider</artifactId>
-            <version>1.0.1</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/src/main/resources/lib/provider-1.0.1.jar</systemPath>
-        </dependency>
+        <!-- provider-1.0.1.jar (悟空ID) 已移除，改用本地 LoginController -->
     </dependencies>
     <repositories>
         <repository>

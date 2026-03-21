@@ -66,7 +66,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import com.kakarote.ids.provider.utils.UserCacheUtil;
+import com.kakarote.finance.utils.LocalUserCacheUtil;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -275,14 +275,14 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
                 financeCertificateVO.setTotal(total.toString());
             }
             financeCertificateVO.setCertificateDetails(details);
-            financeCertificateVO.setCreateUserName(UserCacheUtil.getUserName(financeCertificateVO.getCreateUserId()));
-            financeCertificateVO.setExamineUserName(UserCacheUtil.getUserName(financeCertificateVO.getExamineUserId()));
+            financeCertificateVO.setCreateUserName(LocalUserCacheUtil.getUserName(financeCertificateVO.getCreateUserId()));
+            financeCertificateVO.setExamineUserName(LocalUserCacheUtil.getUserName(financeCertificateVO.getExamineUserId()));
             if (financeCertificateVO.getBatchId() != null) {
                 List<FileEntity> fileEntityList = fileService.queryFileList(financeCertificateVO.getBatchId());
                 financeCertificateVO.setFileEntityList(fileEntityList);
             }
             if (financeCertificateVO.getExamineUserId() != null) {
-                financeCertificateVO.setExamineUserName(UserCacheUtil.getUserName(financeCertificateVO.getExamineUserId()));
+                financeCertificateVO.setExamineUserName(LocalUserCacheUtil.getUserName(financeCertificateVO.getExamineUserId()));
             }
 
         });
@@ -417,8 +417,8 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
             });
         }
         certificateVO.setCertificateDetails(details);
-        certificateVO.setCreateUserName(UserCacheUtil.getUserName(certificate.getCreateUserId()));
-        certificateVO.setExamineUserName(UserCacheUtil.getUserName(certificate.getExamineUserId()));
+        certificateVO.setCreateUserName(LocalUserCacheUtil.getUserName(certificate.getCreateUserId()));
+        certificateVO.setExamineUserName(LocalUserCacheUtil.getUserName(certificate.getExamineUserId()));
         FinanceStatementSettle statementSettle =
                 financeStatementSettleService.getByPeriod(DateUtil.format(certificate.getCertificateTime(), "yyyyMM"), AccountSet.getAccountSetId());
         if (statementSettle != null) {

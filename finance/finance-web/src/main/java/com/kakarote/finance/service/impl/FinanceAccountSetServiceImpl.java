@@ -30,7 +30,7 @@ import com.kakarote.finance.entity.VO.FinanceAccountListVO;
 import com.kakarote.finance.entity.VO.FinanceAccountVO;
 import com.kakarote.finance.mapper.FinanceAccountSetMapper;
 import com.kakarote.finance.service.*;
-import com.kakarote.ids.provider.utils.UserCacheUtil;
+import com.kakarote.finance.utils.LocalUserCacheUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -215,7 +215,7 @@ public class FinanceAccountSetServiceImpl extends BaseServiceImpl<FinanceAccount
             Map<String, Object> maps = new HashMap<>(16);
             maps.put("userId", setBO.getUserId());
             maps.put("isFounder", setBO.getIsFounder());
-            maps.put("realname", UserCacheUtil.getUserName(setBO.getUserId()));
+            maps.put("realname", LocalUserCacheUtil.getUserName(setBO.getUserId()));
             List<Long> roleList = baseMapper.getRoleIdList(accountId, setBO.getUserId());
             roleList.removeAll(Collections.singleton(null));
             if (roleList.size() > 0) {
@@ -250,7 +250,7 @@ public class FinanceAccountSetServiceImpl extends BaseServiceImpl<FinanceAccount
             if (!userIds.contains(auth.getUserId())) {
                 OperationLog operationLog = new OperationLog();
                 operationLog.setOperationObject(accountSet.getCompanyName());
-                operationLog.setOperationInfo("授权：" + UserCacheUtil.getUserName(auth.getUserId()));
+                operationLog.setOperationInfo("授权：" + LocalUserCacheUtil.getUserName(auth.getUserId()));
                 operationLog.setBehavior(BehaviorEnum.AUTHORIZATION);
                 operationLogList.add(operationLog);
             } else {
@@ -287,7 +287,7 @@ public class FinanceAccountSetServiceImpl extends BaseServiceImpl<FinanceAccount
         for (Long userId : userIds) {
             OperationLog operationLog = new OperationLog();
             operationLog.setOperationObject(accountSet.getCompanyName());
-            operationLog.setOperationInfo("取消授权：" + UserCacheUtil.getUserName(userId));
+            operationLog.setOperationInfo("取消授权：" + LocalUserCacheUtil.getUserName(userId));
             operationLog.setBehavior(BehaviorEnum.CANCEL_AUTHORIZATION);
             operationLogList.add(operationLog);
         }

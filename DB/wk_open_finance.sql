@@ -250,6 +250,7 @@ CREATE TABLE `wk_finance_account_set`  (
 -- ----------------------------
 -- Records of wk_finance_account_set
 -- ----------------------------
+INSERT INTO `wk_finance_account_set` VALUES (1, 'LOCAL-001', '本地测试账套', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, NOW(), 1, NOW(), 1, '2026-03-01 00:00:00', 1, 1);
 
 -- ----------------------------
 -- Table structure for wk_finance_account_user
@@ -272,6 +273,7 @@ CREATE TABLE `wk_finance_account_user`  (
 -- ----------------------------
 -- Records of wk_finance_account_user
 -- ----------------------------
+INSERT INTO `wk_finance_account_user` VALUES (1, 1, 1, 1, 1, NULL, 1, NOW(), 1, NOW());
 
 -- ----------------------------
 -- Table structure for wk_finance_adjuvant
@@ -899,6 +901,7 @@ CREATE TABLE `wk_finance_parameter`  (
 -- ----------------------------
 -- Records of wk_finance_parameter
 -- ----------------------------
+INSERT INTO `wk_finance_parameter` VALUES (1, '2026-03-01 00:00:00', 1, 4, '4-2-2-2', 1, 2, 2, 2, NULL, NULL, '本地测试账套', 1, 1, 1, NOW(), 1, NOW());
 
 -- ----------------------------
 -- Table structure for wk_finance_report_template
@@ -1660,5 +1663,28 @@ CREATE TABLE `wk_finance_voucher`  (
 -- ----------------------------
 -- Records of wk_finance_voucher
 -- ----------------------------
+
+-- ----------------------------
+-- Table structure for wk_admin_user (本地用户表，替换悟空ID认证)
+-- ----------------------------
+DROP TABLE IF EXISTS `wk_admin_user`;
+CREATE TABLE `wk_admin_user` (
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `username` varchar(100) NOT NULL COMMENT '登录用户名',
+  `password` varchar(255) NOT NULL COMMENT '密码 sha256(password+salt)',
+  `salt` varchar(50) NOT NULL COMMENT '盐值',
+  `realname` varchar(100) NOT NULL DEFAULT '' COMMENT '显示名称',
+  `status` int NOT NULL DEFAULT 1 COMMENT '1正常 0禁用',
+  `is_admin` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否管理员',
+  `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`user_id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '本地用户表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of wk_admin_user
+-- 默认账号: admin / 123456
+-- 密码计算: sha256('123456' + 'wukong') = 919aa35c24894d0bd656428e3ff65dd4ee412530d427808bf1239b6f4de2ac6b
+-- ----------------------------
+INSERT INTO `wk_admin_user` VALUES (1, 'admin', '919aa35c24894d0bd656428e3ff65dd4ee412530d427808bf1239b6f4de2ac6b', 'wukong', '管理员', 1, 1, NOW());
 
 SET FOREIGN_KEY_CHECKS = 1;

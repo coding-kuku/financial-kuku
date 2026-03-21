@@ -18,9 +18,7 @@ spring:
     username: root
     password: password
   elasticsearch:
-    uris: 192.168.1.210:9200
-    username: elastic
-    password: xOCpPgRD4cypUCPBlapP
+    uris: 127.0.0.1:9200
 jetcache:
   statIntervalMinutes: 0
   areaInCacheName: false
@@ -38,13 +36,6 @@ jetcache:
       # 不需要password的redis连接为 redis://127.0.0.1:6379/
       uri: redis://123456@127.0.0.1:6379/
 wukong:
-  ids:
-    auth:
-      appId: 1711560062472347648
-      clientId: 5d9c9d18-162f-4df3-b2df-8b8b64e409df
-      clientSecret: f0d4e98c-fa6b-43a7-87ec-a06fba038d5c
-      requestUri: http://192.168.1.79:88/open/oauth2/token
-      redirectUri: http://192.168.1.79:88/open/oauth2/token
   common:
     upload:
       type: local

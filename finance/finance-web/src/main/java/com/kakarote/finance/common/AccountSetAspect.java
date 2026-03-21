@@ -11,11 +11,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Objects;
+
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 
 /**
@@ -38,7 +42,19 @@ public class AccountSetAspect {
     @Around("execution(* com.kakarote.finance.controller..*.*(..)) && !execution(@(com.kakarote.core.common.ParamAspect) * *(..)) ")
     public Object before(ProceedingJoinPoint point) throws Throwable {
         try {
+            MethodSignature signature = (MethodSignature) point.getSignature();
+            String methodName = signature.getMethod().getName();
+            if (Objects.equals(methodName, "login")
+                    || Objects.equals(methodName, "authorization")
+                    || Objects.equals(methodName, "logout")
+                    || Objects.equals(methodName, "queryLoginUser")) {
+                return point.proceed();
+            }
+
             UserInfo user = UserUtil.getUser();
+            if (user == null || user.getUserId() == null) {
+                return point.proceed();
+            }
             //查看当前登录用户是否有默认账套
             FinanceAccountUser accountUser = new FinanceAccountUser();
             List<FinanceAccountUser> accountUserList = accountUserService.lambdaQuery().eq(FinanceAccountUser::getUserId, user.getUserId()).eq(FinanceAccountUser::getIsDefault, 1).isNotNull(FinanceAccountUser::getRoleId).groupBy(FinanceAccountUser::getAccountId).list();

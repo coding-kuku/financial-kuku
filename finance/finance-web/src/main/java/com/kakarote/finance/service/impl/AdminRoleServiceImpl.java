@@ -43,12 +43,15 @@ public class AdminRoleServiceImpl extends BaseServiceImpl<AdminRoleMapper, Admin
      */
     @Override
     public JSONObject auth(Long userId) {
-        String cacheKey = AdminCacheKey.USER_AUTH_CACHE_KET + userId.toString();
+        List<AdminMenu> adminMenus = adminMenuService.queryMenuList(userId);
+        JSONObject jsonObject = createMenu(new HashSet<>(adminMenus), 0L);
+        if (userId == null) {
+            return jsonObject;
+        }
+        String cacheKey = AdminCacheKey.USER_AUTH_CACHE_KET + userId;
         if (redis.exists(cacheKey)) {
             return redis.get(cacheKey);
         }
-        List<AdminMenu> adminMenus = adminMenuService.queryMenuList(userId);
-        JSONObject jsonObject = createMenu(new HashSet<>(adminMenus), 0L);
         redis.setex(cacheKey, 300, jsonObject);
         return jsonObject;
     }
