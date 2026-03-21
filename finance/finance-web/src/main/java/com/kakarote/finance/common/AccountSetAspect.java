@@ -3,6 +3,9 @@ package com.kakarote.finance.common;
 import cn.hutool.core.collection.CollUtil;
 import com.kakarote.common.entity.UserInfo;
 import com.kakarote.common.utils.UserUtil;
+import com.kakarote.core.common.Const;
+import com.kakarote.core.redis.Redis;
+import com.kakarote.core.servlet.ApplicationContextHolder;
 import com.kakarote.finance.entity.PO.FinanceAccountSet;
 import com.kakarote.finance.entity.PO.FinanceAccountUser;
 import com.kakarote.finance.service.IFinanceAccountSetService;
@@ -15,7 +18,10 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Objects;
 
@@ -51,13 +57,21 @@ public class AccountSetAspect {
                 return point.proceed();
             }
 
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+            String token = request.getHeader(Const.DEFAULT_TOKEN_NAME);
             UserInfo user = UserUtil.getUser();
+            if ((user == null || user.getUserId() == null) && token != null && !token.isEmpty()) {
+                Object sessionValue = ApplicationContextHolder.getBean(Redis.class).get(token);
+                if (sessionValue instanceof UserInfo && ((UserInfo) sessionValue).getUserId() != null) {
+                    user = (UserInfo) sessionValue;
+                }
+            }
             if (user == null || user.getUserId() == null) {
                 return point.proceed();
             }
             //查看当前登录用户是否有默认账套
-            FinanceAccountUser accountUser = new FinanceAccountUser();
-            List<FinanceAccountUser> accountUserList = accountUserService.lambdaQuery().eq(FinanceAccountUser::getUserId, user.getUserId()).eq(FinanceAccountUser::getIsDefault, 1).isNotNull(FinanceAccountUser::getRoleId).groupBy(FinanceAccountUser::getAccountId).list();
+            FinanceAccountUser accountUser = null;
+            List<FinanceAccountUser> accountUserList = accountUserService.lambdaQuery().eq(FinanceAccountUser::getUserId, user.getUserId()).eq(FinanceAccountUser::getIsDefault, 1).isNotNull(FinanceAccountUser::getRoleId).list();
             if (CollUtil.isEmpty(accountUserList)) {
                 //查询是否有全部账套
                 List<FinanceAccountUser> userList = accountUserService.lambdaQuery().eq(FinanceAccountUser::getUserId, user.getUserId()).eq(FinanceAccountUser::getIsDefault, 0).isNotNull(FinanceAccountUser::getRoleId).list();
@@ -76,9 +90,14 @@ public class AccountSetAspect {
                 //默认取第一个
                 accountUser = accountUserList.get(0);
             }
+            if (accountUser == null || accountUser.getAccountId() == null) {
+                // 用户尚未绑定账套（首次创建账套场景），允许通过，AccountSet 保持 null
+                return point.proceed();
+            }
             FinanceAccountSet accountSet = setService.getById(accountUser.getAccountId());
-            if (accountSet == null) {
-                accountSet = new FinanceAccountSet();
+            if (accountSet == null || accountSet.getAccountId() == null) {
+                // 账套记录已被删除，允许通过，AccountSet 保持 null
+                return point.proceed();
             }
             AccountSet.setAccountSet(accountSet);
             return point.proceed();

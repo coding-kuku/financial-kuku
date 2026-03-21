@@ -75,10 +75,12 @@ http://localhost:44316
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/wk_open_finance?characterEncoding=utf8&useSSL=false&zeroDateTimeBehavior=convertToNull&tinyInt1isBit=false&serverTimezone=Asia/Shanghai&useAffectedRows=true&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/wk_open_finance?characterEncoding=utf8&useSSL=false&zeroDateTimeBehavior=convertToNull&tinyInt1isBit=false&serverTimezone=Asia/Shanghai&useAffectedRows=true&allowPublicKeyRetrieval=true&sessionVariables=sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'
     username: root
     password: password
 ```
+
+> `sessionVariables=sql_mode=...` 已写入 URL，固定排除 `ONLY_FULL_GROUP_BY`，无需再手动执行 `SET GLOBAL sql_mode`。
 
 ### Redis 配置
 
@@ -271,14 +273,15 @@ mysql -h127.0.0.1 -uroot -ppassword -e "SHOW DATABASES LIKE 'wk_open_finance';"
 
 #### 检查 MySQL `sql_mode`
 
-本项目里有历史 SQL 与 MySQL 8 的 `ONLY_FULL_GROUP_BY` 不兼容。
-如果登录后出现账套查询异常、跳到 `#/noAuth`、或部分列表接口报 SQL 分组错误，先执行：
+`ONLY_FULL_GROUP_BY` 兼容问题已通过在 JDBC URL 中写入 `sessionVariables=sql_mode=...` 固定解决，**无需手动执行 `SET GLOBAL sql_mode`**。
+
+如果需要确认当前连接的 sql_mode，可查询：
 
 ```bash
-mysql -h127.0.0.1 -uroot -ppassword -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));"
+mysql -h127.0.0.1 -uroot -ppassword -e "SELECT @@SESSION.sql_mode;"
 ```
 
-执行后重启应用，让新的数据库连接生效。
+预期输出中不应包含 `ONLY_FULL_GROUP_BY`。
 
 #### 检查 Redis
 
@@ -290,13 +293,40 @@ redis-cli -a 123456 -h 127.0.0.1 -p 6379 ping
 
 ## 9. 当前已完成的关键改造
 
-- 已移除对悟空 ID 的依赖
-- 已移除 `provider-1.0.1.jar`
-- 已新增本地登录接口
+**基础离线化（第一轮）**
+- 已移除对悟空 ID 的依赖，移除 `provider-1.0.1.jar`
+- 已新增本地登录接口（`/login`、`/adminUser/logout`、`/adminUser/queryLoginUser` 等）
 - 已新增本地登录页 `local-login.html`
-- 已新增本地用户表 `wk_admin_user`
+- 已新增本地用户表 `wk_admin_user`，默认账号 `admin/123456`
 - 已将前端预编译 JS 中的 `id.72crm.com` 跳转替换为 `/local-login.html`
-- 已支持完全离线登录和本地部署
+
+**认证与账套上下文修复**
+- `ParamAspect`：修复空 UserInfo 绕过 null 检查的 bug，增加登录接口豁免
+- `AccountSetAspect`：增加 Redis 兜底恢复用户信息，修复账套为空时的错误处理
+
+**SQL 兼容性修复**
+- MySQL JDBC URL 加入 `sessionVariables=sql_mode=...`，固定排除 `ONLY_FULL_GROUP_BY`
+- `FinanceAccountSetMapper.xml`：修复 `GROUP BY` 聚合违规（`is_founder`、`is_default`、`GROUP BY` 列补全）
+- `FinanceCertificateMapper.xml`：修复两处明细账/余额表查询的 `GROUP BY` 违规
+
+**报表兼容性修复**
+- `FinanceReportRequestBO`：新增自定义 JSON 反序列化，兼容旧前端发送的字符串型 `type`（`"MONTH"→1`、`"QUARTER"→2`）
+- `FinanceCashFlowStatementReportImpl` / `FinanceIncomeStatementReportServiceImpl`：平衡校验增加 null 守卫
+
+**账套与科目修复**
+- `FinanceAccountSetServiceImpl`：`companyCode` 空值回退，`saveBatch` 逐条写入
+- `FinanceAccountUserServiceImpl`：`financeAuth()` 改用 `adminRoleService.auth()`，对齐前端权限树
+- `FinanceSubjectServiceImpl`：科目复制和最小值查找的 null/空集合守卫
+
+**前端 chunk 修复**
+- `index.html`：webpack chunk hash map 补全 `chunk-5f4fcffe`（核算项目明细账）和 `chunk-0927bf12`（核算项目余额表）两个缺失条目，修复点击无响应问题
+- `chunk-392f2abc`、`chunk-fe0f7034`：报表请求 `type:"MONTH"` 改为 `type:1`
+- `chunk-71c3c0d5`：账套管理操作改为显示错误提示
+
+**API 参数兼容**
+- `FinanceCurrencyController.queryListByAccountId`：`accountId` 改为可选，缺省从账套上下文读取
+- `FinanceCertificateController.queryLabelName`：`adjuvantId` 改为可选，防止前端 watcher `immediate:true` 触发时报 500
+- `AdminFileServiceImpl`：文件下载 domain 补全前导 `/`
 
 ---
 

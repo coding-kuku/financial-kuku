@@ -1535,7 +1535,7 @@
         WHERE a.account_id = #{accountId}
         AND (DATE_FORMAT(a.certificate_time, '%Y%m') >= #{fromPeriod}
         AND DATE_FORMAT(a.certificate_time, '%Y%m') &lt;= #{toPeriod})
-        GROUP BY b.subject_id, DATE_FORMAT(a.certificate_time, '%Y%m')
+        GROUP BY b.subject_id, b.subject_number, DATE_FORMAT(a.certificate_time, '%Y%m')
         ) a
         order by subject_number
     </select>
@@ -1564,7 +1564,7 @@
         WHERE a.account_id = #{accountId}
         AND (DATE_FORMAT(a.certificate_time, '%Y%m') >= #{fromPeriod}
         AND DATE_FORMAT(a.certificate_time, '%Y%m') &lt;= #{toPeriod})
-        GROUP BY b.subject_id, DATE_FORMAT(a.certificate_time, '%Y%m')
+        GROUP BY b.subject_id, e.number, DATE_FORMAT(a.certificate_time, '%Y%m')
         ) a
         order by number
     </select>

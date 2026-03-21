@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.ToString;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.databind.JsonNode;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,37 @@ public class FinanceReportRequestBO {
 
     @ApiModelProperty(value = "1 月报 2 季报")
     private Integer type;
+
+    @JsonSetter("type")
+    public void setTypeNode(JsonNode typeNode) {
+        if (typeNode == null || typeNode.isNull()) {
+            this.type = null;
+            return;
+        }
+        if (typeNode.isInt() || typeNode.isLong()) {
+            this.type = typeNode.asInt();
+            return;
+        }
+        String text = typeNode.asText();
+        if (text == null) {
+            this.type = null;
+            return;
+        }
+        text = text.trim();
+        if (text.isEmpty()) {
+            this.type = null;
+            return;
+        }
+        if ("MONTH".equalsIgnoreCase(text)) {
+            this.type = 1;
+            return;
+        }
+        if ("QUARTER".equalsIgnoreCase(text)) {
+            this.type = 2;
+            return;
+        }
+        this.type = Integer.valueOf(text);
+    }
 
     @NotNull
     @ApiModelProperty(value = "开始账期：格式 yyyyMM")

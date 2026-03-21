@@ -2,12 +2,12 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.kakarote.finance.mapper.FinanceAccountSetMapper">
     <select id="getUserIdList" resultType="com.kakarote.finance.entity.BO.FinanceAccountSetBO">
-        SELECT user_id,is_founder FROM wk_finance_account_user WHERE account_id = #{accountId} GROUP BY user_id
+        SELECT user_id,MAX(is_founder) AS is_founder FROM wk_finance_account_user WHERE account_id = #{accountId} GROUP BY user_id
     </select>
 
     <select id="getAccountSetList" resultType="com.kakarote.finance.entity.VO.FinanceAccountListVO">
         SELECT a.account_id,a.company_name,a.start_time,a.start_time as
-        enable_time,a.`status`,b.is_default,a.contacts,a.mobile
+        enable_time,a.`status`,MAX(b.is_default) AS is_default,a.contacts,a.mobile
         FROM wk_finance_account_set a
         LEFT JOIN wk_finance_account_user b ON a.account_id = b.account_id
         WHERE 1=1
@@ -15,7 +15,7 @@
         <if test="userId != null and userId != ''">
             and b.user_id = #{userId}
         </if>
-        GROUP BY b.account_id
+        GROUP BY a.account_id,a.company_name,a.start_time,a.`status`,a.contacts,a.mobile
     </select>
 
     <select id="getSettleTime" resultType="java.lang.String">

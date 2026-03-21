@@ -271,7 +271,10 @@ public class FinanceCertificateController {
 
     @PostMapping("/queryLabelName")
     @ApiOperation("核算获取辅助项目")
-    public Result<List<JSONObject>> queryLabelName(@RequestParam("adjuvantId") Long adjuvantId) {
+    public Result<List<JSONObject>> queryLabelName(@RequestParam(value = "adjuvantId", required = false) Long adjuvantId) {
+        if (adjuvantId == null) {
+            return Result.ok(new java.util.ArrayList<>());
+        }
         List<JSONObject> list = financeCertificateService.queryLabelName(adjuvantId);
         return Result.ok(list);
     }

@@ -181,7 +181,9 @@ public class FinanceSubjectServiceImpl extends BaseServiceImpl<FinanceSubjectMap
                         .eq(FinanceInitial::getSubjectId, subject.getParentId())
                         .one();
                 // 新建子科目的初始余额
-                FinanceInitial initial = BeanUtil.copyProperties(parentInitial, FinanceInitial.class);
+                FinanceInitial initial = parentInitial != null
+                        ? BeanUtil.copyProperties(parentInitial, FinanceInitial.class)
+                        : new FinanceInitial();
                 initial.setInitialId(null);
                 initial.setSubjectId(subject.getSubjectId());
                 initial.setCreateTime(LocalDateTime.now());
@@ -1227,6 +1229,9 @@ public class FinanceSubjectServiceImpl extends BaseServiceImpl<FinanceSubjectMap
                 .eq(FinanceSubject::getType, type)
                 .ne(FinanceSubject::getStatus, 3)
                 .list();
+        if (CollUtil.isEmpty(subjects)) {
+            return subjects;
+        }
         Integer firstGrade = subjects.stream().min(Comparator.comparing(FinanceSubject::getGrade)).get().getGrade();
         subjects = subjects.stream().filter(o -> ObjectUtil.equal(firstGrade, o.getGrade())).collect(Collectors.toList());
         return subjects;

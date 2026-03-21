@@ -116,6 +116,9 @@ public class FinanceAccountSetServiceImpl extends BaseServiceImpl<FinanceAccount
             updateById(accountSet);
         } else {
             accountSet.setCreateUserId(UserUtil.getUserId());
+            if (StrUtil.isBlank(accountSet.getCompanyCode())) {
+                accountSet.setCompanyCode(accountSet.getCompanyName());
+            }
             operationLog.setOperationInfo("新建账套：" + accountSet.getCompanyName());
             save(accountSet);
             //将所有财务角色查询出来
@@ -132,7 +135,7 @@ public class FinanceAccountSetServiceImpl extends BaseServiceImpl<FinanceAccount
                     accountUser.setIsFounder(1);
                     userList.add(accountUser);
                 }
-                accountUserService.saveBatch(userList, Const.BATCH_SAVE_SIZE);
+                userList.forEach(accountUserService::save);
             } else {
                 //如果没有角色,将当前创建人添加到授权员工中
                 FinanceAccountUser accountUser = new FinanceAccountUser();

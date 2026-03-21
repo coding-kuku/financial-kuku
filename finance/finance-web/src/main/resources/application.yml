@@ -14,7 +14,7 @@ spring:
       pool:
         max-active: 300
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/wk_open_finance?characterEncoding=utf8&useSSL=false&zeroDateTimeBehavior=convertToNull&tinyInt1isBit=false&serverTimezone=Asia/Shanghai&useAffectedRows=true&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/wk_open_finance?characterEncoding=utf8&useSSL=false&zeroDateTimeBehavior=convertToNull&tinyInt1isBit=false&serverTimezone=Asia/Shanghai&useAffectedRows=true&allowPublicKeyRetrieval=true&sessionVariables=sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'
     username: root
     password: password
   elasticsearch:
@@ -40,5 +40,5 @@ wukong:
     upload:
       type: local
       region: D:/wukong
-      domain: commonFile/download
+      domain: /commonFile/download
       bucket-name: D:/wukong

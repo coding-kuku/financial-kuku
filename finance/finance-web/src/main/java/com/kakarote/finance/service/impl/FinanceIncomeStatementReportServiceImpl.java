@@ -257,10 +257,14 @@ public class FinanceIncomeStatementReportServiceImpl extends BaseServiceImpl<Fin
         JSONObject o2 = filterReport(incomeStatementReport, 32);
         JSONObject object = new JSONObject();
         object.put("notContains", notContains);
-        String yearValue = "yearValue";
-        String endPeriod = "endPeriod";
-        String initialPeriod = "initialPeriod";
-        if (o2.getBigDecimal(yearValue).compareTo(o1.getBigDecimal(endPeriod).subtract(o1.getBigDecimal(initialPeriod))) == 0) {
+        if (ObjectUtil.isNull(o1) || ObjectUtil.isNull(o2)
+                || ObjectUtil.isNull(o1.getBigDecimal("endPeriod"))
+                || ObjectUtil.isNull(o1.getBigDecimal("initialPeriod"))
+                || ObjectUtil.isNull(o2.getBigDecimal("yearValue"))) {
+            object.put("balanced", false);
+            return object;
+        }
+        if (o2.getBigDecimal("yearValue").compareTo(o1.getBigDecimal("endPeriod").subtract(o1.getBigDecimal("initialPeriod"))) == 0) {
             object.put("balanced", true);
         } else {
             object.put("balanced", false);

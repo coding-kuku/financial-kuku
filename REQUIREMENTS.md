@@ -36,19 +36,23 @@
 
 **实现**：新建 `LoginController.java`，提供以下接口：
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `POST /login` | 用户名密码登录 | 查 `wk_admin_user` 表，验证 `sha256(password+salt)`，生成 UUID token 写入 Redis，返回 token |
-| `POST /adminUser/logout` | 退出登录 | 删除 Redis 中的 token |
-| `POST /adminUser/queryLoginUser` | 获取当前用户信息 | 从 ThreadLocal 读取 UserInfo 返回 |
-| `POST /adminUser/authorization` | OAuth2 回调（存根） | 返回错误，本地模式不支持 |
+| 接口 | 说明 |
+|------|------|
+| `POST /login` | 用户名密码登录，查 `wk_admin_user` 表，验证 `sha256(password+salt)`，生成 UUID token 写入 Redis，返回 token |
+| `POST /adminUser/logout` | 退出登录，删除 Redis 中的 token |
+| `POST /adminUser/queryLoginUser` | 获取当前用户信息，从 ThreadLocal 或 Redis 读取 UserInfo 返回 |
+| `POST /adminUser/queryUserList` | 返回本地用户列表（凭证/账套页面需要） |
+| `POST /adminUser/queryDeptTree` | 返回虚拟部门树（前端组织架构选择需要） |
+| `POST /adminUser/queryOrganizationInfo` | 返回组织架构信息（用户+部门联合视图） |
+| `POST /adminUser/authorization` | OAuth2 回调（存根，返回错误，本地模式不支持） |
 
 密码哈希算法：`DigestUtil.sha256Hex(password + salt)`（Hutool）
 
 Token 在 Redis 的存储格式（与 ParamAspect 兼容）：
 ```
-redis.setex(token,          expireSeconds, userInfo)
-redis.setex(token + "_token", expireSeconds, "1")
+redis.set(token, userInfo)           // 写入 UserInfo 对象
+redis.expire(token, expireSeconds)   // 设置 TTL
+redis.setex(token + "_token", expireSeconds, "1")  // 写入存活标记
 ```
 
 **文件**：`finance/finance-web/src/main/java/com/kakarote/finance/controller/LoginController.java`（新建）
@@ -132,8 +136,82 @@ sed -i '' 's|https://id\.72crm\.com/index\.html|/local-login.html|g' \
 **实现**：
 - 删除 `wukong.ids.auth` 配置块（appId、clientId、clientSecret、requestUri、redirectUri）
 - 将 Elasticsearch 地址从内网 IP `192.168.1.210:9200` 改为 `127.0.0.1:9200`，并移除认证信息（本地无密码 ES）
+- 在 MySQL JDBC URL 中增加 `sessionVariables=sql_mode='STRICT_TRANS_TABLES,...'`，固定 SQL 模式，避免 `ONLY_FULL_GROUP_BY` 等严格模式差异引发兼容问题
+- 将文件下载 domain 从 `commonFile/download` 改为 `/commonFile/download`（补全前导斜杠，防止深层路由下 URL 拼接出错）
 
 **文件**：`finance/finance-web/src/main/resources/application.yml`
+
+---
+
+### 9. 运行时兼容性修复（多轮调试补充）
+
+以下问题在实际运行验证中发现并修复，属于原代码与本地部署环境的兼容缺口。
+
+**`ParamAspect.java`**
+- 原代码用 `new UserInfo()` 初始化，导致空对象绕过 null 检查 → 改为 `null` 初始化
+- 增加 `instanceof UserInfo` 类型验证和 `userId == null` 守卫
+- 增加 `/login`、`/adminUser/authorization` 路径的前置绕过，避免登录接口被自身拦截
+
+**`AccountSetAspect.java`**
+- 增加从 Redis token 直接恢复用户信息的兜底逻辑，防止 ThreadLocal 丢失时账套无法加载
+- 修复 `accountSet == null` 时构造空壳继续执行的逻辑，改为直接放行
+
+**`FinanceReportRequestBO.java`**
+- 新增 `@JsonSetter("type")` 自定义反序列化，将旧前端发送的字符串 `"MONTH"→1`、`"QUARTER"→2` 归一化为整数，解决报表接口反序列化异常
+
+**`FinanceAccountSetMapper.xml`**
+- `is_founder`、`is_default` 加 `MAX()` 聚合，`GROUP BY` 补全所有非聚合列，修复 `ONLY_FULL_GROUP_BY` 违规
+
+**`FinanceCertificateMapper.xml`**
+- 两处 `GROUP BY` 子句补全 `subject_number`、`e.number`，修复相同的 GROUP BY 违规
+
+**`FinanceAccountSetServiceImpl.java`**
+- `companyCode` 为空时自动回退到 `companyName`，防止非空约束报错
+- 将 `saveBatch()` 改为逐条 `save()`，绕过本地环境 batch insert 的问题
+
+**`FinanceAccountUserServiceImpl.java`**
+- `financeAuth()` 改为调用 `adminRoleService.auth()`，与前端路由权限校验树对齐
+- 多处补充 `UserUtil.getUser()` 的 null 守卫
+- 新增 `saveBatch()` 覆盖
+
+**`FinanceCashFlowStatementReportImpl.java` / `FinanceIncomeStatementReportServiceImpl.java`**
+- 在平衡校验逻辑中增加 null 守卫，防止无数据时 NPE，改为返回 `balanced:false`
+
+**`FinanceSubjectServiceImpl.java`**
+- 科目复制时增加 `parentInitial != null` 守卫
+- 科目列表最小值查找前增加空集合守卫
+
+**`AdminFileServiceImpl.java`**
+- 文件下载 URL 拼接时补全 `/` 前缀，防止嵌套路由下路径错误
+
+**`FinanceCurrencyController.java`**
+- `queryListByAccountId` 的 `accountId` 改为可选，缺省时从 `AccountSet.getAccountSetId()` 读取
+
+**`FinanceCertificateController.java`**
+- `queryLabelName` 的 `adjuvantId` 改为 `required=false`，前端 watcher `immediate:true` 触发时 adjuvantId 尚未就绪，不再触发 500 错误
+
+**`index.html`（前端 webpack bootstrap）**
+- 在 JS/CSS chunk hash map 中补全两个缺失条目：
+  - `chunk-5f4fcffe`（核算项目明细账）
+  - `chunk-0927bf12`（核算项目余额表）
+  - 缺失时 webpack 解析为 `undefined`，chunk 加载 404，导致这两个页面点击无响应
+
+**前端 JS bundle 直接 patch（3 个 chunk）**
+- `chunk-392f2abc`（利润表）、`chunk-fe0f7034`（现金流量表）：报表请求 `type:"MONTH"` → `type:1`
+- `chunk-71c3c0d5`（账套管理）：`.catch()` 改为显示错误消息而非静默忽略
+
+**文件**（受影响）：
+- `common/common-web/src/main/java/com/kakarote/core/config/ParamAspect.java`
+- `finance/finance-web/src/main/java/com/kakarote/finance/common/AccountSetAspect.java`
+- `finance/finance-web/src/main/java/com/kakarote/finance/entity/BO/FinanceReportRequestBO.java`
+- `finance/finance-web/src/main/java/com/kakarote/finance/mapper/xml/FinanceAccountSetMapper.xml`
+- `finance/finance-web/src/main/java/com/kakarote/finance/mapper/xml/FinanceCertificateMapper.xml`
+- `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/` 下多个 ServiceImpl
+- `finance/finance-web/src/main/java/com/kakarote/finance/controller/` 下多个 Controller
+- `finance/finance-web/src/main/resources/static/index.html`
+- `finance/finance-web/src/main/resources/static/static/js/chunk-392f2abc.372f40fb.js`
+- `finance/finance-web/src/main/resources/static/static/js/chunk-71c3c0d5.2e2ae53d.js`
+- `finance/finance-web/src/main/resources/static/static/js/chunk-fe0f7034.9cb7a8ec.js`
 
 ---
 
@@ -212,9 +290,9 @@ java -jar finance/finance-web/target/finance-web-0.0.1-SNAPSHOT.jar
 
 ## 未改动的内容
 
-- 所有财务业务逻辑（凭证、科目、期末结转、报表等）
-- MyBatis-Plus 数据访问层
-- `AccountSetAspect`（账套拦截器）
-- `ParamAspect`（认证拦截器，无需修改，与新 Redis token 格式兼容）
+- 所有财务核心业务逻辑（凭证录入、科目管理、期末结转、报表计算等核心流程）
+- MyBatis-Plus 数据访问层（Mapper 接口，除 XML 中 GROUP BY 修复外）
 - `wk_common_web-1.0.6.jar`（保留，提供 UserInfo、Redis 等基础类）
 - `AdminServiceImpl`（原本已是本地空实现，无远程调用）
+
+> **注**：`AccountSetAspect` 和 `ParamAspect` 在多轮调试中均有修改（见第 9 节），不再属于未改动文件。

@@ -1,7 +1,9 @@
 package com.kakarote.finance.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.kakarote.common.entity.UserInfo;
 import com.kakarote.common.utils.UserUtil;
 import com.kakarote.core.servlet.BaseServiceImpl;
 import com.kakarote.finance.common.AccountSet;
@@ -10,12 +12,16 @@ import com.kakarote.finance.entity.PO.AdminMenu;
 import com.kakarote.finance.entity.PO.FinanceAccountUser;
 import com.kakarote.finance.mapper.FinanceAccountUserMapper;
 import com.kakarote.finance.service.IAdminMenuService;
+import com.kakarote.finance.service.IAdminRoleService;
 import com.kakarote.finance.service.IFinanceAccountUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import com.kakarote.core.common.Const;
 
 /**
  * <p>
@@ -31,12 +37,17 @@ public class FinanceAccountUserServiceImpl extends BaseServiceImpl<FinanceAccoun
     @Autowired
     private IAdminMenuService adminMenuService;
 
-
+    @Autowired
+    private IAdminRoleService adminRoleService;
 
     public List<Long> getRoleList() {
+        Long userId = UserUtil.getUserId();
+        if (userId == null && UserUtil.getUser() != null) {
+            userId = UserUtil.getUser().getUserId();
+        }
         List<FinanceAccountUser> accountUserList = lambdaQuery()
                 .eq(FinanceAccountUser::getAccountId, AccountSet.getAccountSetId())
-                .eq(FinanceAccountUser::getUserId, UserUtil.getUserId())
+                .eq(FinanceAccountUser::getUserId, userId)
                 .isNotNull(FinanceAccountUser::getRoleId).list();
         if (CollUtil.isEmpty(accountUserList)) {
             return new ArrayList<>();
@@ -51,13 +62,15 @@ public class FinanceAccountUserServiceImpl extends BaseServiceImpl<FinanceAccoun
      */
     @Override
     public JSONObject financeAuth() {
-        List<AdminMenu> menus = queryMenuListByAdmin();
-        if (CollUtil.isEmpty(menus)) {
-            return new JSONObject();
+        Long userId = UserUtil.getUserId();
+        if (userId == null && UserUtil.getUser() != null) {
+            userId = UserUtil.getUser().getUserId();
         }
-        JSONObject jsonObject = createMenu(new HashSet<>(menus), 0L);
+        JSONObject auth = adminRoleService.auth(userId);
         JSONObject result = new JSONObject();
-        result.put(FinanceConst.FINANCE_SERVICE, jsonObject.getJSONObject(FinanceConst.FINANCE_SERVICE));
+        if (ObjectUtil.isNotNull(auth) && ObjectUtil.isNotNull(auth.getJSONObject(FinanceConst.FINANCE_SERVICE))) {
+            result.put(FinanceConst.FINANCE_SERVICE, auth.getJSONObject(FinanceConst.FINANCE_SERVICE));
+        }
         return result;
     }
 
@@ -67,14 +80,27 @@ public class FinanceAccountUserServiceImpl extends BaseServiceImpl<FinanceAccoun
      * @return
      */
     public List<AdminMenu> queryMenuListByAdmin() {
-        if (UserUtil.isAdmin()) {
-            return adminMenuService.queryMenuList(UserUtil.getUserId());
+        UserInfo user = UserUtil.getUser();
+        if (user != null && user.isAdmin()) {
+            return adminMenuService.queryMenuList(user.getUserId());
         }
         List<Long> roleList = getRoleList();
         if (roleList.size() > 0) {
             return adminMenuService.queryMenuListByRoleIds(roleList);
         }
         return new ArrayList<>();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean saveBatch(Collection<FinanceAccountUser> entityList, int batchSize) {
+        if (CollUtil.isEmpty(entityList)) {
+            return true;
+        }
+        for (FinanceAccountUser entity : entityList) {
+            save(entity);
+        }
+        return true;
     }
 
     private JSONObject createMenu(Set<AdminMenu> adminMenuList, Long parentId) {

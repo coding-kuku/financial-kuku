@@ -274,10 +274,13 @@ public class FinanceCashFlowStatementReportImpl extends BaseServiceImpl<FinanceC
     public JSONObject balanceCheck(FinanceReportRequestBO requestBO) {
         JSONObject balanceSheetBalanceResult = balanceSheetService.balanceCheck(requestBO);
         JSONObject object = new JSONObject();
-        String notContains = "notContains";
-        String settled = "settled";
-        if (!balanceSheetBalanceResult.getJSONArray(notContains).isEmpty() || !balanceSheetBalanceResult.getBoolean(settled)
-                || !balanceSheetBalanceResult.getBoolean("balanced")) {
+        if (ObjectUtil.isNull(balanceSheetBalanceResult)) {
+            object.put("balanceSheet", false);
+            return object;
+        }
+        if (CollUtil.isNotEmpty(balanceSheetBalanceResult.getJSONArray("notContains"))
+                || !Boolean.TRUE.equals(balanceSheetBalanceResult.getBoolean("settled"))
+                || !Boolean.TRUE.equals(balanceSheetBalanceResult.getBoolean("balanced"))) {
             object.put("balanceSheet", false);
         } else {
             object.put("balanceSheet", true);

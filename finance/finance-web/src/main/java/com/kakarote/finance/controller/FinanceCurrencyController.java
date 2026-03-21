@@ -10,6 +10,7 @@ import com.kakarote.common.log.enums.BehaviorEnum;
 import com.kakarote.common.log.enums.OperateObjectEnum;
 import com.kakarote.core.common.Result;
 import com.kakarote.finance.entity.PO.FinanceCurrency;
+import com.kakarote.finance.common.AccountSet;
 import com.kakarote.finance.service.IFinanceCurrencyService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -67,7 +68,10 @@ public class FinanceCurrencyController {
 
     @PostMapping("/queryListByAccountId")
     @ApiOperation("列表查询币种根据账套id")
-    public Result<List<FinanceCurrency>> queryListByAccountId(@RequestParam("accountId") Long accountId) {
+    public Result<List<FinanceCurrency>> queryListByAccountId(@RequestParam(value = "accountId", required = false) Long accountId) {
+        if (accountId == null) {
+            accountId = AccountSet.getAccountSetId();
+        }
         List<FinanceCurrency> list = financeCurrencyService.queryListByAccountId(accountId);
         return Result.ok(list);
     }

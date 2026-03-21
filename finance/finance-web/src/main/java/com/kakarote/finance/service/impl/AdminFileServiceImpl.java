@@ -179,7 +179,8 @@ public class AdminFileServiceImpl extends BaseServiceImpl<AdminFileMapper, Admin
 
     @Override
     public String getUrl(Long fieldId) {
-        return StrUtil.join("/", domain, fieldId);
+        String normalizedDomain = StrUtil.addPrefixIfNot(domain, "/");
+        return StrUtil.join("/", normalizedDomain, fieldId);
     }
 
     /**

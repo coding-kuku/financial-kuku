@@ -2,13 +2,16 @@ package com.kakarote.finance.controller;
 
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.crypto.digest.DigestUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.kakarote.common.entity.UserInfo;
+import com.kakarote.common.servlet.UserStrategy;
 import com.kakarote.common.utils.UserUtil;
 import com.kakarote.core.common.Const;
 import com.kakarote.core.common.Result;
 import com.kakarote.core.redis.Redis;
+import com.kakarote.core.servlet.ApplicationContextHolder;
 import com.kakarote.finance.entity.PO.LocalUser;
 import com.kakarote.finance.mapper.LocalUserMapper;
 import com.kakarote.finance.utils.LocalUserCacheUtil;
@@ -60,16 +63,18 @@ public class LoginController {
         }
 
         String token = IdUtil.simpleUUID();
-        UserInfo userInfo = new UserInfo();
-        userInfo.setUserId(user.getUserId());
-        userInfo.setUsername(user.getUsername());
-        userInfo.setNickname(user.getRealname() != null ? user.getRealname() : user.getUsername());
-        userInfo.setAdmin(Boolean.TRUE.equals(user.getIsAdmin()));
+        UserInfo userInfo = buildUserInfo(user);
 
         int expireSeconds = Const.MAX_USER_EXIST_TIME;
-        redis.setex(token, expireSeconds, userInfo);
+        redis.set(token, userInfo);
+        redis.expire(token, expireSeconds);
         redis.setex(token + Const.TOKEN_CACHE_NAME, expireSeconds, "1");
         LocalUserCacheUtil.cacheUserName(user.getUserId(), userInfo.getNickname());
+
+        Object storedSession = redis.get(token);
+        if (storedSession == null) {
+            return Result.error(500, "本地登录会话写入失败");
+        }
 
         return Result.ok(token);
     }
@@ -87,13 +92,59 @@ public class LoginController {
         return Result.ok();
     }
 
+    private UserInfo buildUserInfo(LocalUser user) {
+        UserInfo userInfo = new UserInfo();
+        String realname = user.getRealname() != null ? user.getRealname() : user.getUsername();
+        userInfo.setUserId(user.getUserId());
+        userInfo.setUsername(user.getUsername());
+        userInfo.setNickname(realname);
+        userInfo.setAdmin(Boolean.TRUE.equals(user.getIsAdmin()));
+        return userInfo;
+    }
+
+    private UserInfo resolveCurrentUser() {
+        UserInfo user = UserUtil.getUser();
+        if (user != null && user.getUserId() != null) {
+            return user;
+        }
+        HttpServletRequest request = ((org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()).getRequest();
+        String token = request.getHeader(Const.DEFAULT_TOKEN_NAME);
+        if (token == null || token.isEmpty() || !redis.exists(token + Const.TOKEN_CACHE_NAME)) {
+            return null;
+        }
+        Object sessionValue = redis.get(token);
+        if (!(sessionValue instanceof UserInfo)) {
+            return null;
+        }
+        UserInfo sessionUser = (UserInfo) sessionValue;
+        if (sessionUser.getUserId() == null) {
+            return null;
+        }
+        tryBindUserStrategy();
+        UserUtil.setUser(sessionUser);
+        return sessionUser;
+    }
+
+    private void tryBindUserStrategy() {
+        try {
+            UserStrategy userStrategy = ApplicationContextHolder.getBean(UserStrategy.class);
+            if (userStrategy != null) {
+                UserUtil userUtil = ApplicationContextHolder.getBean(UserUtil.class);
+                if (userUtil != null) {
+                    userUtil.setUserStrategy(userStrategy);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
     /**
      * 前端 adminUser/queryLoginUser 接口：返回当前登录用户信息
      */
     @PostMapping("/adminUser/queryLoginUser")
     @ApiOperation("获取当前登录用户信息")
-    public Result<JSONObject> queryLoginUser() {
-        UserInfo user = UserUtil.getUser();
+    public Result<JSONObject> queryLoginUser(HttpServletRequest request) {
+        UserInfo user = resolveCurrentUser();
         JSONObject result = new JSONObject();
         if (user != null && user.getUserId() != null) {
             result.put("userId", user.getUserId());

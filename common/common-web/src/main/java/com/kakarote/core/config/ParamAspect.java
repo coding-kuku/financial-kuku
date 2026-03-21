@@ -38,12 +38,19 @@ public class ParamAspect implements Ordered {
         try {
             if (attributes != null) {
                 HttpServletRequest request = attributes.getRequest();
-                String token = request.getHeader(Const.DEFAULT_TOKEN_NAME);
-                UserInfo info = new  UserInfo();
-                if (StrUtil.isNotEmpty(token) && redis.exists(token+Const.TOKEN_CACHE_NAME)) {
-                    info = redis.get(token);
+                String requestUri = request.getRequestURI();
+                if (StrUtil.equalsAny(requestUri, "/login", "/adminUser/authorization")) {
+                    return point.proceed();
                 }
-                if (ObjectUtil.isNull(info)) {
+                String token = request.getHeader(Const.DEFAULT_TOKEN_NAME);
+                UserInfo info = null;
+                if (StrUtil.isNotEmpty(token) && redis.exists(token + Const.TOKEN_CACHE_NAME)) {
+                    Object sessionValue = redis.get(token);
+                    if (sessionValue instanceof UserInfo) {
+                        info = (UserInfo) sessionValue;
+                    }
+                }
+                if (ObjectUtil.isNull(info) || info.getUserId() == null) {
                     throw new NoLoginException();
                 }
                 UserUtil.setUser(info);
