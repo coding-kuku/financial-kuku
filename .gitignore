@@ -7,3 +7,5 @@ target
 */target/**
 rebel.xml
 rebel-remote.xml
+.playwright-cli/
+__pycache__/
