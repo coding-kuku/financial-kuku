@@ -251,12 +251,13 @@ class TestSubject:
 
     def test_add_subject(self, client):
         with patch("requests.post", return_value=self._mock(None)) as mock_post:
-            _subject.add_subject(client, "1001", "库存现金", 1, parent_id=10)
+            _subject.add_subject(client, "1001", "库存现金", 1, balance_direction=1, parent_id=10)
         body = mock_post.call_args.kwargs.get("json", {})
-        assert body["number"] == "1001"       # API field is "number", not "subjectNumber"
+        assert body["number"] == "1001"           # API field is "number", not "subjectNumber"
         assert body["subjectName"] == "库存现金"
-        assert body["type"] == 1              # API field is "type", not "subjectType"
-        assert body["parentId"] == 10         # API field is "parentId", not "pid"
+        assert body["type"] == 1                  # API field is "type", not "subjectType"
+        assert body["balanceDirection"] == 1      # 1=借方, required by frontend
+        assert body["parentId"] == 10             # API field is "parentId", not "pid"
 
     def test_delete_subjects(self, client):
         with patch("requests.post", return_value=self._mock(None)) as mock_post:

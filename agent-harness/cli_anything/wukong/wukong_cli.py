@@ -11,6 +11,7 @@ Usage:
 """
 
 import json
+import re
 import shlex
 import sys
 from typing import Optional
@@ -360,6 +361,9 @@ def account_switch(ctx: click.Context, account_id: int):
 @click.pass_context
 def account_create(ctx: click.Context, name: str, company: str, start: str, currency: str):
     """Create a new account set."""
+    if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", start):
+        _err(ctx, f"--start must be in YYYY-MM format (e.g. 2024-01), got: {start!r}")
+        sys.exit(1)
     client = _get_client(ctx)
     try:
         _account.create_account(client, name, company, start, currency)
@@ -451,13 +455,26 @@ def _flatten_subjects(subjects: list, indent: int = 0) -> list:
 @click.option("--name", required=True, help="Account name (e.g. 库存现金)")
 @click.option("--type", "subject_type", required=True, type=int,
               help="1=资产 2=负债 3=权益 4=成本 5=损益")
+@click.option("--direction", "balance_direction", required=True, type=int,
+              help="Balance direction: 1=借方(debit) 2=贷方(credit)")
 @click.option("--parent-id", type=int, default=None, help="Parent subject ID")
 @click.pass_context
-def subject_add(ctx: click.Context, code: str, name: str, subject_type: int, parent_id: Optional[int]):
-    """Add a new subject (account code)."""
+def subject_add(ctx: click.Context, code: str, name: str, subject_type: int,
+                balance_direction: int, parent_id: Optional[int]):
+    """Add a new subject (account code).
+
+    --direction is required: 1=借方(debit), 2=贷方(credit).
+    --type must be 1–5: 1=资产 2=负债 3=权益 4=成本 5=损益.
+    """
+    if subject_type not in (1, 2, 3, 4, 5):
+        _err(ctx, f"--type must be 1–5 (got {subject_type}): 1=资产 2=负债 3=权益 4=成本 5=损益")
+        sys.exit(1)
+    if balance_direction not in (1, 2):
+        _err(ctx, f"--direction must be 1 (借方/debit) or 2 (贷方/credit) (got {balance_direction})")
+        sys.exit(1)
     client = _get_client(ctx)
     try:
-        _subject.add_subject(client, code, name, subject_type, parent_id=parent_id)
+        _subject.add_subject(client, code, name, subject_type, balance_direction, parent_id=parent_id)
     except WukongError as e:
         _handle_error(ctx, e)
         return
@@ -518,6 +535,9 @@ def voucher_list(ctx: click.Context):
 @click.pass_context
 def voucher_add(ctx: click.Context, name: str):
     """Add a voucher word (e.g. '记')."""
+    if not name.strip():
+        _err(ctx, "凭证字不能为空 (voucher word name must not be blank)")
+        sys.exit(1)
     client = _get_client(ctx)
     try:
         _voucher.add_voucher_word(client, name)
@@ -1021,6 +1041,12 @@ def adjuvant_list(ctx: click.Context):
 @click.pass_context
 def adjuvant_add(ctx: click.Context, name: str, label: int):
     """Add a new auxiliary accounting category."""
+    if not name.strip():
+        _err(ctx, "名称不能为空 (adjuvant name must not be blank)")
+        sys.exit(1)
+    if label not in range(1, 8):
+        _err(ctx, f"--label must be 1–7 (got {label}): 1=客户 2=供应商 3=职员 4=项目 5=部门 6=存货 7=自定义")
+        sys.exit(1)
     client = _get_client(ctx)
     try:
         _adjuvant.add_adjuvant(client, name, label)

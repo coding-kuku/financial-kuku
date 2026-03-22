@@ -34,6 +34,7 @@ def add_subject(
     subject_number: str,
     subject_name: str,
     subject_type: int,
+    balance_direction: int,
     parent_id: Optional[int] = None,
     currency_type: int = 1,
     is_end: int = 1,
@@ -44,19 +45,21 @@ def add_subject(
         subject_number: Account code (e.g. "1001") — sent as field "number"
         subject_name: Account name (e.g. "库存现金")
         subject_type: 1=资产, 2=负债, 3=权益, 4=成本, 5=损益 — sent as field "type"
+        balance_direction: 1=借方 (debit), 2=贷方 (credit) — required by frontend
         parent_id: Parent subject ID (None for top-level)
         currency_type: 1=人民币, 2=外币
         is_end: 1=leaf node (末级), 0=parent node
     """
     body = {
-        "number": subject_number,       # API uses "number", not "subjectNumber"
+        "number": subject_number,           # API uses "number", not "subjectNumber"
         "subjectName": subject_name,
-        "type": subject_type,           # API uses "type", not "subjectType"
+        "type": subject_type,               # API uses "type", not "subjectType"
+        "balanceDirection": balance_direction,
         "currencyType": currency_type,
         "isEnd": is_end,
     }
     if parent_id is not None:
-        body["parentId"] = parent_id    # API uses "parentId", not "pid"
+        body["parentId"] = parent_id        # API uses "parentId", not "pid"
     client.post("/financeSubject/add", body)
 
 
