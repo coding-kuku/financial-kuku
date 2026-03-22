@@ -357,10 +357,106 @@ class TestCertificateUpdate:
         assert len(body["certificateDetails"]) == 2
 
     def test_update_certificate_with_num(self, client):
+        details = [
+            {"subjectId": 1, "digestContent": "备注", "debtorBalance": 200, "creditBalance": 0},
+            {"subjectId": 2, "digestContent": "", "debtorBalance": 0, "creditBalance": 200},
+        ]
         with patch("requests.post", return_value=self._mock(None)) as mock_post:
-            _cert.update_certificate(client, 10, 2, "2024-03-01", [], certificate_num=5)
+            _cert.update_certificate(client, 10, 2, "2024-03-01", details, certificate_num=5)
         body = mock_post.call_args.kwargs.get("json", {})
         assert body["certificateNum"] == 5
+
+
+# ── certificate validation tests ──────────────────────────────────────
+
+class TestCertificateValidation:
+    """Unit tests for validate_certificate_details — mirrors frontend checkForm rules."""
+
+    _VALID = [
+        {"subjectId": 1, "digestContent": "memo", "debtorBalance": 1000, "creditBalance": 0},
+        {"subjectId": 2, "digestContent": "",     "debtorBalance": 0,    "creditBalance": 1000},
+    ]
+
+    def test_valid_details_pass(self):
+        result = _cert.validate_certificate_details(self._VALID)
+        assert len(result) == 2
+
+    # Rule 7 + Rule 1: pure empty rows are filtered, then must not be empty
+    def test_empty_list_raises(self):
+        with pytest.raises(ValueError, match="不能为空"):
+            _cert.validate_certificate_details([])
+
+    def test_all_empty_rows_raises(self):
+        rows = [
+            {"subjectId": None, "debtorBalance": 0, "creditBalance": None},
+            {"digestContent": "x"},
+        ]
+        with pytest.raises(ValueError, match="不能为空"):
+            _cert.validate_certificate_details(rows)
+
+    # Rule 7: pure empty rows are filtered out before further checks
+    def test_empty_rows_filtered_before_validation(self):
+        rows = [
+            {},  # pure empty — should be filtered
+            {"subjectId": 1, "digestContent": "memo", "debtorBalance": 500, "creditBalance": 0},
+            {"subjectId": 2, "digestContent": "",     "debtorBalance": 0,   "creditBalance": 500},
+        ]
+        result = _cert.validate_certificate_details(rows)
+        assert len(result) == 2  # empty row removed
+
+    # Rule 4: subject set but both balances zero
+    def test_subject_without_amount_raises(self):
+        rows = [
+            {"subjectId": 1, "digestContent": "memo", "debtorBalance": 0, "creditBalance": 0},
+            {"subjectId": 2, "digestContent": "",     "debtorBalance": 0, "creditBalance": 0},
+        ]
+        with pytest.raises(ValueError, match="有科目但借贷金额均为 0"):
+            _cert.validate_certificate_details(rows)
+
+    # Rule 5: amount set but no subject
+    def test_amount_without_subject_raises(self):
+        rows = [
+            {"digestContent": "memo", "debtorBalance": 100, "creditBalance": 0},
+            {"digestContent": "",     "debtorBalance": 0,   "creditBalance": 100},
+        ]
+        with pytest.raises(ValueError, match="有金额但没有科目"):
+            _cert.validate_certificate_details(rows)
+
+    # Rule 3: first valid entry must have digestContent
+    def test_first_entry_no_digest_raises(self):
+        rows = [
+            {"subjectId": 1, "digestContent": "",    "debtorBalance": 100, "creditBalance": 0},
+            {"subjectId": 2, "digestContent": "ok",  "debtorBalance": 0,   "creditBalance": 100},
+        ]
+        with pytest.raises(ValueError, match="第一条摘要不能为空"):
+            _cert.validate_certificate_details(rows)
+
+    # Rule 6: debit must equal credit
+    def test_unbalanced_raises(self):
+        rows = [
+            {"subjectId": 1, "digestContent": "memo", "debtorBalance": 1000, "creditBalance": 0},
+            {"subjectId": 2, "digestContent": "",     "debtorBalance": 0,    "creditBalance": 500},
+        ]
+        with pytest.raises(ValueError, match="借贷不平衡"):
+            _cert.validate_certificate_details(rows)
+
+    # Rule 6: floating-point amounts must still balance
+    def test_balanced_floats_pass(self):
+        rows = [
+            {"subjectId": 1, "digestContent": "memo", "debtorBalance": 333.33, "creditBalance": 0},
+            {"subjectId": 2, "digestContent": "",     "debtorBalance": 0,      "creditBalance": 333.33},
+        ]
+        result = _cert.validate_certificate_details(rows)
+        assert len(result) == 2
+
+    # Rule 6: slight floating-point mismatch still caught at 2dp
+    def test_unbalanced_by_cent_raises(self):
+        rows = [
+            {"subjectId": 1, "digestContent": "memo", "debtorBalance": 100.00, "creditBalance": 0},
+            {"subjectId": 2, "digestContent": "",     "debtorBalance": 0,      "creditBalance": 100.01},
+        ]
+        with pytest.raises(ValueError, match="借贷不平衡"):
+            _cert.validate_certificate_details(rows)
 
 
 # ── adjuvant.py tests ─────────────────────────────────────────────────

@@ -9,6 +9,93 @@ from typing import Optional
 from cli_anything.wukong.utils.wukong_backend import WukongClient
 
 
+def _to_float(value) -> float:
+    """Coerce a balance field to float; treat None/empty/falsy as 0."""
+    if not value:
+        return 0.0
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def validate_certificate_details(details: list[dict]) -> list[dict]:
+    """Validate and filter certificate details to match frontend rules.
+
+    Steps (mirrors Create.vue checkForm logic):
+      1. Filter pure empty rows (no subjectId AND both balances 0/None).
+      2. Raise if filtered list is empty.
+      3. For each remaining row:
+         - subjectId set but both balances 0 → error.
+         - non-zero balance but no subjectId → error.
+      4. Raise if no valid entry (subjectId + at least one non-zero balance).
+      5. Raise if first valid entry has no digestContent.
+      6. Raise if total debits ≠ total credits.
+
+    Returns the filtered details list (pure empty rows removed) on success.
+    Raises ValueError with a descriptive message on any failure.
+    """
+    # Rule 7: drop rows with neither subjectId nor any amount
+    filtered = [
+        row for row in details
+        if row.get("subjectId")
+        or _to_float(row.get("debtorBalance"))
+        or _to_float(row.get("creditBalance"))
+    ]
+
+    # Rule 1: must not be empty after filtering
+    if not filtered:
+        raise ValueError(
+            "certificateDetails 不能为空 — 至少需要一条有效分录 (at least one valid entry required)"
+        )
+
+    # Rules 4 & 5: per-row consistency check
+    for i, row in enumerate(filtered):
+        has_subject = bool(row.get("subjectId"))
+        debit = _to_float(row.get("debtorBalance"))
+        credit = _to_float(row.get("creditBalance"))
+        has_amount = debit != 0.0 or credit != 0.0
+
+        if has_subject and not has_amount:
+            raise ValueError(
+                f"第 {i + 1} 条：有科目但借贷金额均为 0 (row {i + 1}: subject set but both balances are zero)"
+            )
+        if has_amount and not has_subject:
+            raise ValueError(
+                f"第 {i + 1} 条：有金额但没有科目 (row {i + 1}: amount set but subjectId is missing)"
+            )
+
+    # Collect valid entries: subjectId + at least one non-zero balance
+    valid_entries = [
+        row for row in filtered
+        if row.get("subjectId")
+        and (_to_float(row.get("debtorBalance")) or _to_float(row.get("creditBalance")))
+    ]
+
+    # Rule 2: must have at least one valid entry
+    if not valid_entries:
+        raise ValueError(
+            "没有有效分录 — 每条分录必须有科目且借方或贷方金额非零 (no valid entry: each entry needs a subjectId with non-zero balance)"
+        )
+
+    # Rule 3: first valid entry must have digestContent
+    if not valid_entries[0].get("digestContent"):
+        raise ValueError(
+            "第一条摘要不能为空 (digestContent of the first valid entry must not be empty)"
+        )
+
+    # Rule 6: debits must equal credits (rounded to 2 dp to handle float imprecision)
+    total_debit = round(sum(_to_float(row.get("debtorBalance")) for row in valid_entries), 2)
+    total_credit = round(sum(_to_float(row.get("creditBalance")) for row in valid_entries), 2)
+    if total_debit != total_credit:
+        raise ValueError(
+            f"借贷不平衡：借方合计 {total_debit:.2f}，贷方合计 {total_credit:.2f} "
+            f"(debits {total_debit:.2f} ≠ credits {total_credit:.2f})"
+        )
+
+    return filtered
+
+
 def list_certificates(
     client: WukongClient,
     start_time: Optional[str] = None,
@@ -73,10 +160,11 @@ def add_certificate(
     Returns:
         Created certificate dict
     """
+    filtered = validate_certificate_details(details)
     body: dict = {
         "voucherId": voucher_id,
         "certificateTime": certificate_time,
-        "certificateDetails": details,
+        "certificateDetails": filtered,
     }
     if certificate_num is not None:
         body["certificateNum"] = certificate_num
@@ -92,12 +180,13 @@ def update_certificate(
     certificate_num: Optional[int] = None,
 ) -> dict:
     """Update an existing certificate."""
+    filtered = validate_certificate_details(details)
     # Snowflake IDs arrive as strings from the API; convert to int for Java Long
     body: dict = {
         "certificateId": int(certificate_id),
         "voucherId": int(voucher_id),
         "certificateTime": certificate_time,
-        "certificateDetails": details,
+        "certificateDetails": filtered,
     }
     if certificate_num is not None:
         body["certificateNum"] = certificate_num

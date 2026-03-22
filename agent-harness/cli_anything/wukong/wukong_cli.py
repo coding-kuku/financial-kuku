@@ -649,6 +649,9 @@ def certificate_add(ctx: click.Context, voucher_id: int, date: str, details_json
     client = _get_client(ctx)
     try:
         result = _cert.add_certificate(client, voucher_id, date, details)
+    except ValueError as e:
+        _err(ctx, str(e))
+        sys.exit(1)
     except WukongError as e:
         _handle_error(ctx, e)
         return
@@ -736,6 +739,9 @@ def certificate_update(ctx: click.Context, certificate_id: int, voucher_id: int,
     client = _get_client(ctx)
     try:
         _cert.update_certificate(client, certificate_id, voucher_id, date, details)
+    except ValueError as e:
+        _err(ctx, str(e))
+        sys.exit(1)
     except WukongError as e:
         _handle_error(ctx, e)
         return
