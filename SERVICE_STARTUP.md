@@ -332,7 +332,65 @@ redis-cli -a 123456 -h 127.0.0.1 -p 6379 ping
 
 ---
 
-## 10. 备注
+## 10. 临时公网访问（Cloudflare Tunnel）
+
+如果本机服务运行在 `127.0.0.1:44316`，且当前机器没有公网 IP，可直接使用 Cloudflare 的 quick tunnel 临时暴露到公网。
+
+### 安装
+
+当前本机已通过 Homebrew 安装：
+
+```bash
+brew install cloudflared
+```
+
+如果 PATH 未生效，也可直接使用绝对路径：
+
+```bash
+/opt/homebrew/opt/cloudflared/bin/cloudflared
+```
+
+### 启动临时公网隧道
+
+```bash
+cloudflared tunnel --url http://127.0.0.1:44316
+```
+
+或：
+
+```bash
+/opt/homebrew/opt/cloudflared/bin/cloudflared tunnel --url http://127.0.0.1:44316
+```
+
+启动后终端会返回一个 `https://*.trycloudflare.com` 的临时公网地址，外部可直接通过该地址访问本机服务。
+
+本次实际生成过的示例地址：
+
+```text
+https://explicit-holly-expand-actors.trycloudflare.com
+```
+
+> 该地址仅作示例，quick tunnel 每次启动后生成的域名通常都会变化。
+
+### 说明
+
+- 该方式**不需要公网机**
+- 适合临时演示、临时调试、短时间对外访问
+- 只要本地 `cloudflared` 进程还在运行，公网地址通常就可继续使用
+- 但 quick tunnel **没有稳定性保证，也没有固定有效时长承诺**
+- 如果本机休眠、断网、终端结束或进程退出，公网访问会中断
+
+### HTTPS 场景
+
+如果本地服务本身是 HTTPS，可改为：
+
+```bash
+cloudflared tunnel --url https://127.0.0.1:44316
+```
+
+---
+
+## 11. 备注
 
 - 当前启动日志中有 Elasticsearch warning，但**不影响基础登录和主要试用流程**
 - 如果后续涉及搜索、字段检索等功能异常，再补充启动 Elasticsearch 并完善其配置
