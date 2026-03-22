@@ -32,6 +32,8 @@ import org.apache.poi.util.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,6 +57,8 @@ import java.util.stream.Collectors;
 @Service("statementService")
 public class FinanceStatementServiceImpl extends BaseServiceImpl<FinanceStatementMapper, FinanceStatement>
         implements IFinanceStatementService, IFinanceInitService {
+
+    private static final String TRANSFER_VOUCHER_NAME = "转";
 
     @Autowired
     private IFinanceStatementSubjectService statementSubjectService;
@@ -852,6 +856,7 @@ public class FinanceStatementServiceImpl extends BaseServiceImpl<FinanceStatemen
      * 处理结转损益
      */
     private BigDecimal incomeStatement(FinanceStatement statement, String certificateTime, Integer type) {
+        ensureTransferStatementVoucher(statement);
         BigDecimal balance = new BigDecimal("0");
         FinanceSubjectIdsVO idsVO = financeSubjectService.queryIdsById(statement.getAdjustSubjectId());
         FinanceDetailAccountBO accountBO = new FinanceDetailAccountBO();
@@ -1041,7 +1046,25 @@ public class FinanceStatementServiceImpl extends BaseServiceImpl<FinanceStatemen
 
     }
 
+    private Long getTransferVoucherId() {
+        FinanceVoucher financeVoucher = financeVoucherService.lambdaQuery()
+                .eq(FinanceVoucher::getAccountId, AccountSet.getAccountSetId())
+                .eq(FinanceVoucher::getVoucherName, TRANSFER_VOUCHER_NAME)
+                .one();
+        if (financeVoucher == null) {
+            throw new CrmException(SystemCodeEnum.SYSTEM_ERROR);
+        }
+        return financeVoucher.getVoucherId();
+    }
+
+    private void ensureTransferStatementVoucher(FinanceStatement statement) {
+        if (statement != null && Integer.valueOf(2).equals(statement.getStatementType()) && statement.getVoucherId() == null) {
+            throw new CrmException(SystemCodeEnum.SYSTEM_ERROR);
+        }
+    }
+
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void init() {
         String str;
         ClassPathResource classPathResource = new ClassPathResource("excelTemplates/statementSave.json");
@@ -1069,14 +1092,7 @@ public class FinanceStatementServiceImpl extends BaseServiceImpl<FinanceStatemen
                 statement.setCreateUserId(UserUtil.getUserId());
                 statement.setCreateTime(LocalDateTime.now());
                 statement.setAccountId(AccountSet.getAccountSetId());
-                if (statement.getVoucherId() == null) {
-                    FinanceVoucher financeVoucher = financeVoucherService.lambdaQuery()
-                            .eq(FinanceVoucher::getAccountId, AccountSet.getAccountSetId())
-                            .eq(FinanceVoucher::getIsDefault, 1).one();
-                    if (financeVoucher != null) {
-                        statement.setVoucherId(financeVoucher.getVoucherId());
-                    }
-                }
+                statement.setVoucherId(getTransferVoucherId());
                 statement.setDigestContent("结转本期损益");
                 statement.setStatementId(BaseUtil.getNextId());
                 statements.add(statement);

@@ -298,3 +298,19 @@ java -jar finance/finance-web/target/finance-web-0.0.1-SNAPSHOT.jar
 - `AdminServiceImpl`（原本已是本地空实现，无远程调用）
 
 > **注**：`AccountSetAspect` 和 `ParamAspect` 在多轮调试中均有修改（见第 9 节），不再属于未改动文件。
+
+---
+
+## 项目任务划分
+
+本项目包含两个独立任务：
+
+### 任务一：离线部署改造（本文档）
+
+去除对悟空 ID 认证服务的所有依赖，使系统可以 100% 本地离线部署和运行。详见本文档各节。
+
+### 任务二：原系统 Bug 修复
+
+在改造过程中发现并修复的原有系统缺陷，与离线部署改造无关，均存在于 `opensource-baseline` 原始代码中。
+
+详见：[BUGFIXES.md](./BUGFIXES.md)
