@@ -48,13 +48,13 @@ _PERIOD_MAP = {"month": 1, "quarter": 2, "year": 3}
 
 
 def _get_client(ctx: click.Context) -> WukongClient:
-    """Build client from context (url + token from session)."""
+    """Build client from context (url + token from session).
+
+    URL priority: --url flag > WUKONG_URL env var > session file > default.
+    """
     url = ctx.obj.get("url") or _session.get_base_url()
-    sess = _session.load_session()
-    if ctx.obj.get("url"):
-        sess["base_url"] = ctx.obj["url"]
-    token = sess.get("token")
-    return WukongClient(base_url=sess.get("base_url", url), token=token)
+    token = _session.get_token()
+    return WukongClient(base_url=url, token=token)
 
 
 def _out(ctx: click.Context, data, text: str = ""):
@@ -248,6 +248,8 @@ def auth_login(ctx: click.Context, username: str, password: str):
         _handle_error(ctx, e)
         return
     _session.set_token(token)
+    if ctx.obj.get("url"):
+        _session.set_base_url(ctx.obj["url"])
     if ctx.obj.get("json"):
         _out(ctx, {"token": token, "username": username})
     else:
