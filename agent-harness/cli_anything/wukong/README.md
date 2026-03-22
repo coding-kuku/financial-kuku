@@ -66,10 +66,11 @@ cli-anything-wukong --url http://192.168.1.100:44316 status
 | `account create` | Create new account set |
 | `account init` | Initialize default subjects and voucher words |
 | `subject list` | List subjects / account codes (科目) |
-| `subject add` | Add a subject |
+| `subject add` | Add a subject (`--code`, `--name`, `--type` 1–5, `--direction` 1=借方/2=贷方 all required) |
 | `subject delete` | Delete subjects |
 | `voucher list` | List voucher words (凭证字) |
 | `voucher add <name>` | Add a voucher word |
+| `voucher delete <id>` | Delete a voucher word |
 | `certificate list` | List journal entries (凭证) |
 | `certificate get <id>` | Get certificate detail |
 | `certificate add` | Add a journal entry |
