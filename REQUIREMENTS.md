@@ -32,7 +32,7 @@
 
 **问题**：原有登录流程为：前端 → 重定向到 `id.72crm.com` → OAuth2 授权码 → POST `/adminUser/authorization` → 颁发 token。需替换为本地用户名密码登录。
 
-**认证机制**：系统内置的 `ParamAspect` 拦截所有 Controller 方法，读取请求头 `AUTH-TOKEN`，检查 `redis.exists(token + "_token")`，然后 `redis.get(token)` 取出 `UserInfo` 设入 ThreadLocal。登录接口只需按此格式写入 Redis 即可与现有拦截器兼容。
+**认证机制**：系统内置的 `ParamAspect` 拦截所有 Controller 方法，读取请求头 `AUTH-TOKEN`，检查 `redis.exists(token + "_token")`，然后 `redis.get(token)` 取出 `UserInfo`。单机离线模式下新增 `LocalUserStrategy.java` 作为本地 `UserStrategy` 实现，在启动时注册到 `UserUtil`，将 `UserInfo` 存入 ThreadLocal，使 `UserUtil.setUser/getUser/removeUser` 在本地模式下正常工作。登录接口只需按此格式写入 Redis，即可与现有拦截器和业务代码兼容。
 
 **实现**：新建 `LoginController.java`，提供以下接口：
 
@@ -55,7 +55,9 @@ redis.expire(token, expireSeconds)   // 设置 TTL
 redis.setex(token + "_token", expireSeconds, "1")  // 写入存活标记
 ```
 
-**文件**：`finance/finance-web/src/main/java/com/kakarote/finance/controller/LoginController.java`（新建）
+**文件**：
+- `finance/finance-web/src/main/java/com/kakarote/finance/controller/LoginController.java`（新建）
+- `finance/finance-web/src/main/java/com/kakarote/finance/config/LocalUserStrategy.java`（新建，本地 `UserStrategy` 实现）
 
 ---
 

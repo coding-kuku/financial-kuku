@@ -298,10 +298,12 @@ redis-cli -a 123456 -h 127.0.0.1 -p 6379 ping
 - 已新增本地登录接口（`/login`、`/adminUser/logout`、`/adminUser/queryLoginUser` 等）
 - 已新增本地登录页 `local-login.html`
 - 已新增本地用户表 `wk_admin_user`，默认账号 `admin/123456`
+- 已新增本地 `UserStrategy` 实现 `LocalUserStrategy`，用于将登录用户绑定到 `UserUtil` 的 ThreadLocal 上下文
 - 已将前端预编译 JS 中的 `id.72crm.com` 跳转替换为 `/local-login.html`
 
 **认证与账套上下文修复**
 - `ParamAspect`：修复空 UserInfo 绕过 null 检查的 bug，增加登录接口豁免
+- `LocalUserStrategy`：在单机离线模式下为 `UserUtil.setUser/getUser/removeUser` 提供本地 ThreadLocal 存储实现
 - `AccountSetAspect`：增加 Redis 兜底恢复用户信息，修复账套为空时的错误处理
 
 **SQL 兼容性修复**
