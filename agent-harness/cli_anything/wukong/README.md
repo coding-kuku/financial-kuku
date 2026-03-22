@@ -44,8 +44,8 @@ cli-anything-wukong account switch 1
 # List subjects (account codes)
 cli-anything-wukong subject list
 
-# List journal entries
-cli-anything-wukong certificate list --start 2024-01-01 --end 2024-12-31
+# List journal entries (--start/--end use yyyyMM format, not YYYY-MM-DD)
+cli-anything-wukong certificate list --start 202401 --end 202412
 
 # Financial reports (JSON output for agents)
 cli-anything-wukong --json report balance-sheet --period month --date 2024-06-30
@@ -100,7 +100,7 @@ All commands support `--json` for machine-readable output:
 ```bash
 cli-anything-wukong --json auth whoami
 cli-anything-wukong --json account list
-cli-anything-wukong --json certificate list --start 2024-01-01 --end 2024-06-30
+cli-anything-wukong --json certificate list --start 202401 --end 202406
 ```
 
 ## Session Storage

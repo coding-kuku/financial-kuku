@@ -6,7 +6,7 @@ Usage:
     cli-anything-wukong --json auth login -u admin -p 123456
     cli-anything-wukong account list
     cli-anything-wukong subject list
-    cli-anything-wukong certificate list --start 2024-01-01 --end 2024-12-31
+    cli-anything-wukong certificate list --start 202401 --end 202412
     cli-anything-wukong report balance-sheet --period month --date 2024-06-30
 """
 
@@ -576,15 +576,26 @@ def certificate():
 
 
 @certificate.command("list")
-@click.option("--start", default=None, help="Start date (YYYY-MM-DD)")
-@click.option("--end", default=None, help="End date (YYYY-MM-DD)")
+@click.option("--start", default=None, help="Start period yyyyMM (e.g. 202401)")
+@click.option("--end", default=None, help="End period yyyyMM (e.g. 202412)")
 @click.option("--voucher-id", type=int, default=None, help="Filter by voucher word ID")
 @click.option("--status", "check_status", type=int, default=None, help="0=unreviewed 1=reviewed")
 @click.option("--page", default=1, show_default=True, help="Page number")
 @click.option("--size", default=20, show_default=True, help="Page size")
 @click.pass_context
 def certificate_list(ctx: click.Context, start, end, voucher_id, check_status, page, size):
-    """List journal entry certificates."""
+    """List journal entry certificates.
+
+    --start and --end must be in yyyyMM format (e.g. 202401).
+    The backend compares periods as strings in that format.
+    """
+    _period_re = re.compile(r"^\d{4}(0[1-9]|1[0-2])$")
+    if start and not _period_re.match(start):
+        _err(ctx, f"--start must be yyyyMM (e.g. 202401), got: {start!r}")
+        sys.exit(1)
+    if end and not _period_re.match(end):
+        _err(ctx, f"--end must be yyyyMM (e.g. 202412), got: {end!r}")
+        sys.exit(1)
     client = _get_client(ctx)
     try:
         result = _cert.list_certificates(client, start, end, voucher_id, check_status, page, size)
