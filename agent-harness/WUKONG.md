@@ -47,7 +47,9 @@ Authentication failure returns code 401 or 302. Business errors return non-200 c
 | `account` | Account set management (账套) |
 | `subject` | Subject / account code management (科目) |
 | `voucher` | Voucher word management (凭证字) |
-| `certificate` | Journal entry management (凭证) |
+| `certificate` | Journal entry management (凭证) — list, get, add, update, delete, review |
+| `adjuvant` | Auxiliary accounting categories (辅助核算) — list, add, delete |
+| `statement` | Period closing (结账) — status, close, reopen |
 | `ledger` | Account book queries (账簿) |
 | `report` | Financial reports (报表) |
 | `status` | Server health check |
@@ -87,12 +89,48 @@ cli-anything-wukong certificate add \
   --voucher-id 1 \
   --date 2024-06-01 \
   --detail '[
-    {"subjectId": 1001, "digestContent": "收到货款", "debtorBalance": 1000, "ownerBalance": 0},
-    {"subjectId": 6001, "digestContent": "收到货款", "debtorBalance": 0, "ownerBalance": 1000}
+    {"subjectId": 1001, "digestContent": "收到货款", "debtorBalance": 1000, "creditBalance": 0},
+    {"subjectId": 6001, "digestContent": "收到货款", "debtorBalance": 0, "creditBalance": 1000}
+  ]'
+
+# Update an existing journal entry
+cli-anything-wukong certificate update \
+  --id 42 \
+  --voucher-id 1 \
+  --date 2024-06-15 \
+  --detail '[
+    {"subjectId": 1001, "digestContent": "收到货款(修正)", "debtorBalance": 1200, "creditBalance": 0},
+    {"subjectId": 6001, "digestContent": "收到货款(修正)", "debtorBalance": 0, "creditBalance": 1200}
   ]'
 
 # Review the certificate
 cli-anything-wukong certificate review 42 --approve
+```
+
+### Auxiliary Accounting (辅助核算)
+
+```bash
+# List all auxiliary accounting categories
+cli-anything-wukong adjuvant list
+
+# Add a custom category (label 7 = custom)
+cli-anything-wukong adjuvant add --name "研发项目A" --label project
+
+# Delete by ID
+cli-anything-wukong adjuvant delete 123
+```
+
+### Period Closing (结账)
+
+```bash
+# Check current period status
+cli-anything-wukong statement status
+
+# Close the current accounting period
+cli-anything-wukong statement close --date 2024-01-31
+
+# Reopen a period if corrections are needed
+cli-anything-wukong statement reopen --date 2024-01-31
 ```
 
 ### Financial Reports

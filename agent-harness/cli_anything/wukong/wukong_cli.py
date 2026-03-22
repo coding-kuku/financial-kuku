@@ -26,6 +26,8 @@ from cli_anything.wukong.core import (
     certificate as _cert,
     ledger as _ledger,
     report as _report,
+    adjuvant as _adjuvant,
+    statement as _statement,
 )
 from cli_anything.wukong.utils.wukong_backend import (
     WukongClient,
@@ -123,6 +125,13 @@ def repl(ctx: click.Context):
         "certificate add":   "Add a journal entry",
         "certificate get":   "Get a certificate by ID",
         "certificate review":"Review/approve certificates",
+        "certificate update":"Update an existing certificate",
+        "adjuvant list":     "List auxiliary accounting categories (辅助核算)",
+        "adjuvant add":      "Add an auxiliary accounting category",
+        "adjuvant delete":   "Delete an auxiliary accounting category",
+        "statement status":  "Query period closing status (结账状态)",
+        "statement close":   "Close the accounting period (结账)",
+        "statement reopen":  "Reopen a closed period (反结账)",
         "ledger detail":     "Detail ledger (明细账)",
         "ledger general":    "General ledger (总账)",
         "ledger balance":    "Subject balance table (科目余额表)",
@@ -704,6 +713,36 @@ def certificate_next_num(ctx: click.Context, voucher_id: int, date: str):
         _skin.status("Next certificate number", str(num))
 
 
+@certificate.command("update")
+@click.option("--id", "certificate_id", required=True, type=int, help="Certificate ID to update")
+@click.option("--voucher-id", required=True, type=int, help="Voucher word ID")
+@click.option("--date", required=True, help="Certificate date (YYYY-MM-DD)")
+@click.option("--detail", "details_json", required=True,
+              help='Details as JSON array: \'[{"subjectId":1,"digestContent":"memo","debtorBalance":1000,"ownerBalance":0}]\'')
+@click.pass_context
+def certificate_update(ctx: click.Context, certificate_id: int, voucher_id: int, date: str, details_json: str):
+    """Update an existing journal entry certificate.
+
+    Each detail line requires: subjectId, digestContent, debtorBalance, ownerBalance.
+    Total debits must equal total credits.
+    """
+    try:
+        details = json.loads(details_json)
+    except json.JSONDecodeError as e:
+        _skin.error(f"Invalid JSON for --detail: {e}")
+        sys.exit(1)
+    client = _get_client(ctx)
+    try:
+        _cert.update_certificate(client, certificate_id, voucher_id, date, details)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if ctx.obj.get("json"):
+        _out(ctx, {"updated": True, "certificate_id": certificate_id})
+    else:
+        _skin.success(f"Certificate {certificate_id} updated")
+
+
 # ── ledger group ───────────────────────────────────────────────────────
 
 
@@ -918,6 +957,160 @@ def report_cash_flow(ctx: click.Context, period: str, date: str, check: bool):
         if check_result:
             balanced = check_result.get("balanced", check_result.get("status"))
             _skin.success("Balanced") if balanced else _skin.warning(f"NOT balanced: {check_result}")
+
+
+# ── adjuvant group ─────────────────────────────────────────────────────
+
+_ADJUVANT_LABEL_NAMES = {
+    1: "客户(Customer)",
+    2: "供应商(Supplier)",
+    3: "职员(Employee)",
+    4: "项目(Project)",
+    5: "部门(Department)",
+    6: "存货(Inventory)",
+    7: "自定义(Custom)",
+}
+
+
+@cli.group()
+def adjuvant():
+    """Auxiliary accounting (辅助核算) management."""
+
+
+@adjuvant.command("list")
+@click.pass_context
+def adjuvant_list(ctx: click.Context):
+    """List all auxiliary accounting categories (辅助核算)."""
+    client = _get_client(ctx)
+    try:
+        items = _adjuvant.list_adjuvants(client)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if ctx.obj.get("json"):
+        _out(ctx, items)
+    else:
+        if not items:
+            _skin.warning("No auxiliary accounting categories found")
+            return
+        headers = ["ID", "Name", "Label", "Type"]
+        rows = []
+        for it in items:
+            label = it.get("label")
+            rows.append([
+                str(it.get("adjuvantId", "")),
+                it.get("adjuvantName", ""),
+                _ADJUVANT_LABEL_NAMES.get(label, str(label or "")),
+                "固定" if it.get("adjuvantType") == 1 else "自定义",
+            ])
+        _skin.table(headers, rows)
+
+
+@adjuvant.command("add")
+@click.option("--name", required=True, help="Category name (e.g. 部门)")
+@click.option("--label", type=int, default=7, show_default=True,
+              help="1=客户 2=供应商 3=职员 4=项目 5=部门 6=存货 7=自定义")
+@click.pass_context
+def adjuvant_add(ctx: click.Context, name: str, label: int):
+    """Add a new auxiliary accounting category."""
+    client = _get_client(ctx)
+    try:
+        _adjuvant.add_adjuvant(client, name, label)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if ctx.obj.get("json"):
+        _out(ctx, {"created": True, "name": name, "label": label})
+    else:
+        _skin.success(f"Added adjuvant: {name}")
+
+
+@adjuvant.command("delete")
+@click.argument("adjuvant_id", type=int)
+@click.pass_context
+def adjuvant_delete(ctx: click.Context, adjuvant_id: int):
+    """Delete an auxiliary accounting category by ID."""
+    client = _get_client(ctx)
+    try:
+        _adjuvant.delete_adjuvant(client, adjuvant_id)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if ctx.obj.get("json"):
+        _out(ctx, {"deleted": adjuvant_id})
+    else:
+        _skin.success(f"Deleted adjuvant {adjuvant_id}")
+
+
+# ── statement group ─────────────────────────────────────────────────────
+
+
+@cli.group()
+def statement():
+    """Period closing (结账) operations."""
+
+
+@statement.command("status")
+@click.pass_context
+def statement_status(ctx: click.Context):
+    """Query current period closing status (结账状态)."""
+    client = _get_client(ctx)
+    try:
+        result = _statement.query_statement(client)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if ctx.obj.get("json"):
+        _out(ctx, result)
+    else:
+        settle_time = result.get("settleTime", "")
+        number = result.get("number", 0)
+        statements = result.get("statements") or []
+        _skin.status("Last settlement", str(settle_time)[:19] if settle_time else "none")
+        _skin.status("Certificates this period", str(number))
+        if statements:
+            _skin.section("Statement items")
+            headers = ["Name", "Status"]
+            rows = []
+            for s in statements:
+                name = s.get("statementName") or s.get("name", "")
+                st = s.get("status") or s.get("statementStatus", "")
+                rows.append([name, str(st)])
+            _skin.table(headers, rows)
+
+
+@statement.command("close")
+@click.option("--date", required=True, help="Period date (YYYY-MM-DD or YYYY-MM-01)")
+@click.pass_context
+def statement_close(ctx: click.Context, date: str):
+    """Close (结账) the accounting period."""
+    client = _get_client(ctx)
+    try:
+        _statement.close_period(client, date)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if ctx.obj.get("json"):
+        _out(ctx, {"closed": True, "date": date})
+    else:
+        _skin.success(f"Period {date} closed")
+
+
+@statement.command("reopen")
+@click.option("--date", required=True, help="Period date (YYYY-MM-DD or YYYY-MM-01)")
+@click.pass_context
+def statement_reopen(ctx: click.Context, date: str):
+    """Reopen (反结账) a previously closed period."""
+    client = _get_client(ctx)
+    try:
+        _statement.reopen_period(client, date)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if ctx.obj.get("json"):
+        _out(ctx, {"reopened": True, "date": date})
+    else:
+        _skin.success(f"Period {date} reopened")
 
 
 # ── Entry point ────────────────────────────────────────────────────────

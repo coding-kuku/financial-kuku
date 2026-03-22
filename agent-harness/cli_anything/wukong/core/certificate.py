@@ -65,7 +65,7 @@ def add_certificate(
                 "subjectId": int,        # subject ID
                 "digestContent": str,    # memo/summary
                 "debtorBalance": float,  # debit amount (0 if credit)
-                "ownerBalance": float,   # credit amount (0 if debit)
+                "creditBalance": float,  # credit amount (0 if debit)
                 "adjuvantList": []       # optional auxiliary accounting items
             }
         certificate_num: Certificate number (auto-assigned if None)
@@ -92,9 +92,10 @@ def update_certificate(
     certificate_num: Optional[int] = None,
 ) -> dict:
     """Update an existing certificate."""
+    # Snowflake IDs arrive as strings from the API; convert to int for Java Long
     body: dict = {
-        "certificateId": certificate_id,
-        "voucherId": voucher_id,
+        "certificateId": int(certificate_id),
+        "voucherId": int(voucher_id),
         "certificateTime": certificate_time,
         "certificateDetails": details,
     }

@@ -4,8 +4,8 @@
 
 | File | Tests Planned |
 |------|--------------|
-| `test_core.py` | 28 unit tests |
-| `test_full_e2e.py` | 20 E2E + subprocess tests |
+| `test_core.py` | 37 unit tests |
+| `test_full_e2e.py` | 24 E2E + subprocess tests |
 
 ---
 
@@ -45,11 +45,24 @@ Unit tests use synthetic data, no running server required. All tests mock `Wukon
 - `test_add_subject` — posts correct body
 - `test_delete_subjects` — posts ids list
 
-### `certificate.py` (4 tests)
+### `certificate.py` (6 tests)
 - `test_list_certificates` — pagination and filters passed correctly
 - `test_get_certificate` — fetches by ID
 - `test_add_certificate` — posts body with details array
 - `test_review_certificates` — posts status flag
+- `test_update_certificate` — posts update with int IDs
+- `test_update_certificate_with_num` — optional certificateNum included
+
+### `adjuvant.py` (4 tests)
+- `test_list_adjuvants` — returns list
+- `test_add_adjuvant` — posts name and label
+- `test_add_adjuvant_default_label` — defaults to label=7
+- `test_delete_adjuvant` — posts adjuvantId
+
+### `statement.py` (3 tests)
+- `test_query_statement` — returns status dict
+- `test_close_period` — posts type=1
+- `test_reopen_period` — posts type=2
 
 ### `ledger.py` (2 tests)
 - `test_query_detail_account` — correct endpoint and body
@@ -94,6 +107,16 @@ E2E tests require the Wukong server running at `http://localhost:44316` with adm
 - `test_status_json` — `--json status` returns valid JSON with server_reachable
 - `test_auth_login_json` — `--json auth login` returns token
 - `test_account_list_json` — `--json account list` returns JSON array
+
+### Certificate Update Workflow — TestCertificateUpdate (1 test)
+- `test_add_and_update_certificate` — add a cert in a past month, update date and content, verify change, delete
+
+### Adjuvant Workflow — TestAdjuvantWorkflow (2 tests)
+- `test_list_adjuvants` — returns list of adjuvant categories
+- `test_add_and_delete_adjuvant` — roundtrip add/delete
+
+### Statement Workflow — TestStatementWorkflow (1 test)
+- `test_query_statement_status` — returns dict with settleTime and statements list
 
 ---
 
@@ -164,6 +187,15 @@ cli_anything/wukong/tests/test_core.py::TestCertificate::test_add_certificate PA
 cli_anything/wukong/tests/test_core.py::TestCertificate::test_review_certificates PASSED
 cli_anything/wukong/tests/test_core.py::TestLedger::test_query_detail_account PASSED
 cli_anything/wukong/tests/test_core.py::TestLedger::test_query_subject_balance_optional_filters PASSED
+cli_anything/wukong/tests/test_core.py::TestCertificateUpdate::test_update_certificate PASSED
+cli_anything/wukong/tests/test_core.py::TestCertificateUpdate::test_update_certificate_with_num PASSED
+cli_anything/wukong/tests/test_core.py::TestAdjuvant::test_list_adjuvants PASSED
+cli_anything/wukong/tests/test_core.py::TestAdjuvant::test_add_adjuvant PASSED
+cli_anything/wukong/tests/test_core.py::TestAdjuvant::test_add_adjuvant_default_label PASSED
+cli_anything/wukong/tests/test_core.py::TestAdjuvant::test_delete_adjuvant PASSED
+cli_anything/wukong/tests/test_core.py::TestStatement::test_query_statement PASSED
+cli_anything/wukong/tests/test_core.py::TestStatement::test_close_period PASSED
+cli_anything/wukong/tests/test_core.py::TestStatement::test_reopen_period PASSED
 cli_anything/wukong/tests/test_full_e2e.py::TestServerConnectivity::test_server_reachable PASSED
 cli_anything/wukong/tests/test_full_e2e.py::TestServerConnectivity::test_login_and_whoami PASSED
 cli_anything/wukong/tests/test_full_e2e.py::TestAccountSetWorkflow::test_list_accounts PASSED
@@ -184,10 +216,14 @@ cli_anything/wukong/tests/test_full_e2e.py::TestCLISubprocess::test_help PASSED
 cli_anything/wukong/tests/test_full_e2e.py::TestCLISubprocess::test_status_json PASSED
 cli_anything/wukong/tests/test_full_e2e.py::TestCLISubprocess::test_auth_login_json PASSED
 cli_anything/wukong/tests/test_full_e2e.py::TestCLISubprocess::test_account_list_json PASSED
-============================== 48 passed in 0.85s ==============================
+cli_anything/wukong/tests/test_full_e2e.py::TestCertificateUpdate::test_add_and_update_certificate PASSED
+cli_anything/wukong/tests/test_full_e2e.py::TestAdjuvantWorkflow::test_list_adjuvants PASSED
+cli_anything/wukong/tests/test_full_e2e.py::TestAdjuvantWorkflow::test_add_and_delete_adjuvant PASSED
+cli_anything/wukong/tests/test_full_e2e.py::TestStatementWorkflow::test_query_statement_status PASSED
+============================== 61 passed in 0.93s ==============================
 ```
 
-**Result: 48/48 passed (100%)**
+**Result: 61/61 passed (100%)**
 
 ### API Discoveries (documented during test development)
 
@@ -202,3 +238,6 @@ cli_anything/wukong/tests/test_full_e2e.py::TestCLISubprocess::test_account_list
 | Report periods | `balanceSheetReport` and `incomeStatementReport` require `fromPeriod`/`toPeriod` in `yyyyMM` format |
 | Snowflake IDs | API returns IDs as JSON strings; must `int()` before sending back as `List<Long>` |
 | `initFinanceData` | **Destructive** — deletes all rows from every finance table including `wk_finance_account_set` |
+| Certificate update | `creditBalance` is the correct credit field (not `ownerBalance`); update to current calendar month returns 500 (server bug) |
+| Adjuvant labels | 1=客户, 2=供应商, 3=职员, 4=项目, 5=部门, 6=存货, 7=自定义; `deleteById` takes `adjuvantId` as a query param |
+| Statement close | `/financeStatement/statement` with `type=1` closes, `type=2` reopens; `queryStatement` returns `settleTime` and `statements` list |

@@ -73,9 +73,16 @@ cli-anything-wukong --url http://192.168.1.100:44316 status
 | `certificate list` | List journal entries (凭证) |
 | `certificate get <id>` | Get certificate detail |
 | `certificate add` | Add a journal entry |
+| `certificate update` | Edit an existing journal entry |
 | `certificate delete` | Delete certificates |
 | `certificate review` | Approve/unapprove certificates |
 | `certificate next-num` | Get next certificate number |
+| `adjuvant list` | List auxiliary accounting categories (辅助核算) |
+| `adjuvant add` | Add an auxiliary accounting category |
+| `adjuvant delete` | Delete an auxiliary accounting category |
+| `statement status` | Query period closing status (结账状态) |
+| `statement close` | Close the current accounting period (结账) |
+| `statement reopen` | Reopen a closed period (反结账) |
 | `ledger detail` | Detail ledger (明细账) |
 | `ledger general` | General ledger (总账) |
 | `ledger balance` | Subject balance table (科目余额表) |

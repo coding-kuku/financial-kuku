@@ -25,6 +25,8 @@ from cli_anything.wukong.core import (
     certificate as _cert,
     ledger as _ledger,
     voucher_word as _voucher,
+    adjuvant as _adjuvant,
+    statement as _statement,
 )
 
 
@@ -330,3 +332,100 @@ class TestLedger:
         body = mock_post.call_args.kwargs.get("json", {})
         assert body["level"] == 1
         assert "subjectId" not in body
+
+
+# ── certificate update tests ───────────────────────────────────────────
+
+class TestCertificateUpdate:
+    def _mock(self, data):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"code": 200, "data": data, "msg": "ok"}
+        return mock_resp
+
+    def test_update_certificate(self, client):
+        details = [
+            {"subjectId": 1, "digestContent": "修改", "debtorBalance": 500, "creditBalance": 0},
+            {"subjectId": 2, "digestContent": "修改", "debtorBalance": 0, "creditBalance": 500},
+        ]
+        with patch("requests.post", return_value=self._mock(None)) as mock_post:
+            _cert.update_certificate(client, 42, 1, "2024-06-15", details)
+        body = mock_post.call_args.kwargs.get("json", {})
+        assert body["certificateId"] == 42
+        assert body["voucherId"] == 1
+        assert body["certificateTime"] == "2024-06-15"
+        assert len(body["certificateDetails"]) == 2
+
+    def test_update_certificate_with_num(self, client):
+        with patch("requests.post", return_value=self._mock(None)) as mock_post:
+            _cert.update_certificate(client, 10, 2, "2024-03-01", [], certificate_num=5)
+        body = mock_post.call_args.kwargs.get("json", {})
+        assert body["certificateNum"] == 5
+
+
+# ── adjuvant.py tests ─────────────────────────────────────────────────
+
+class TestAdjuvant:
+    def _mock(self, data):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"code": 200, "data": data, "msg": "ok"}
+        return mock_resp
+
+    def test_list_adjuvants(self, client):
+        items = [
+            {"adjuvantId": "1", "adjuvantName": "部门", "label": 5, "adjuvantType": 1},
+        ]
+        with patch("requests.post", return_value=self._mock(items)):
+            result = _adjuvant.list_adjuvants(client)
+        assert len(result) == 1
+        assert result[0]["adjuvantName"] == "部门"
+
+    def test_add_adjuvant(self, client):
+        with patch("requests.post", return_value=self._mock(None)) as mock_post:
+            _adjuvant.add_adjuvant(client, "研发中心", label=5)
+        body = mock_post.call_args.kwargs.get("json", {})
+        assert body["adjuvantName"] == "研发中心"
+        assert body["label"] == 5
+
+    def test_add_adjuvant_default_label(self, client):
+        with patch("requests.post", return_value=self._mock(None)) as mock_post:
+            _adjuvant.add_adjuvant(client, "自定义维度")
+        body = mock_post.call_args.kwargs.get("json", {})
+        assert body["label"] == 7  # default = 自定义
+
+    def test_delete_adjuvant(self, client):
+        with patch("requests.post", return_value=self._mock(None)) as mock_post:
+            _adjuvant.delete_adjuvant(client, 99)
+        call_params = mock_post.call_args.kwargs.get("params", {})
+        assert call_params.get("adjuvantId") == 99
+
+
+# ── statement.py tests ────────────────────────────────────────────────
+
+class TestStatement:
+    def _mock(self, data):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"code": 200, "data": data, "msg": "ok"}
+        return mock_resp
+
+    def test_query_statement(self, client):
+        vo = {"settleTime": "2024-01-31T00:00:00", "number": 5, "accountId": 1, "statements": []}
+        with patch("requests.post", return_value=self._mock(vo)):
+            result = _statement.query_statement(client)
+        assert result["number"] == 5
+
+    def test_close_period(self, client):
+        with patch("requests.post", return_value=self._mock(None)) as mock_post:
+            _statement.close_period(client, "2024-01-31")
+        body = mock_post.call_args.kwargs.get("json", {})
+        assert body["type"] == 1
+        assert body["certificateTime"] == "2024-01-31"
+
+    def test_reopen_period(self, client):
+        with patch("requests.post", return_value=self._mock(None)) as mock_post:
+            _statement.reopen_period(client, "2024-01-31")
+        body = mock_post.call_args.kwargs.get("json", {})
+        assert body["type"] == 2
+        assert body["certificateTime"] == "2024-01-31"

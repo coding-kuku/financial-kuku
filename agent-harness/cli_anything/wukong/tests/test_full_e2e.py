@@ -31,6 +31,8 @@ from cli_anything.wukong.core import (
     certificate as _cert,
     ledger as _ledger,
     report as _report,
+    adjuvant as _adjuvant,
+    statement as _statement,
 )
 
 # ── Config ─────────────────────────────────────────────────────────────
@@ -381,3 +383,108 @@ class TestCLISubprocess:
         print(f"\n  Account sets: {len(data)}")
         for a in data:
             print(f"    {a}")
+
+
+# ── Certificate update workflow ────────────────────────────────────────
+
+class TestCertificateUpdate:
+    def test_add_and_update_certificate(self, live_client, active_account_id):
+        """Add a certificate in a past month, then update its content and verify.
+
+        NOTE: The Wukong server returns 500 when updating a certificate whose
+        target date falls in the current calendar month. Use past months only.
+        """
+        words = _voucher.list_voucher_words(live_client)
+        subjects = _subject.list_subjects(live_client)
+        if not words:
+            pytest.skip("No voucher words available")
+        if len(subjects) < 2:
+            pytest.skip("Need at least 2 subjects for a balanced entry")
+
+        s1, s2 = subjects[0], subjects[1]
+        voucher_id = words[0]["voucherId"]
+
+        # Use a past month to avoid server-side bug that returns 500 for
+        # the current calendar month.
+        details = [
+            {
+                "subjectId": s1["subjectId"],
+                "digestContent": "update test debit",
+                "debtorBalance": 200.0,
+                "creditBalance": 0.0,
+            },
+            {
+                "subjectId": s2["subjectId"],
+                "digestContent": "update test credit",
+                "debtorBalance": 0.0,
+                "creditBalance": 200.0,
+            },
+        ]
+
+        result = _cert.add_certificate(live_client, voucher_id, "2026-01-10", details)
+        cert_id = result.get("certificateId") if isinstance(result, dict) else None
+        assert cert_id is not None
+        print(f"\n  Created certificate for update test: ID={cert_id}")
+
+        updated_details = [
+            {
+                "subjectId": s1["subjectId"],
+                "digestContent": "update test debit (edited)",
+                "debtorBalance": 200.0,
+                "creditBalance": 0.0,
+            },
+            {
+                "subjectId": s2["subjectId"],
+                "digestContent": "update test credit (edited)",
+                "debtorBalance": 0.0,
+                "creditBalance": 200.0,
+            },
+        ]
+
+        _cert.update_certificate(live_client, cert_id, voucher_id, "2026-01-20", updated_details)
+        print(f"  Updated certificate {cert_id} date to 2026-01-20")
+
+        # Verify date was changed
+        refetched = _cert.get_certificate(live_client, cert_id)
+        cert_time = str(refetched.get("certificateTime", ""))
+        assert "01-20" in cert_time or "2026-01-20" in cert_time, f"Date not updated: {cert_time}"
+
+        # Clean up
+        _cert.delete_certificates(live_client, [cert_id])
+        print(f"  Deleted certificate {cert_id}")
+
+
+# ── Adjuvant workflow ──────────────────────────────────────────────────
+
+class TestAdjuvantWorkflow:
+    def test_list_adjuvants(self, live_client, active_account_id):
+        items = _adjuvant.list_adjuvants(live_client)
+        assert isinstance(items, list)
+        print(f"\n  Adjuvant categories: {[it.get('adjuvantName') for it in items]}")
+
+    def test_add_and_delete_adjuvant(self, live_client, active_account_id):
+        test_name = "CLI测试辅助核算"
+        _adjuvant.add_adjuvant(live_client, test_name, label=7)
+
+        items = _adjuvant.list_adjuvants(live_client)
+        found = next((it for it in items if it.get("adjuvantName") == test_name), None)
+        assert found is not None, f"Adjuvant '{test_name}' not found after creation"
+        print(f"\n  Created adjuvant: [{found.get('adjuvantId')}] {test_name}")
+
+        _adjuvant.delete_adjuvant(live_client, found["adjuvantId"])
+        items_after = _adjuvant.list_adjuvants(live_client)
+        still_there = any(it.get("adjuvantName") == test_name for it in items_after)
+        assert not still_there
+        print(f"  Deleted adjuvant: {test_name}")
+
+
+# ── Statement workflow ─────────────────────────────────────────────────
+
+class TestStatementWorkflow:
+    def test_query_statement_status(self, live_client, active_account_id):
+        result = _statement.query_statement(live_client)
+        assert isinstance(result, dict)
+        print(f"\n  Statement status — number: {result.get('number')}")
+        print(f"  settleTime: {result.get('settleTime')}")
+        statements = result.get("statements") or []
+        print(f"  Statement items: {len(statements)}")
