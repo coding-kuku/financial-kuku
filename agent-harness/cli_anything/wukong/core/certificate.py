@@ -223,18 +223,19 @@ def get_next_certificate_num(
 
     Args:
         voucher_id: Voucher word ID
-        certificate_time: Date as yyyyMM (e.g. "202603") or YYYY-MM-DD
-            (auto-normalized to yyyyMM — the API requires this format)
+        certificate_time: Date in YYYY-MM-DD format (e.g. "2024-06-01")
 
     Returns:
         {"certificateNum": N}
     """
-    # API requires yyyyMM format for BeanUtil to leave LocalDateTime null,
-    # which lets the SQL date filter fall through safely.
-    period = certificate_time[:7].replace("-", "") if "-" in certificate_time else certificate_time
+    # BeanUtil on the backend maps this String field to LocalDateTime.
+    # It can parse "YYYY-MM-DD HH:mm:ss" but not "yyyyMM".
+    # We pass the first day of the month as a full datetime string.
+    year_month = certificate_time[:7]  # "2024-06"
+    full_dt = f"{year_month}-01 00:00:00"
     return client.post("/financeCertificate/queryNumByTime", {
         "voucherId": voucher_id,
-        "certificateTime": period,
+        "certificateTime": full_dt,
     }) or {}
 
 

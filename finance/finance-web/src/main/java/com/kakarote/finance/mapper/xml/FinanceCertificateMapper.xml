@@ -1456,6 +1456,7 @@
             and certificate_id != #{data.certificateId}
         </if>
         order by certificate_num desc
+        limit 1
     </select>
     <select id="queryCertificate" resultType="com.kakarote.finance.entity.PO.FinanceCertificate">
         select *

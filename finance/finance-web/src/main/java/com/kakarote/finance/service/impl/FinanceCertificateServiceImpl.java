@@ -2878,6 +2878,7 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
     @Override
     public JSONObject queryNumByTime(FinanceCertificateBO financeCertificateBO) {
         FinanceCertificate certificate = BeanUtil.copyProperties(financeCertificateBO, FinanceCertificate.class);
+        certificate.setAccountId(AccountSet.getAccountSetId());
         FinanceCertificate financeCertificate = getBaseMapper().queryByTime(certificate);
         JSONObject json = new JSONObject();
         if (financeCertificate == null) {
