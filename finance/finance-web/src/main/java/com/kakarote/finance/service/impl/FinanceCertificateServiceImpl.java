@@ -1319,6 +1319,29 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
                         debtorEndBalance = BigDecimal.ZERO;
                     }
                 }
+                // 父科目可能同时有直接记账（不通过子科目），需将自身余额叠加进汇总
+                // (Parent subject may be directly booked in addition to its children)
+                JSONObject ownInitial = this.filterBalanceBySubjectId(initialBalance, subjectId);
+                JSONObject ownCurrent = this.filterBalanceBySubjectId(currentBalance, subjectId);
+                JSONObject ownYear    = this.filterBalanceBySubjectId(yearBalance, subjectId);
+                JSONObject ownEnd     = this.filterBalanceBySubjectId(endBalance, subjectId);
+                if (ownCurrent != null) {
+                    debtorCurrentBalance = debtorCurrentBalance.add(Optional.ofNullable(ownCurrent.getBigDecimal("debtorBalance")).orElse(BigDecimal.ZERO));
+                    creditCurrentBalance = creditCurrentBalance.add(Optional.ofNullable(ownCurrent.getBigDecimal("creditBalance")).orElse(BigDecimal.ZERO));
+                }
+                if (ownYear != null) {
+                    debtorYearBalance = debtorYearBalance.add(Optional.ofNullable(ownYear.getBigDecimal("debtorBalance")).orElse(BigDecimal.ZERO));
+                    creditYearBalance = creditYearBalance.add(Optional.ofNullable(ownYear.getBigDecimal("creditBalance")).orElse(BigDecimal.ZERO));
+                }
+                // initialBalance/endBalance 已按科目方向折算为单字段，直接叠加
+                if (ownInitial != null) {
+                    debtorInitialBalance = debtorInitialBalance.add(Optional.ofNullable(ownInitial.getBigDecimal("debtorBalance")).orElse(BigDecimal.ZERO));
+                    creditInitialBalance = creditInitialBalance.add(Optional.ofNullable(ownInitial.getBigDecimal("creditBalance")).orElse(BigDecimal.ZERO));
+                }
+                if (ownEnd != null) {
+                    debtorEndBalance = debtorEndBalance.add(Optional.ofNullable(ownEnd.getBigDecimal("debtorBalance")).orElse(BigDecimal.ZERO));
+                    creditEndBalance = creditEndBalance.add(Optional.ofNullable(ownEnd.getBigDecimal("creditBalance")).orElse(BigDecimal.ZERO));
+                }
             } else {
                 // 计算子科目的科目余额
                 JSONObject initial = this.filterBalanceBySubjectId(initialBalance, subjectId);
