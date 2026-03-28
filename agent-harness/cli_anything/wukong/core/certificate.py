@@ -108,9 +108,10 @@ def list_certificates(
     """List certificates with pagination.
 
     Args:
-        start_time: Start period filter in yyyyMM format (e.g. "202401") —
-            the SQL compares DATE_FORMAT(certificate_time,'%Y%m') against this string directly
-        end_time: End period filter in yyyyMM format (e.g. "202412")
+        start_time: Start period in yyyyMM format (e.g. "202401") —
+            the SQL compares DATE_FORMAT(certificate_time,'%Y%m') against this string directly.
+            CLI converts YYYY-MM input to this format before calling.
+        end_time: End period in yyyyMM format (e.g. "202412")
         voucher_id: Filter by voucher word ID
         check_status: 0=unreviewed, 1=reviewed
         page_no: Page number (1-based)

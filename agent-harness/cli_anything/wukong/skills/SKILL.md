@@ -7,6 +7,17 @@ description: "CLI for Wukong Accounting (悟空财务) — manage journal entrie
 
 Command-line interface for **Wukong Accounting (悟空财务)**, a Chinese double-entry bookkeeping system.
 
+## Date Format Convention
+
+Two formats are used — pick the right one for each context:
+
+| Format | Example | Used for |
+|--------|---------|---------|
+| `YYYY-MM` | `2024-06` | Period ranges: `ledger --start/--end`, `report --date`, `certificate list --start/--end` |
+| `YYYY-MM-DD` | `2024-06-01` | Full dates: `certificate add/update --date`, `statement close/reopen --date` |
+
+The CLI converts `YYYY-MM` to the internal `yyyyMM` format before calling the API. **Never pass `yyyyMM` (e.g. `202401`) or `YYYY-MM-DD` to period parameters** — the CLI will reject them.
+
 ## Prerequisites
 
 1. Wukong Accounting server running on port 44316 (or custom URL)
@@ -42,7 +53,7 @@ cli-anything-wukong auth whoami                        # Current user info
 ```bash
 cli-anything-wukong account list                       # All accessible account sets
 cli-anything-wukong account switch <id>                # Switch active account set
-cli-anything-wukong account create --name "My Co" --company "My Co Ltd" --start 2024-01
+cli-anything-wukong account create --company "My Co Ltd" --start 2024-01
 cli-anything-wukong account init                       # Initialize default subjects/voucher words
 ```
 
@@ -64,32 +75,32 @@ cli-anything-wukong voucher delete <id>
 
 ### certificate — Journal Entries (凭证)
 ```bash
-cli-anything-wukong certificate list --start 2024-01-01 --end 2024-12-31
+cli-anything-wukong certificate list --start 2024-01 --end 2024-12
 cli-anything-wukong certificate list --voucher-id 1 --status 0   # unreviewed
 cli-anything-wukong certificate get <id>
 cli-anything-wukong certificate next-num --voucher-id 1 --date 2024-06-01
 cli-anything-wukong certificate add \
   --voucher-id 1 --date 2024-06-01 \
-  --detail '[{"subjectId":101,"digestContent":"memo","debtorBalance":1000,"ownerBalance":0},
-             {"subjectId":201,"digestContent":"memo","debtorBalance":0,"ownerBalance":1000}]'
+  --detail '[{"subjectId":101,"digestContent":"memo","debtorBalance":1000,"creditBalance":0},
+             {"subjectId":201,"digestContent":"memo","debtorBalance":0,"creditBalance":1000}]'
 cli-anything-wukong certificate review <id1> <id2> --approve
 cli-anything-wukong certificate delete <id1> <id2>
 ```
 
 ### ledger — Account Books (账簿)
 ```bash
-cli-anything-wukong ledger detail --subject-id 123 --start 2024-01-01 --end 2024-06-30
-cli-anything-wukong ledger general --subject-id 123 --start 2024-01-01 --end 2024-12-31
-cli-anything-wukong ledger balance --start 2024-01-01 --end 2024-12-31 --level 1
-cli-anything-wukong ledger multi-column --subject-id 123 --start 2024-01-01 --end 2024-06-30
+cli-anything-wukong ledger detail --subject-id 123 --start 2024-01 --end 2024-06
+cli-anything-wukong ledger general --subject-id 123 --start 2024-01 --end 2024-12
+cli-anything-wukong ledger balance --start 2024-01 --end 2024-12 --level 1
+cli-anything-wukong ledger multi-column --subject-id 123 --start 2024-01 --end 2024-06
 ```
 
 ### report — Financial Reports (报表)
 ```bash
-cli-anything-wukong report balance-sheet --period month --date 2024-06-30
-cli-anything-wukong report balance-sheet --period quarter --date 2024-09-30 --check
-cli-anything-wukong report income --period month --date 2024-06-30
-cli-anything-wukong report cash-flow --period year --date 2024-12-31
+cli-anything-wukong report balance-sheet --period month --date 2024-06
+cli-anything-wukong report balance-sheet --period quarter --date 2024-09 --check
+cli-anything-wukong report income --period month --date 2024-06
+cli-anything-wukong report cash-flow --period year --date 2024-12
 ```
 
 Period options: `month`, `quarter`, `year`
@@ -111,10 +122,10 @@ cli-anything-wukong --json auth login -u admin -p 123456
 cli-anything-wukong --json account list
 # [{"accountSetId": 1, "accountName": "Default", ...}]
 
-cli-anything-wukong --json certificate list --start 2024-01-01 --end 2024-12-31
+cli-anything-wukong --json certificate list --start 2024-01 --end 2024-12
 # {"total": 42, "records": [...]}
 
-cli-anything-wukong --json report balance-sheet --period month --date 2024-06-30
+cli-anything-wukong --json report balance-sheet --period month --date 2024-06
 # {"rows": [...]}
 
 cli-anything-wukong --json status

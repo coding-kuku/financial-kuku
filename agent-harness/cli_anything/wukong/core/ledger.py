@@ -34,8 +34,8 @@ def query_detail_account(
 
     Args:
         subject_id: Subject ID
-        start_time: Period start (YYYY-MM-DD)
-        end_time: Period end (YYYY-MM-DD)
+        start_time: Period start in yyyyMM format (e.g. "202101")
+        end_time: Period end in yyyyMM format (e.g. "202112")
 
     Returns:
         List of transaction rows
@@ -65,8 +65,9 @@ def query_subject_balance(
     """Query subject balance table (科目余额表).
 
     Args:
-        start_time: Period start (YYYY-MM-DD)
-        end_time: Period end (YYYY-MM-DD)
+        start_time: Period start in yyyyMM format (e.g. "202101") —
+            the backend parses this with SIMPLE_MONTH_PATTERN, so yyyyMM is required.
+        end_time: Period end in yyyyMM format (e.g. "202112")
         subject_id: Optional subject filter
         level: Optional subject level filter (1, 2, 3...)
 

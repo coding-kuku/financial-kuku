@@ -6,8 +6,18 @@ Usage:
     cli-anything-wukong --json auth login -u admin -p 123456
     cli-anything-wukong account list
     cli-anything-wukong subject list
-    cli-anything-wukong certificate list --start 202401 --end 202412
-    cli-anything-wukong report balance-sheet --period month --date 2024-06-30
+    cli-anything-wukong certificate list --start 2024-01 --end 2024-12
+    cli-anything-wukong report balance-sheet --period month --date 2024-06
+
+Date format convention
+----------------------
+Two formats are used at the CLI boundary:
+
+* YYYY-MM   — year-month precision (period inputs): ledger ranges, report
+              dates, certificate list filters.  The CLI converts these to
+              yyyyMM internally before sending to the API.
+* YYYY-MM-DD — full date (day precision): certificate entry dates,
+              statement close/reopen dates.
 """
 
 import json
@@ -44,6 +54,24 @@ _skin = ReplSkin("wukong", version=_VERSION)
 # ── Period type mapping ────────────────────────────────────────────────
 
 _PERIOD_MAP = {"month": 1, "quarter": 2, "year": 3}
+
+# ── Date helpers ───────────────────────────────────────────────────────
+
+_PERIOD_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")   # YYYY-MM
+_DATE_RE   = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-\d{2}$")  # YYYY-MM-DD
+
+
+def _validate_period(ctx: click.Context, name: str, value: str) -> str:
+    """Validate and return a YYYY-MM period string, or abort."""
+    if not _PERIOD_RE.match(value):
+        _err(ctx, f"{name} must be YYYY-MM (e.g. 2024-01), got: {value!r}")
+        sys.exit(1)
+    return value
+
+
+def _to_yyyymm(period: str) -> str:
+    """Convert YYYY-MM → yyyyMM (e.g. '2024-01' → '202401')."""
+    return period.replace("-", "")
 
 # ── Context helpers ────────────────────────────────────────────────────
 
@@ -354,26 +382,26 @@ def account_switch(ctx: click.Context, account_id: int):
 
 
 @account.command("create")
-@click.option("--name", required=True, help="Account set name")
 @click.option("--company", required=True, help="Company name")
-@click.option("--start", required=True, help="Start date (YYYY-MM)")
-@click.option("--currency", default="CNY", show_default=True, help="Currency code")
+@click.option("--start", required=True, help="Accounting start month (YYYY-MM)")
 @click.pass_context
-def account_create(ctx: click.Context, name: str, company: str, start: str, currency: str):
-    """Create a new account set."""
+def account_create(ctx: click.Context, company: str, start: str):
+    """Create and activate a new account set."""
     if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", start):
-        _err(ctx, f"--start must be in YYYY-MM format (e.g. 2024-01), got: {start!r}")
+        _err(ctx, f"--start must be YYYY-MM (e.g. 2024-01), got: {start!r}")
         sys.exit(1)
+    start_date = start + "-01"
     client = _get_client(ctx)
     try:
-        _account.create_account(client, name, company, start, currency)
+        account_id = _account.create_account(client, company)
+        _account.configure_account(client, account_id, start_date)
     except WukongError as e:
         _handle_error(ctx, e)
         return
     if ctx.obj.get("json"):
-        _out(ctx, {"created": True, "name": name})
+        _out(ctx, {"created": True, "account_id": account_id, "company": company})
     else:
-        _skin.success(f"Created account set: {name}")
+        _skin.success(f"Created account set: {company} (id={account_id})")
 
 
 @account.command("init")
@@ -576,8 +604,8 @@ def certificate():
 
 
 @certificate.command("list")
-@click.option("--start", default=None, help="Start period yyyyMM (e.g. 202401)")
-@click.option("--end", default=None, help="End period yyyyMM (e.g. 202412)")
+@click.option("--start", default=None, help="Start period YYYY-MM (e.g. 2024-01)")
+@click.option("--end", default=None, help="End period YYYY-MM (e.g. 2024-12)")
 @click.option("--voucher-id", type=int, default=None, help="Filter by voucher word ID")
 @click.option("--status", "check_status", type=int, default=None, help="0=unreviewed 1=reviewed")
 @click.option("--page", default=1, show_default=True, help="Page number")
@@ -586,16 +614,14 @@ def certificate():
 def certificate_list(ctx: click.Context, start, end, voucher_id, check_status, page, size):
     """List journal entry certificates.
 
-    --start and --end must be in yyyyMM format (e.g. 202401).
-    The backend compares periods as strings in that format.
+    --start and --end use YYYY-MM format (e.g. 2024-01).
     """
-    _period_re = re.compile(r"^\d{4}(0[1-9]|1[0-2])$")
-    if start and not _period_re.match(start):
-        _err(ctx, f"--start must be yyyyMM (e.g. 202401), got: {start!r}")
-        sys.exit(1)
-    if end and not _period_re.match(end):
-        _err(ctx, f"--end must be yyyyMM (e.g. 202412), got: {end!r}")
-        sys.exit(1)
+    if start:
+        _validate_period(ctx, "--start", start)
+        start = _to_yyyymm(start)
+    if end:
+        _validate_period(ctx, "--end", end)
+        end = _to_yyyymm(end)
     client = _get_client(ctx)
     try:
         result = _cert.list_certificates(client, start, end, voucher_id, check_status, page, size)
@@ -791,8 +817,8 @@ def ledger():
 
 
 def _ledger_date_options(f):
-    f = click.option("--start", required=True, help="Start date (YYYY-MM-DD)")(f)
-    f = click.option("--end", required=True, help="End date (YYYY-MM-DD)")(f)
+    f = click.option("--start", required=True, help="Start period YYYY-MM (e.g. 2021-01)")(f)
+    f = click.option("--end", required=True, help="End period YYYY-MM (e.g. 2021-12)")(f)
     return f
 
 
@@ -815,9 +841,12 @@ def _print_ledger_table(ctx, rows: list):
 @click.pass_context
 def ledger_detail(ctx: click.Context, subject_id: int, start: str, end: str):
     """Query detail ledger (明细账) for a subject."""
+    _validate_period(ctx, "--start", start)
+    _validate_period(ctx, "--end", end)
+    start_p, end_p = _to_yyyymm(start), _to_yyyymm(end)
     client = _get_client(ctx)
     try:
-        rows = _ledger.query_detail_account(client, subject_id, start, end)
+        rows = _ledger.query_detail_account(client, subject_id, start_p, end_p)
     except WukongError as e:
         _handle_error(ctx, e)
         return
@@ -834,9 +863,12 @@ def ledger_detail(ctx: click.Context, subject_id: int, start: str, end: str):
 @click.pass_context
 def ledger_general(ctx: click.Context, subject_id: int, start: str, end: str):
     """Query general ledger (总账) — summarized monthly balances."""
+    _validate_period(ctx, "--start", start)
+    _validate_period(ctx, "--end", end)
+    start_p, end_p = _to_yyyymm(start), _to_yyyymm(end)
     client = _get_client(ctx)
     try:
-        rows = _ledger.query_general_ledger(client, subject_id, start, end)
+        rows = _ledger.query_general_ledger(client, subject_id, start_p, end_p)
     except WukongError as e:
         _handle_error(ctx, e)
         return
@@ -854,9 +886,12 @@ def ledger_general(ctx: click.Context, subject_id: int, start: str, end: str):
 @click.pass_context
 def ledger_balance(ctx: click.Context, start: str, end: str, subject_id, level):
     """Query subject balance table (科目余额表)."""
+    _validate_period(ctx, "--start", start)
+    _validate_period(ctx, "--end", end)
+    start_p, end_p = _to_yyyymm(start), _to_yyyymm(end)
     client = _get_client(ctx)
     try:
-        rows = _ledger.query_subject_balance(client, start, end, subject_id, level)
+        rows = _ledger.query_subject_balance(client, start_p, end_p, subject_id, level)
     except WukongError as e:
         _handle_error(ctx, e)
         return
@@ -873,9 +908,12 @@ def ledger_balance(ctx: click.Context, start: str, end: str, subject_id, level):
 @click.pass_context
 def ledger_multi_column(ctx: click.Context, subject_id: int, start: str, end: str):
     """Query multi-column ledger (多栏账)."""
+    _validate_period(ctx, "--start", start)
+    _validate_period(ctx, "--end", end)
+    start_p, end_p = _to_yyyymm(start), _to_yyyymm(end)
     client = _get_client(ctx)
     try:
-        result = _ledger.query_multi_column(client, subject_id, start, end)
+        result = _ledger.query_multi_column(client, subject_id, start_p, end_p)
     except WukongError as e:
         _handle_error(ctx, e)
         return
@@ -898,7 +936,7 @@ def report():
 def _report_options(f):
     f = click.option("--period", type=click.Choice(["month", "quarter", "year"]),
                      default="month", show_default=True, help="Period type")(f)
-    f = click.option("--date", required=True, help="Period date (YYYY-MM-DD)")(f)
+    f = click.option("--date", required=True, help="Period date YYYY-MM (e.g. 2024-06)")(f)
     return f
 
 
@@ -923,6 +961,7 @@ def _print_report_table(rows: list):
 @click.pass_context
 def report_balance_sheet(ctx: click.Context, period: str, date: str, check: bool):
     """Balance sheet (资产负债表)."""
+    _validate_period(ctx, "--date", date)
     client = _get_client(ctx)
     period_type = _PERIOD_MAP[period]
     try:
@@ -950,6 +989,7 @@ def report_balance_sheet(ctx: click.Context, period: str, date: str, check: bool
 @click.pass_context
 def report_income(ctx: click.Context, period: str, date: str, check: bool):
     """Income statement / P&L (利润表)."""
+    _validate_period(ctx, "--date", date)
     client = _get_client(ctx)
     period_type = _PERIOD_MAP[period]
     try:
@@ -977,6 +1017,7 @@ def report_income(ctx: click.Context, period: str, date: str, check: bool):
 @click.pass_context
 def report_cash_flow(ctx: click.Context, period: str, date: str, check: bool):
     """Cash flow statement (现金流量表)."""
+    _validate_period(ctx, "--date", date)
     client = _get_client(ctx)
     period_type = _PERIOD_MAP[period]
     try:

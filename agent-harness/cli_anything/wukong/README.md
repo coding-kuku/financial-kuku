@@ -28,6 +28,13 @@ cli-anything-wukong --help
 cli-anything-wukong status
 ```
 
+## Date Format Convention
+
+| Format | Example | Used for |
+|--------|---------|---------|
+| `YYYY-MM` | `2024-06` | Period inputs: `ledger --start/--end`, `report --date`, `certificate list --start/--end` |
+| `YYYY-MM-DD` | `2024-06-01` | Full dates: `certificate add/update --date`, `statement close/reopen --date` |
+
 ## Basic Usage
 
 ```bash
@@ -44,11 +51,11 @@ cli-anything-wukong account switch 1
 # List subjects (account codes)
 cli-anything-wukong subject list
 
-# List journal entries (--start/--end use yyyyMM format, not YYYY-MM-DD)
-cli-anything-wukong certificate list --start 202401 --end 202412
+# List journal entries (--start/--end use YYYY-MM format)
+cli-anything-wukong certificate list --start 2024-01 --end 2024-12
 
 # Financial reports (JSON output for agents)
-cli-anything-wukong --json report balance-sheet --period month --date 2024-06-30
+cli-anything-wukong --json report balance-sheet --period month --date 2024-06
 
 # Custom server URL
 cli-anything-wukong --url http://192.168.1.100:44316 status
@@ -100,7 +107,7 @@ All commands support `--json` for machine-readable output:
 ```bash
 cli-anything-wukong --json auth whoami
 cli-anything-wukong --json account list
-cli-anything-wukong --json certificate list --start 202401 --end 202406
+cli-anything-wukong --json certificate list --start 2024-01 --end 2024-06
 ```
 
 ## Session Storage

@@ -39,6 +39,15 @@ All endpoints use `POST`. Response format:
 
 Authentication failure returns code 401 or 302. Business errors return non-200 codes.
 
+## Date Format Convention
+
+| Format | Example | Used for |
+|--------|---------|---------|
+| `YYYY-MM` | `2024-06` | Period ranges: `ledger --start/--end`, `report --date`, `certificate list --start/--end` |
+| `YYYY-MM-DD` | `2024-06-01` | Full dates: `certificate add/update --date`, `statement close/reopen --date` |
+
+The CLI validates and converts `YYYY-MM` to `yyyyMM` internally before sending to the API.
+
 ## CLI Command Groups
 
 | Group | Description |
@@ -113,8 +122,9 @@ cli-anything-wukong certificate review 42 --approve
 # List all auxiliary accounting categories
 cli-anything-wukong adjuvant list
 
-# Add a custom category (label 7 = custom)
-cli-anything-wukong adjuvant add --name "研发项目A" --label project
+# Add a custom category (label 4 = project)
+# Label values: 1=客户 2=供应商 3=职员 4=项目 5=部门 6=存货 7=自定义
+cli-anything-wukong adjuvant add --name "研发项目A" --label 4
 
 # Delete by ID
 cli-anything-wukong adjuvant delete 123
@@ -137,23 +147,23 @@ cli-anything-wukong statement reopen --date 2024-01-31
 
 ```bash
 # Monthly balance sheet
-cli-anything-wukong report balance-sheet --period month --date 2024-06-30 --check
+cli-anything-wukong report balance-sheet --period month --date 2024-06 --check
 
 # Income statement Q2
-cli-anything-wukong report income --period quarter --date 2024-06-30
+cli-anything-wukong report income --period quarter --date 2024-06
 
 # JSON output for agent consumption
-cli-anything-wukong --json report balance-sheet --period month --date 2024-06-30
+cli-anything-wukong --json report balance-sheet --period month --date 2024-06
 ```
 
 ### Account Books
 
 ```bash
 # Detail ledger for subject 1001 (cash)
-cli-anything-wukong ledger detail --subject-id 123 --start 2024-01-01 --end 2024-12-31
+cli-anything-wukong ledger detail --subject-id 123 --start 2024-01 --end 2024-12
 
 # Subject balance table
-cli-anything-wukong ledger balance --start 2024-01-01 --end 2024-12-31 --level 1
+cli-anything-wukong ledger balance --start 2024-01 --end 2024-12 --level 1
 ```
 
 ## Required Dependency
