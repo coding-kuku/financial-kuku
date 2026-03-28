@@ -630,7 +630,7 @@ def certificate_list(ctx: click.Context, start, end, voucher_id, check_status, p
                 r.get("voucherName", ""),
                 str(r.get("certificateNum", "")),
                 str(r.get("debtorBalance", "")),
-                str(r.get("ownerBalance", "")),
+                str(r.get("creditBalance", "")),
                 "reviewed" if r.get("checkStatus") == 1 else "pending",
             ])
         _skin.table(headers, rows)
@@ -665,7 +665,7 @@ def certificate_get(ctx: click.Context, certificate_id: int):
                     d.get("subjectName", ""),
                     d.get("digestContent", ""),
                     str(d.get("debtorBalance") or ""),
-                    str(d.get("ownerBalance") or ""),
+                    str(d.get("creditBalance") or ""),
                 ])
             _skin.table(headers, rows)
 
@@ -674,12 +674,12 @@ def certificate_get(ctx: click.Context, certificate_id: int):
 @click.option("--voucher-id", required=True, type=int, help="Voucher word ID")
 @click.option("--date", required=True, help="Certificate date (YYYY-MM-DD)")
 @click.option("--detail", "details_json", required=True,
-              help='Details as JSON array: \'[{"subjectId":1,"digestContent":"memo","debtorBalance":1000,"ownerBalance":0}]\'')
+              help='Details as JSON array: \'[{"subjectId":1,"digestContent":"memo","debtorBalance":1000,"creditBalance":0}]\'')
 @click.pass_context
 def certificate_add(ctx: click.Context, voucher_id: int, date: str, details_json: str):
     """Add a new journal entry certificate.
 
-    Each detail line requires: subjectId, digestContent, debtorBalance, ownerBalance.
+    Each detail line requires: subjectId, digestContent, debtorBalance, creditBalance.
     Total debits must equal total credits.
     """
     try:
@@ -764,12 +764,12 @@ def certificate_next_num(ctx: click.Context, voucher_id: int, date: str):
 @click.option("--voucher-id", required=True, type=int, help="Voucher word ID")
 @click.option("--date", required=True, help="Certificate date (YYYY-MM-DD)")
 @click.option("--detail", "details_json", required=True,
-              help='Details as JSON array: \'[{"subjectId":1,"digestContent":"memo","debtorBalance":1000,"ownerBalance":0}]\'')
+              help='Details as JSON array: \'[{"subjectId":1,"digestContent":"memo","debtorBalance":1000,"creditBalance":0}]\'')
 @click.pass_context
 def certificate_update(ctx: click.Context, certificate_id: int, voucher_id: int, date: str, details_json: str):
     """Update an existing journal entry certificate.
 
-    Each detail line requires: subjectId, digestContent, debtorBalance, ownerBalance.
+    Each detail line requires: subjectId, digestContent, debtorBalance, creditBalance.
     Total debits must equal total credits.
     """
     try:
