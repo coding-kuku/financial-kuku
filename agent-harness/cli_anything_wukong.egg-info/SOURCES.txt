@@ -4,11 +4,13 @@ cli_anything/wukong/__main__.py
 cli_anything/wukong/wukong_cli.py
 cli_anything/wukong/core/__init__.py
 cli_anything/wukong/core/account.py
+cli_anything/wukong/core/adjuvant.py
 cli_anything/wukong/core/auth.py
 cli_anything/wukong/core/certificate.py
 cli_anything/wukong/core/ledger.py
 cli_anything/wukong/core/report.py
 cli_anything/wukong/core/session.py
+cli_anything/wukong/core/statement.py
 cli_anything/wukong/core/subject.py
 cli_anything/wukong/core/voucher_word.py
 cli_anything/wukong/skills/SKILL.md

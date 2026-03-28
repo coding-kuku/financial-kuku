@@ -1,0 +1,453 @@
+{
+  "account_id": "2036268933673287680",
+  "dataset_basis": "202101记账凭证.xls 标准答案导入结果",
+  "checks": {
+    "certificate_list_api": {
+      "totalRow": 53,
+      "backendPageSize": 15,
+      "page1_count": 15,
+      "page2_count": 15,
+      "page1_first5": [
+        "收_1",
+        "付_1",
+        "转_1",
+        "收_2",
+        "付_2"
+      ],
+      "page2_first5": [
+        "收_1",
+        "付_1",
+        "转_1",
+        "收_2",
+        "付_2"
+      ],
+      "page_no_effective": true
+    },
+    "ledger_detail:1002 银行存款": {
+      "ok": true,
+      "entry_count": 44,
+      "ending": {
+        "digestContent": "本年累计",
+        "balanceDirection": "借",
+        "balance": 10856.99,
+        "debtorBalance": 91105.0,
+        "creditBalance": 85148.85
+      },
+      "sample_entries": [
+        {
+          "date": "2021-01-07",
+          "certificateNum": "付_1",
+          "digest": "支付建行单位结算卡年费",
+          "debtorBalance": 0.0,
+          "creditBalance": 10.0,
+          "balance": 4890.84
+        },
+        {
+          "date": "2021-01-14",
+          "certificateNum": "付_2",
+          "digest": "支付1月份社保费",
+          "debtorBalance": 0.0,
+          "creditBalance": 2079.7,
+          "balance": 2811.14
+        },
+        {
+          "date": "2021-01-21",
+          "certificateNum": "收_1",
+          "digest": "收到蓬江区世祥商行采购室内用具款",
+          "debtorBalance": 18235.0,
+          "creditBalance": 0.0,
+          "balance": 21046.14
+        },
+        {
+          "date": "2021-01-21",
+          "certificateNum": "收_2",
+          "digest": "收到蓬江区世祥商行服装采购款",
+          "debtorBalance": 72870.0,
+          "creditBalance": 0.0,
+          "balance": 93916.14
+        },
+        {
+          "date": "2021-01-24",
+          "certificateNum": "付_3",
+          "digest": "采购大人短袖衣服（上海衫城贸易有限公司）96281379",
+          "debtorBalance": 0.0,
+          "creditBalance": 22099.0,
+          "balance": 71817.14
+        }
+      ]
+    },
+    "ledger_general:1002 银行存款": {
+      "ok": true,
+      "row_count": 0,
+      "rows": []
+    },
+    "ledger_detail:1122 应收账款": {
+      "ok": true,
+      "entry_count": 2,
+      "ending": {
+        "digestContent": "本年累计",
+        "balanceDirection": "借",
+        "balance": -91105.0,
+        "debtorBalance": 0.0,
+        "creditBalance": 91105.0
+      },
+      "sample_entries": [
+        {
+          "date": "2021-01-21",
+          "certificateNum": "收_1",
+          "digest": "收到蓬江区世祥商行采购室内用具款",
+          "debtorBalance": 0.0,
+          "creditBalance": 18235.0,
+          "balance": -18235.0
+        },
+        {
+          "date": "2021-01-21",
+          "certificateNum": "收_2",
+          "digest": "收到蓬江区世祥商行服装采购款",
+          "debtorBalance": 0.0,
+          "creditBalance": 72870.0,
+          "balance": -91105.0
+        }
+      ]
+    },
+    "ledger_general:1122 应收账款": {
+      "ok": true,
+      "row_count": 0,
+      "rows": []
+    },
+    "ledger_detail:1405 库存商品": {
+      "ok": true,
+      "entry_count": 5,
+      "ending": {
+        "digestContent": "本年累计",
+        "balanceDirection": "借",
+        "balance": 99565.37,
+        "debtorBalance": 57861.0,
+        "creditBalance": 0.0
+      },
+      "sample_entries": [
+        {
+          "date": "2021-01-31",
+          "certificateNum": "转_3",
+          "digest": "从东莞米纯购卫衣200件",
+          "debtorBalance": 3292.0,
+          "creditBalance": 0.0,
+          "balance": 44996.37
+        },
+        {
+          "date": "2021-01-31",
+          "certificateNum": "转_4",
+          "digest": "从义乌弗雷娅购卫衣625件",
+          "debtorBalance": 22050.0,
+          "creditBalance": 0.0,
+          "balance": 67046.37
+        },
+        {
+          "date": "2021-01-31",
+          "certificateNum": "转_5",
+          "digest": "从东莞纯衣购T恤200件",
+          "debtorBalance": 2060.0,
+          "creditBalance": 0.0,
+          "balance": 69106.37
+        },
+        {
+          "date": "2021-01-31",
+          "certificateNum": "转_6",
+          "digest": "从上海衫城购T恤1550件",
+          "debtorBalance": 22099.0,
+          "creditBalance": 0.0,
+          "balance": 91205.37
+        },
+        {
+          "date": "2021-01-31",
+          "certificateNum": "转_7",
+          "digest": "从义乌超宏购烫画纸1520张2021-01-26No.11557948",
+          "debtorBalance": 8360.0,
+          "creditBalance": 0.0,
+          "balance": 99565.37
+        }
+      ]
+    },
+    "ledger_general:1405 库存商品": {
+      "ok": true,
+      "row_count": 0,
+      "rows": []
+    },
+    "ledger_detail:2202 应付账款": {
+      "ok": true,
+      "entry_count": 45,
+      "ending": {
+        "digestContent": "本年累计",
+        "balanceDirection": "贷",
+        "balance": -24690.65,
+        "debtorBalance": 82551.65,
+        "creditBalance": 57861.0
+      },
+      "sample_entries": [
+        {
+          "date": "2021-01-24",
+          "certificateNum": "付_3",
+          "digest": "采购大人短袖衣服（上海衫城贸易有限公司）96281379",
+          "debtorBalance": 22099.0,
+          "creditBalance": 0.0,
+          "balance": -22099.0
+        },
+        {
+          "date": "2021-01-26",
+          "certificateNum": "付_4",
+          "digest": "采购烫画（义乌市超宏烫画有限公司）11557948",
+          "debtorBalance": 8360.0,
+          "creditBalance": 0.0,
+          "balance": -30459.0
+        },
+        {
+          "date": "2021-01-26",
+          "certificateNum": "付_5",
+          "digest": "采购童装短袖衣服（广东莱纯服装有限公司）17774649",
+          "debtorBalance": 2060.0,
+          "creditBalance": 0.0,
+          "balance": -32519.0
+        },
+        {
+          "date": "2021-01-27",
+          "certificateNum": "付_7",
+          "digest": "采购钥匙扣（义乌市郎嘉商贸有限公司）54602836",
+          "debtorBalance": 589.0,
+          "creditBalance": 0.0,
+          "balance": -33108.0
+        },
+        {
+          "date": "2021-01-28",
+          "certificateNum": "付_8",
+          "digest": "采购大人卫衣（义乌市弗雷娅服装有限公司）31327961",
+          "debtorBalance": 22050.0,
+          "creditBalance": 0.0,
+          "balance": -55158.0
+        }
+      ]
+    },
+    "ledger_general:2202 应付账款": {
+      "ok": true,
+      "row_count": 0,
+      "rows": []
+    },
+    "ledger_detail:3103 本年利润": {
+      "ok": true,
+      "entry_count": 1,
+      "ending": {
+        "digestContent": "本年累计",
+        "balanceDirection": "贷",
+        "balance": -12921.64,
+        "debtorBalance": 12921.64,
+        "creditBalance": 0.0
+      },
+      "sample_entries": [
+        {
+          "date": "2021-01-31",
+          "certificateNum": "转_9",
+          "digest": "1月  结转损益",
+          "debtorBalance": 12921.64,
+          "creditBalance": 0.0,
+          "balance": -12921.64
+        }
+      ]
+    },
+    "ledger_general:3103 本年利润": {
+      "ok": true,
+      "row_count": 0,
+      "rows": []
+    },
+    "ledger_detail:5601 销售费用": {
+      "ok": true,
+      "entry_count": 2,
+      "ending": {
+        "digestContent": "本年累计",
+        "balanceDirection": "平",
+        "balance": 0.0,
+        "debtorBalance": 6200.0,
+        "creditBalance": 6200.0
+      },
+      "sample_entries": [
+        {
+          "date": "2021-01-31",
+          "certificateNum": "转_2",
+          "digest": "计提1月份工资",
+          "debtorBalance": 6200.0,
+          "creditBalance": 0.0,
+          "balance": 6200.0
+        },
+        {
+          "date": "2021-01-31",
+          "certificateNum": "转_9",
+          "digest": "1月  结转损益",
+          "debtorBalance": 0.0,
+          "creditBalance": 6200.0,
+          "balance": 0.0
+        }
+      ]
+    },
+    "ledger_general:5601 销售费用": {
+      "ok": true,
+      "row_count": 0,
+      "rows": []
+    },
+    "ledger_detail:5602 管理费用": {
+      "ok": true,
+      "entry_count": 4,
+      "ending": {
+        "digestContent": "本年累计",
+        "balanceDirection": "平",
+        "balance": 0.0,
+        "debtorBalance": 6691.74,
+        "creditBalance": 6691.74
+      },
+      "sample_entries": [
+        {
+          "date": "2021-01-31",
+          "certificateNum": "转_1",
+          "digest": "计提1月份社保费",
+          "debtorBalance": 1391.74,
+          "creditBalance": 0.0,
+          "balance": 1391.74
+        },
+        {
+          "date": "2021-01-31",
+          "certificateNum": "转_2",
+          "digest": "计提1月份工资",
+          "debtorBalance": 5300.0,
+          "creditBalance": 0.0,
+          "balance": 6691.74
+        },
+        {
+          "date": "2021-01-31",
+          "certificateNum": "转_9",
+          "digest": "1月  结转损益",
+          "debtorBalance": 0.0,
+          "creditBalance": 5300.0,
+          "balance": 1391.74
+        },
+        {
+          "date": "2021-01-31",
+          "certificateNum": "转_9",
+          "digest": "1月  结转损益",
+          "debtorBalance": 0.0,
+          "creditBalance": 1391.74,
+          "balance": 0.0
+        }
+      ]
+    },
+    "ledger_general:5602 管理费用": {
+      "ok": true,
+      "row_count": 0,
+      "rows": []
+    },
+    "ledger_balance_level1": {
+      "ok": false,
+      "error": "API error 500: 网络错误，请稍候再试"
+    },
+    "report_balance_sheet": {
+      "ok": true,
+      "row_count": 58,
+      "nonzero_rows": [],
+      "check_error": "API error 500: 网络错误，请稍候再试"
+    },
+    "report_income": {
+      "ok": true,
+      "row_count": 31,
+      "nonzero_rows": [],
+      "check": {
+        "notContains": [],
+        "balanced": false
+      }
+    },
+    "report_cash_flow": {
+      "ok": true,
+      "row_count": 25,
+      "nonzero_rows": [
+        {
+          "name": "销售产成品、商品、提供劳务收到的现金",
+          "monthValue": 91105.0,
+          "yearValue": 91105.0
+        },
+        {
+          "name": "购买原材料、商品、接受劳务支付的现金",
+          "monthValue": 82551.65,
+          "yearValue": 82551.65
+        },
+        {
+          "name": "支付的职工薪酬",
+          "monthValue": 1391.74,
+          "yearValue": 1391.74
+        },
+        {
+          "name": "支付的税费",
+          "monthValue": -12.4,
+          "yearValue": -12.4
+        },
+        {
+          "name": "支付其他与经营活动有关的现金",
+          "monthValue": 10108.26,
+          "yearValue": 10108.26
+        },
+        {
+          "name": "经营活动产生的现金流量净额",
+          "monthValue": -2934.25,
+          "yearValue": -2934.25
+        },
+        {
+          "name": "分配利润支付的现金",
+          "monthValue": 12921.64,
+          "yearValue": 12921.64
+        },
+        {
+          "name": "筹资活动产生的现金流量净额",
+          "monthValue": -12921.64,
+          "yearValue": -12921.64
+        },
+        {
+          "name": "四、现金净增加额",
+          "monthValue": -15855.89,
+          "yearValue": -15855.89
+        },
+        {
+          "name": "加：期初现金余额",
+          "monthValue": 5360.84,
+          "yearValue": 5360.84
+        },
+        {
+          "name": "五、期末现金余额",
+          "monthValue": -10495.05,
+          "yearValue": -10495.05
+        }
+      ],
+      "check_error": "API error 500: 网络错误，请稍候再试"
+    },
+    "statement_status": {
+      "ok": true,
+      "settleTime": "2021-01-01 00:00:00",
+      "certificateNum": null,
+      "items": [
+        {
+          "statementName": "转出未交增值税",
+          "isEndOver": 0,
+          "certificateCount": 0
+        },
+        {
+          "statementName": "计提地税",
+          "isEndOver": 0,
+          "certificateCount": 0
+        },
+        {
+          "statementName": "计提所得税",
+          "isEndOver": 0,
+          "certificateCount": 0
+        },
+        {
+          "statementName": "结转损益",
+          "isEndOver": 0,
+          "certificateCount": 0
+        }
+      ]
+    }
+  }
+}

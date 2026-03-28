@@ -1,0 +1,5 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Mon Mar 23 00:32:56 CST 2026
+https\://repo.maven.apache.org/maven2/.lastUpdated=1774197176953
+http\://0.0.0.0/.error=Could not transfer artifact com.squareup.okhttp3\:okhttp-bom\:pom\:4.10.0 from/to maven-default-http-blocker (http\://0.0.0.0/)\: Blocked mirror for repositories\: [jcenter-snapshots (http\://oss.jfrog.org/artifactory/oss-snapshot-local/, default, releases+snapshots)]
+@default-maven-default-http-blocker-http\://0.0.0.0/.lastUpdated=1774197176777

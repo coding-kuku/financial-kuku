@@ -1,0 +1,5 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Mon Mar 23 00:33:22 CST 2026
+https\://repo.maven.apache.org/maven2/.lastUpdated=1774197202895
+http\://0.0.0.0/.error=Could not transfer artifact org.mockito\:mockito-core\:jar\:4.5.1 from/to maven-default-http-blocker (http\://0.0.0.0/)\: Blocked mirror for repositories\: [jcenter-snapshots (http\://oss.jfrog.org/artifactory/oss-snapshot-local/, default, releases+snapshots)]
+@default-maven-default-http-blocker-http\://0.0.0.0/.lastUpdated=1774197189479

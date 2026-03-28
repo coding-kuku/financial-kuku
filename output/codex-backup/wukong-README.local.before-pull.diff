@@ -1,0 +1,76 @@
+diff --git a/agent-harness/cli_anything/wukong/README.md b/agent-harness/cli_anything/wukong/README.md
+index 823deb8..1b1c124 100644
+--- a/agent-harness/cli_anything/wukong/README.md
++++ b/agent-harness/cli_anything/wukong/README.md
+@@ -44,8 +44,8 @@ cli-anything-wukong account switch 1
+ # List subjects (account codes)
+ cli-anything-wukong subject list
+ 
+-# List journal entries
+-cli-anything-wukong certificate list --start 2024-01-01 --end 2024-12-31
++# List journal entries for accounting periods 202401 through 202412
++cli-anything-wukong certificate list --start 202401 --end 202412
+ 
+ # Financial reports (JSON output for agents)
+ cli-anything-wukong --json report balance-sheet --period month --date 2024-06-30
+@@ -54,6 +54,51 @@ cli-anything-wukong --json report balance-sheet --period month --date 2024-06-30
+ cli-anything-wukong --url http://192.168.1.100:44316 status
+ ```
+ 
++## Period Format Rules
++
++Different command groups use different time formats. Do not assume every command accepts `YYYY-MM-DD`.
++
++### `certificate list`
++
++`certificate list --start/--end` uses **accounting periods** in `YYYYMM` format.
++
++Correct:
++
++```bash
++# January 2021 only
++cli-anything-wukong certificate list --start 202101 --end 202101
++
++# Full year 2024
++cli-anything-wukong certificate list --start 202401 --end 202412
++```
++
++Incorrect:
++
++```bash
++# This command may return misleading empty results
++cli-anything-wukong certificate list --start 2021-01-01 --end 2021-01-31
++```
++
++Reason: the backend filters voucher periods using `DATE_FORMAT(certificate_time, '%Y%m')`, so this command is period-based, not natural-date-based.
++
++### `report` commands
++
++`report balance-sheet`, `report income`, and `report cash-flow` use a **period end date** in `YYYY-MM-DD` format.
++
++```bash
++cli-anything-wukong report balance-sheet --period month --date 2021-01-31
++cli-anything-wukong report income --period month --date 2021-01-31
++cli-anything-wukong report cash-flow --period month --date 2021-01-31
++```
++
++### `ledger` commands
++
++`ledger detail`, `ledger general`, and `ledger balance` use natural dates in `YYYY-MM-DD` format.
++
++```bash
++cli-anything-wukong ledger balance --start 2021-01-01 --end 2021-01-31
++```
++
+ ## Command Groups
+ 
+ | Command | Description |
+@@ -99,7 +144,7 @@ All commands support `--json` for machine-readable output:
+ ```bash
+ cli-anything-wukong --json auth whoami
+ cli-anything-wukong --json account list
+-cli-anything-wukong --json certificate list --start 2024-01-01 --end 2024-06-30
++cli-anything-wukong --json certificate list --start 202401 --end 202406
+ ```
+ 
+ ## Session Storage

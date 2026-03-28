@@ -1,0 +1,154 @@
+─────────────────────────────────────────────────────────────────────────
+
+• 科目和凭证字已经证明账套初始化是完整的，而且能看到明确的辅助核算绑定，
+  比如 1122 应收账款 绑定了“客户”。现在进入核心核验：抽查已有凭证、拉科目
+  余额表，再跑资产负债表和利润表，看系统链路是不是闭合。
+
+✔ You approved codex to run ./.venv-wukong/bin/cli-anything-wukong --json
+  certificate list --start 202101... this time
+
+• Ran ./.venv-wukong/bin/cli-anything-wukong --json certificate list
+  │ --start 202101 --end 202112
+  └ {
+      "total": 15,
+    … +1493 lines
+      ]
+    }
+
+✔ You approved codex to run ./.venv-wukong/bin/cli-anything-wukong --json
+  ledger balance --start 2021-01-... this time
+
+• Ran ./.venv-wukong/bin/cli-anything-wukong --json ledger balance
+  │ --start 2021-01-01 --end 2021-12-31 --level 1
+  └ {"error": "API error 500: 网络错误，请稍候再试"}
+
+✔ You approved codex to run ./.venv-wukong/bin/cli-anything-wukong --json
+  report balance-sheet --period m... this time
+
+• Ran ./.venv-wukong/bin/cli-anything-wukong --json report balance-sheet
+  │ --period month --date 2021-12-31 --check
+  └ {"error": "API error 500: 网络错误，请稍候再试"}
+
+─────────────────────────────────────────────────────────────────────────
+
+• 我已经拿到凭证明细和利润表，但余额表与资产负债表校验接口返回了 API 500:
+  网络错误，请稍候再试。这更像后端接口级问题，不是 CLI 链路断开，所以我先
+  补做两件事：一是看服务端日志定位 500 的真实原因，二是换用更贴近现有数据
+  的查询参数再验证一次，排除时间区间触发的问题。
+
+✔ You approved codex to run ./.venv-wukong/bin/cli-anything-wukong --json
+  report balance-sheet --period m... this time
+
+• Ran ./.venv-wukong/bin/cli-anything-wukong --json report balance-sheet
+  │ --period month --date 2021-01-31
+  └ {
+      "rows": [
+    … +1509 lines
+      ]
+    }
+
+✔ You approved codex to run ./.venv-wukong/bin/cli-anything-wukong --json
+  certificate get 203681357433631... this time
+
+  │ --subject-id 2036268933799116800 --start 2021-01-01 --end
+  │ 2021-01-31
+  └ [
+      {
+    … +797 lines
+      }
+    ]
+
+─────────────────────────────────────────────────────────────────────────
+
+• 我在把两个 500 拆开看。现在基本可以确认有一部分不是“系统挂了”，而是“接
+  口/CLI 参数约定不一致”：服务端日志明确报了 Parse [2021-01-01] with
+  format [yyyyMM] error!。我再补一个 yyyyMM 版本的余额表调用，把这个问题
+  定性清楚，然后给你一份可执行的测试结论。
+  数处理，另一条是 balance-sheet --check 的后端计算异常。我会同时看 CLI
+  请求构造和 Java 服务端对应方法，把“是 CLI 传错、后端接口脆弱，还是账套
+  数据触发了 bug”区分清楚。
+
+• Explored
+  └ Read wukong_cli.py, ledger.py, report.py
+    Search ledger balance|querySubjectBalance|balanceCheck|balance-sheet|
+  现，因为刚才服务端已经报出 startTime 被按 yyyyMM 解析。接着我会把 CLI
+  的 ledger 请求体和 Java 端的 querySubjectBalance 逐行对上。
+
+✔ You approved codex to run mysql -uroot -ppassword -D wk_open_finance -e
+  'SELECT rule FROM wk_finance_pa... this time
+
+• Explored
+─────────────────────────────────────────────────────────────────────────
+
+• 我已经拿到第二个异常的核心线索：balance-sheet --check 不是简单的“报表不
+  平”，而是后端在遍历科目余额结果时，把一个以 C 开头的编号当成纯数字去做
+  BigDecimal 解析了。这个特征非常像存货/辅助核算卡片编号（例如 C0002），
+  所以我接着追 querySubjectBalance 里辅助项结果是怎么塞进来的，确认是不是
+  余额校验把“辅助卡片编号”误当“科目编号”处理。
+
+• Explored
+
+• Ran ./.venv-wukong/bin/cli-anything-wukong --json ledger balance
+  │ --start 202101 --end 202101 --level 1
+  └ {"error": "API error 500: 网络错误，请稍候再试"}
+
+• Waited for background terminal · /opt/homebrew/Cellar/openjdk/25.0.2/
+libexec/openjdk.jdk/Contents/Home/bin/java -cp 'finance/finance-web/
+target/finance-web-0.0.1-SNAPSHOT.jar.original:finance/finance-web/
+target/lib/*:runtime-extra-libs/*'
+com.kakarote.finance.FinanceApplication
+
+─────────────────────────────────────────────────────────────────────────
+• Ran ./.venv-wukong/bin/cli-anything-wukong --json report balance-sheet
+  │ --period month --date 2021-01-31 | rg -n '其他应收款|资产总计|负债
+  │ 和所有者权益（或股东权益）总计|预付账款|预收账款' -C 2
+  └ 113-      "name": "应收账款",
+    114-      "sort": 4,
+    … +80 lines
+    1509-      }
+    1510-    }
+    2202    应付账款    2
+    2203    预收账款    2
+
+✔ You approved codex to run ./.venv-wukong/bin/cli-anything-wukong --json
+  ledger detail --subject-id 2036... this time
+
+• Ran ./.venv-wukong/bin/cli-anything-wukong --json ledger detail
+  │ --subject-id 2036268933807505409 --start 2021-01-01 --end
+    Search queryCurrentBalanceNoSettle|queryAccumulatedAmountNoSettle in
+• 我找到第三层问题的更具体形态了：不是 1221 余额凭空消失，而是报表取数很
+  可能只拿了它的末级子科目，没把“有子科目但自己本身也直接记账”的父科目余
+  额纳进去。1221 下面确实挂了一个二级科目 122101，而当前 687.96 又是直接
+  记在一级科目 1221 上，这正好解释了为什么报表行是 0、总表却差 687.96。下
+  面我只验证这一点。
+
+✔ You approved codex to run mysql -uroot -ppassword -D wk_open_finance -e
+  "SELECT subject_id, number, sub... this time
+
+• Explored
+  └ Read CashFlowStatementReportHolder.java
+    Search getFirstChildSubjectIds in common
+
+• Ran mysql -uroot -ppassword -D wk_open_finance -e "SELECT subject_id,
+  │ number, subject_name, parent_id FROM wk_finance_subject WHERE
+  │ account_id=2036268933673287680 AND (number='1221' OR
+  │ … +2 lines
+  └ mysql: [Warning] Using a password on the command line interface can
+    be insecure.
+    … +2 lines
+    2036443986130010112    122101    个人部分社保费
+    2036268933807505409
+
+─────────────────────────────────────────────────────────────────────────
+
+• 我已经把根因收束到几处具体代码上了。为避免泛泛而谈，我再取一遍带行号的
+  关键片段，最后给你一份可以直接开修的定位结论。
+
+• Explored
+  └ Read ledger.py, CashFlowStatementReportHolder.java, wukong_cli.py,
+         FinanceCertificateServiceImpl.java,
+         FinanceBalanceSheetReportServiceImpl.java, pom.xml
+
+■ Conversation interrupted - tell the model what to do differently.
+Something went wrong? Hit `/feedback` to report the issue.
+

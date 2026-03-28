@@ -1,0 +1,5 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Mon Mar 23 00:32:03 CST 2026
+https\://repo.maven.apache.org/maven2/.lastUpdated=1774197123670
+http\://0.0.0.0/.error=Could not transfer artifact org.junit\:junit-bom\:pom\:5.7.2 from/to maven-default-http-blocker (http\://0.0.0.0/)\: Blocked mirror for repositories\: [jcenter-snapshots (http\://oss.jfrog.org/artifactory/oss-snapshot-local/, default, releases+snapshots)]
+@default-maven-default-http-blocker-http\://0.0.0.0/.lastUpdated=1774197123519

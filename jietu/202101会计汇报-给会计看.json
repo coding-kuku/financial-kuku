@@ -1,0 +1,695 @@
+{
+  "meta": {
+    "voucher_count": 53,
+    "voucher_type_text": "银收2张，银付42张，转9张",
+    "ledger_summary": {
+      "1002 银行存款": {
+        "entry_count": 44,
+        "balance_direction": "借",
+        "balance": 10856.99,
+        "debit_total": 91105.0,
+        "credit_total": 85148.85
+      },
+      "1122 应收账款": {
+        "entry_count": 2,
+        "balance_direction": "借",
+        "balance": -91105.0,
+        "debit_total": 0.0,
+        "credit_total": 91105.0
+      },
+      "1405 库存商品": {
+        "entry_count": 5,
+        "balance_direction": "借",
+        "balance": 99565.37,
+        "debit_total": 57861.0,
+        "credit_total": 0.0
+      },
+      "2202 应付账款": {
+        "entry_count": 45,
+        "balance_direction": "贷",
+        "balance": -24690.65,
+        "debit_total": 82551.65,
+        "credit_total": 57861.0
+      },
+      "3103 本年利润": {
+        "entry_count": 1,
+        "balance_direction": "贷",
+        "balance": -12921.64,
+        "debit_total": 12921.64,
+        "credit_total": 0.0
+      },
+      "5601 销售费用": {
+        "entry_count": 2,
+        "balance_direction": "平",
+        "balance": 0.0,
+        "debit_total": 6200.0,
+        "credit_total": 6200.0
+      },
+      "5602 管理费用": {
+        "entry_count": 4,
+        "balance_direction": "平",
+        "balance": 0.0,
+        "debit_total": 6691.74,
+        "credit_total": 6691.74
+      }
+    },
+    "reports": {
+      "balance_sheet": {
+        "rows": [
+          {
+            "name": "货币资金",
+            "endPeriod": 11816.99
+          },
+          {
+            "name": "预付账款",
+            "endPeriod": 24690.65
+          },
+          {
+            "name": "存货",
+            "endPeriod": 99565.37
+          },
+          {
+            "name": "库存商品",
+            "endPeriod": 99565.37
+          },
+          {
+            "name": "流动资产合计",
+            "endPeriod": 136073.01
+          },
+          {
+            "name": "资产总计",
+            "endPeriod": 136073.01
+          },
+          {
+            "name": "预收账款",
+            "endPeriod": 91105.0
+          },
+          {
+            "name": "应付职工薪酬",
+            "endPeriod": 11500.0
+          },
+          {
+            "name": "应交税费",
+            "endPeriod": 18.2
+          },
+          {
+            "name": "其他应付款",
+            "endPeriod": 49287.15
+          },
+          {
+            "name": "流动负债合计",
+            "endPeriod": 151910.35
+          },
+          {
+            "name": "负债合计",
+            "endPeriod": 151910.35
+          },
+          {
+            "name": "实收资本（或股本）",
+            "endPeriod": 20000.0
+          },
+          {
+            "name": "未分配利润",
+            "endPeriod": -35149.38
+          },
+          {
+            "name": "所有者权益（或股东权益）合计",
+            "endPeriod": -15149.38
+          },
+          {
+            "name": "负债和所有者权益（或股东权益）总计",
+            "endPeriod": 136760.97
+          }
+        ],
+        "check": {
+          "error": "API error 500: 网络错误，请稍候再试"
+        }
+      },
+      "income_statement": {
+        "rows": [],
+        "check": {
+          "notContains": [],
+          "balanced": false
+        }
+      },
+      "cash_flow_statement": {
+        "rows": [
+          {
+            "name": "销售产成品、商品、提供劳务收到的现金",
+            "monthValue": 91105.0
+          },
+          {
+            "name": "购买原材料、商品、接受劳务支付的现金",
+            "monthValue": 82551.65
+          },
+          {
+            "name": "支付的职工薪酬",
+            "monthValue": 1391.74
+          },
+          {
+            "name": "支付的税费",
+            "monthValue": -12.4
+          },
+          {
+            "name": "支付其他与经营活动有关的现金",
+            "monthValue": 10108.26
+          },
+          {
+            "name": "经营活动产生的现金流量净额",
+            "monthValue": -2934.25
+          },
+          {
+            "name": "分配利润支付的现金",
+            "monthValue": 12921.64
+          },
+          {
+            "name": "筹资活动产生的现金流量净额",
+            "monthValue": -12921.64
+          },
+          {
+            "name": "四、现金净增加额",
+            "monthValue": -15855.89
+          },
+          {
+            "name": "加：期初现金余额",
+            "monthValue": 5360.84
+          },
+          {
+            "name": "五、期末现金余额",
+            "monthValue": -10495.05
+          }
+        ],
+        "check": {
+          "error": "API error 500: 网络错误，请稍候再试"
+        }
+      }
+    },
+    "statement_status": {
+      "settleTime": "2021-01-01 00:00:00",
+      "items": [
+        {
+          "name": "转出未交增值税",
+          "done": 0
+        },
+        {
+          "name": "计提地税",
+          "done": 0
+        },
+        {
+          "name": "计提所得税",
+          "done": 0
+        },
+        {
+          "name": "结转损益",
+          "done": 0
+        }
+      ],
+      "certificate_count_text": null
+    },
+    "review_points": [
+      "资产负债表显示资产总计 136073.01，负债和所有者权益总计 136760.97；两者未平，需继续复核。",
+      "利润表本次系统返回金额为 0，结合业务情况判断，当前数据更像“银行流水凭证结果”，可能并非完整收入成本结转链条。",
+      "应收账款期末余额显示为 -91105.0，呈异常贷方挂账特征，建议核对是否缺少销售确认或期初往来承接。",
+      "结账模块（转出未交增值税、计提地税、计提所得税、结转损益）均未完成，不建议直接据此结账。"
+    ]
+  },
+  "vouchers": [
+    {
+      "date": "2021-01-21",
+      "voucher_num": "银收-1",
+      "voucher_type": "银收",
+      "digest": "收到蓬江区世祥商行采购室内用具款",
+      "entry_count": 2,
+      "debit_total": 18235.0,
+      "credit_total": 18235.0
+    },
+    {
+      "date": "2021-01-21",
+      "voucher_num": "银收-2",
+      "voucher_type": "银收",
+      "digest": "收到蓬江区世祥商行服装采购款",
+      "entry_count": 2,
+      "debit_total": 72870.0,
+      "credit_total": 72870.0
+    },
+    {
+      "date": "2021-01-07",
+      "voucher_num": "银付-1",
+      "voucher_type": "银付",
+      "digest": "支付建行单位结算卡年费",
+      "entry_count": 2,
+      "debit_total": 10.0,
+      "credit_total": 10.0
+    },
+    {
+      "date": "2021-01-14",
+      "voucher_num": "银付-2",
+      "voucher_type": "银付",
+      "digest": "支付1月份社保费",
+      "entry_count": 7,
+      "debit_total": 2079.7,
+      "credit_total": 2079.7
+    },
+    {
+      "date": "2021-01-24",
+      "voucher_num": "银付-3",
+      "voucher_type": "银付",
+      "digest": "采购大人短袖衣服（上海衫城贸易有限公司）96281379",
+      "entry_count": 2,
+      "debit_total": 22099.0,
+      "credit_total": 22099.0
+    },
+    {
+      "date": "2021-01-26",
+      "voucher_num": "银付-4",
+      "voucher_type": "银付",
+      "digest": "采购烫画（义乌市超宏烫画有限公司）11557948",
+      "entry_count": 2,
+      "debit_total": 8360.0,
+      "credit_total": 8360.0
+    },
+    {
+      "date": "2021-01-26",
+      "voucher_num": "银付-5",
+      "voucher_type": "银付",
+      "digest": "采购童装短袖衣服（广东莱纯服装有限公司）17774649",
+      "entry_count": 2,
+      "debit_total": 2060.0,
+      "credit_total": 2060.0
+    },
+    {
+      "date": "2021-01-27",
+      "voucher_num": "银付-6",
+      "voucher_type": "银付",
+      "digest": "支付建行自助设备使用费",
+      "entry_count": 2,
+      "debit_total": 7.5,
+      "credit_total": 7.5
+    },
+    {
+      "date": "2021-01-27",
+      "voucher_num": "银付-7",
+      "voucher_type": "银付",
+      "digest": "采购钥匙扣（义乌市郎嘉商贸有限公司）54602836",
+      "entry_count": 2,
+      "debit_total": 589.0,
+      "credit_total": 589.0
+    },
+    {
+      "date": "2021-01-28",
+      "voucher_num": "银付-8",
+      "voucher_type": "银付",
+      "digest": "采购大人卫衣（义乌市弗雷娅服装有限公司）31327961",
+      "entry_count": 2,
+      "debit_total": 22050.0,
+      "credit_total": 22050.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-9",
+      "voucher_type": "银付",
+      "digest": "转账到支付宝备用金",
+      "entry_count": 2,
+      "debit_total": 500.0,
+      "credit_total": 500.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-10",
+      "voucher_type": "银付",
+      "digest": "采购童装卫衣（东莞市宜米之家童装有限公司）29299703",
+      "entry_count": 2,
+      "debit_total": 3292.0,
+      "credit_total": 3292.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-11",
+      "voucher_type": "银付",
+      "digest": "采购收纳袋（奥艺（上海）贸易有限公司））11691084",
+      "entry_count": 3,
+      "debit_total": 1412.66,
+      "credit_total": 1412.66
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-12",
+      "voucher_type": "银付",
+      "digest": "采购盲盒（合肥晔彤商贸有限公司）05561368",
+      "entry_count": 2,
+      "debit_total": 1732.4,
+      "credit_total": 1732.4
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-13",
+      "voucher_type": "银付",
+      "digest": "采购盲盒（上海悦佳小商品市场经营管理有限公司）34410114",
+      "entry_count": 2,
+      "debit_total": 633.36,
+      "credit_total": 633.36
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-14",
+      "voucher_type": "银付",
+      "digest": "采购玩具（汕头市澄海区贝哆玩具有限公司）56619108",
+      "entry_count": 2,
+      "debit_total": 312.71,
+      "credit_total": 312.71
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-15",
+      "voucher_type": "银付",
+      "digest": "采购袜子（东莞市赐美服装有限公司）19979134",
+      "entry_count": 2,
+      "debit_total": 74.98,
+      "credit_total": 74.98
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-16",
+      "voucher_type": "银付",
+      "digest": "采购小书包（深圳市唯诺讯科技有限公司）",
+      "entry_count": 2,
+      "debit_total": 546.0,
+      "credit_total": 546.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-17",
+      "voucher_type": "银付",
+      "digest": "采购抱枕（扬州非可玩具有限公司）49287767",
+      "entry_count": 2,
+      "debit_total": 370.0,
+      "credit_total": 370.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-18",
+      "voucher_type": "银付",
+      "digest": "采购地垫（厦门科美诺文化科技有限公司）19874868",
+      "entry_count": 2,
+      "debit_total": 329.0,
+      "credit_total": 329.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-19",
+      "voucher_type": "银付",
+      "digest": "采购玩具（义乌市魅拔贸易有限公司）55588313",
+      "entry_count": 2,
+      "debit_total": 132.0,
+      "credit_total": 132.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-20",
+      "voucher_type": "银付",
+      "digest": "采购玩具（上海童励科技有限公司）10893870",
+      "entry_count": 3,
+      "debit_total": 179.92,
+      "credit_total": 179.92
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-21",
+      "voucher_type": "银付",
+      "digest": "采购抱枕（杭州市布绒坊商贸有限公司）48185731",
+      "entry_count": 2,
+      "debit_total": 333.76,
+      "credit_total": 333.76
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-22",
+      "voucher_type": "银付",
+      "digest": "采购泰迪熊（临沂本真礼品有限公司）16074151",
+      "entry_count": 2,
+      "debit_total": 435.35,
+      "credit_total": 435.35
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-23",
+      "voucher_type": "银付",
+      "digest": "采购玩具（扬州斯克玩具有限公司）49284616",
+      "entry_count": 2,
+      "debit_total": 180.0,
+      "credit_total": 180.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-24",
+      "voucher_type": "银付",
+      "digest": "采购陶瓷杯（深圳德惠陶瓷实业有限公司）06282510",
+      "entry_count": 2,
+      "debit_total": 1184.0,
+      "credit_total": 1184.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-25",
+      "voucher_type": "银付",
+      "digest": "采购盲盒（义乌市朗盛贸易有限公司）",
+      "entry_count": 2,
+      "debit_total": 247.0,
+      "credit_total": 247.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-26",
+      "voucher_type": "银付",
+      "digest": "采购笔记本（义乌市墨言文化用品有限公司）56673457",
+      "entry_count": 2,
+      "debit_total": 197.27,
+      "credit_total": 197.27
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-27",
+      "voucher_type": "银付",
+      "digest": "采购玩具兔（佛山市萌乐奇创意产品有限公司）",
+      "entry_count": 2,
+      "debit_total": 488.0,
+      "credit_total": 488.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-28",
+      "voucher_type": "银付",
+      "digest": "采购泰迪熊（扬州萌豆豆玩具有限公司）",
+      "entry_count": 2,
+      "debit_total": 221.48,
+      "credit_total": 221.48
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-29",
+      "voucher_type": "银付",
+      "digest": "采购鼠标垫（廊坊整点科技有限公司）",
+      "entry_count": 2,
+      "debit_total": 743.7,
+      "credit_total": 743.7
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-30",
+      "voucher_type": "银付",
+      "digest": "采购相框（深圳市奇佳工艺品有限公司）597337836",
+      "entry_count": 2,
+      "debit_total": 800.0,
+      "credit_total": 800.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-31",
+      "voucher_type": "银付",
+      "digest": "采购收纳柜（上海羽维电子商务有限公司）36523551",
+      "entry_count": 2,
+      "debit_total": 3258.0,
+      "credit_total": 3258.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-32",
+      "voucher_type": "银付",
+      "digest": "采购家具（徐州三叉戟家具有限公司）79277632",
+      "entry_count": 2,
+      "debit_total": 2560.0,
+      "credit_total": 2560.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-33",
+      "voucher_type": "银付",
+      "digest": "采购文具（福州市台江区信诚贸易有限公司）19941619",
+      "entry_count": 2,
+      "debit_total": 633.6,
+      "credit_total": 633.6
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-34",
+      "voucher_type": "银付",
+      "digest": "采购家具（福建安溪简欧工艺品有限公司）14142059",
+      "entry_count": 2,
+      "debit_total": 1524.0,
+      "credit_total": 1524.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-35",
+      "voucher_type": "银付",
+      "digest": "采购家具（锦华顺兴（香港）实业有限公司））",
+      "entry_count": 2,
+      "debit_total": 248.0,
+      "credit_total": 248.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-36",
+      "voucher_type": "银付",
+      "digest": "采购家具（厦门老木匠心家居有限公司）19852094",
+      "entry_count": 2,
+      "debit_total": 180.0,
+      "credit_total": 180.0
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-37",
+      "voucher_type": "银付",
+      "digest": "采购家具（安溪县城厢巧华家具店）85423758",
+      "entry_count": 2,
+      "debit_total": 326.7,
+      "credit_total": 326.7
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-38",
+      "voucher_type": "银付",
+      "digest": "采购家具",
+      "entry_count": 2,
+      "debit_total": 186.62,
+      "credit_total": 186.62
+    },
+    {
+      "date": "2021-01-30",
+      "voucher_num": "银付-39",
+      "voucher_type": "银付",
+      "digest": "采购家具（广州恒达置业有限公司）",
+      "entry_count": 2,
+      "debit_total": 211.03,
+      "credit_total": 211.03
+    },
+    {
+      "date": "2021-01-31",
+      "voucher_num": "银付-40",
+      "voucher_type": "银付",
+      "digest": "采购家具（深圳市华创商业展示有限公司）42141132",
+      "entry_count": 2,
+      "debit_total": 1844.11,
+      "credit_total": 1844.11
+    },
+    {
+      "date": "2021-01-31",
+      "voucher_num": "银付-41",
+      "voucher_type": "银付",
+      "digest": "采购家具（广州多艺多贸易有限公司）34540439",
+      "entry_count": 2,
+      "debit_total": 2168.0,
+      "credit_total": 2168.0
+    },
+    {
+      "date": "2021-01-31",
+      "voucher_num": "银付-42",
+      "voucher_type": "银付",
+      "digest": "采购家具（徐州欧耐家具有限公司）63246037",
+      "entry_count": 2,
+      "debit_total": 408.0,
+      "credit_total": 408.0
+    },
+    {
+      "date": "2021-01-31",
+      "voucher_num": "转-1",
+      "voucher_type": "转",
+      "digest": "计提1月份社保费",
+      "entry_count": 6,
+      "debit_total": 1391.74,
+      "credit_total": 1391.74
+    },
+    {
+      "date": "2021-01-31",
+      "voucher_num": "转-2",
+      "voucher_type": "转",
+      "digest": "计提1月份工资",
+      "entry_count": 3,
+      "debit_total": 11500.0,
+      "credit_total": 11500.0
+    },
+    {
+      "date": "2021-01-31",
+      "voucher_num": "转-3",
+      "voucher_type": "转",
+      "digest": "从东莞米纯购卫衣200件",
+      "entry_count": 2,
+      "debit_total": 3292.0,
+      "credit_total": 3292.0
+    },
+    {
+      "date": "2021-01-31",
+      "voucher_num": "转-4",
+      "voucher_type": "转",
+      "digest": "从义乌弗雷娅购卫衣625件",
+      "entry_count": 2,
+      "debit_total": 22050.0,
+      "credit_total": 22050.0
+    },
+    {
+      "date": "2021-01-31",
+      "voucher_num": "转-5",
+      "voucher_type": "转",
+      "digest": "从东莞纯衣购T恤200件",
+      "entry_count": 2,
+      "debit_total": 2060.0,
+      "credit_total": 2060.0
+    },
+    {
+      "date": "2021-01-31",
+      "voucher_num": "转-6",
+      "voucher_type": "转",
+      "digest": "从上海衫城购T恤1550件",
+      "entry_count": 2,
+      "debit_total": 22099.0,
+      "credit_total": 22099.0
+    },
+    {
+      "date": "2021-01-31",
+      "voucher_num": "转-7",
+      "voucher_type": "转",
+      "digest": "从义乌超宏购烫画纸1520张2021-01-26No.11557948",
+      "entry_count": 2,
+      "debit_total": 8360.0,
+      "credit_total": 8360.0
+    },
+    {
+      "date": "2021-01-31",
+      "voucher_num": "转-8",
+      "voucher_type": "转",
+      "digest": "计提购销合同印花税",
+      "entry_count": 2,
+      "debit_total": 12.4,
+      "credit_total": 12.4
+    },
+    {
+      "date": "2021-01-31",
+      "voucher_num": "转-9",
+      "voucher_type": "转",
+      "digest": "1月  结转损益",
+      "entry_count": 6,
+      "debit_total": 12921.64,
+      "credit_total": 12921.64
+    }
+  ]
+}

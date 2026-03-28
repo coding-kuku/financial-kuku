@@ -1,0 +1,401 @@
+[
+  {
+    "source_row": 1,
+    "date": "2021-01-07",
+    "digest": "商务卡-单位结算卡年费",
+    "amount": 10.0,
+    "classification": "bank_fee",
+    "risk": "low",
+    "confidence": "high",
+    "lines": [
+      {
+        "subject_name": "财务费用-手续费",
+        "debit": 10.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 10.0
+      }
+    ]
+  },
+  {
+    "source_row": 5,
+    "date": "2021-01-24",
+    "digest": "支付上海衫城贸易有限公司货款",
+    "amount": 22099.0,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-上海衫城贸易有限公司",
+        "debit": 22099.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 22099.0
+      }
+    ]
+  },
+  {
+    "source_row": 6,
+    "date": "2021-01-26",
+    "digest": "支付义乌市超宏烫画有限公司货款",
+    "amount": 8360.0,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-义乌市超宏烫画有限公司",
+        "debit": 8360.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 8360.0
+      }
+    ]
+  },
+  {
+    "source_row": 7,
+    "date": "2021-01-26",
+    "digest": "支付广东莱纯服装有限公司货款",
+    "amount": 2060.0,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-广东莱纯服装有限公司",
+        "debit": 2060.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 2060.0
+      }
+    ]
+  },
+  {
+    "source_row": 8,
+    "date": "2021-01-27",
+    "digest": "对公自助服务-自助设备使用费",
+    "amount": 7.5,
+    "classification": "bank_fee",
+    "risk": "low",
+    "confidence": "high",
+    "lines": [
+      {
+        "subject_name": "财务费用-手续费",
+        "debit": 7.5,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 7.5
+      }
+    ]
+  },
+  {
+    "source_row": 9,
+    "date": "2021-01-27",
+    "digest": "支付义乌市郎嘉商贸有限公司货款",
+    "amount": 589.0,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-义乌市郎嘉商贸有限公司",
+        "debit": 589.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 589.0
+      }
+    ]
+  },
+  {
+    "source_row": 10,
+    "date": "2021-01-28",
+    "digest": "支付义乌市弗雷娅服装有限公司货款",
+    "amount": 22050.0,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-义乌市弗雷娅服装有限公司",
+        "debit": 22050.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 22050.0
+      }
+    ]
+  },
+  {
+    "source_row": 13,
+    "date": "2021-01-30",
+    "digest": "支付奥艺(上海)贸易有限公司货款",
+    "amount": 1333.28,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-奥艺(上海)贸易有限公司",
+        "debit": 1333.28,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 1333.28
+      }
+    ]
+  },
+  {
+    "source_row": 14,
+    "date": "2021-01-30",
+    "digest": "支付合肥晔彤商贸有限公司货款",
+    "amount": 1732.4,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-合肥晔彤商贸有限公司",
+        "debit": 1732.4,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 1732.4
+      }
+    ]
+  },
+  {
+    "source_row": 18,
+    "date": "2021-01-30",
+    "digest": "支付深圳市唯诺讯科技有限公司货款",
+    "amount": 546.0,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-深圳市唯诺讯科技有限公司",
+        "debit": 546.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 546.0
+      }
+    ]
+  },
+  {
+    "source_row": 19,
+    "date": "2021-01-30",
+    "digest": "支付扬州非可玩具有限公司货款",
+    "amount": 370.0,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-扬州非可玩具有限公司",
+        "debit": 370.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 370.0
+      }
+    ]
+  },
+  {
+    "source_row": 20,
+    "date": "2021-01-30",
+    "digest": "支付厦门视觉美电子商务集团有限公司货款",
+    "amount": 329.0,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-厦门视觉美电子商务集团有限公司",
+        "debit": 329.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 329.0
+      }
+    ]
+  },
+  {
+    "source_row": 22,
+    "date": "2021-01-30",
+    "digest": "支付上海童励科技有限公司货款",
+    "amount": 164.92,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-上海童励科技有限公司",
+        "debit": 164.92,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 164.92
+      }
+    ]
+  },
+  {
+    "source_row": 24,
+    "date": "2021-01-30",
+    "digest": "支付深圳皇亚玩具有限公司货款",
+    "amount": 435.35,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-深圳皇亚玩具有限公司",
+        "debit": 435.35,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 435.35
+      }
+    ]
+  },
+  {
+    "source_row": 27,
+    "date": "2021-01-30",
+    "digest": "支付上海童励科技有限公司货款",
+    "amount": 15.0,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-上海童励科技有限公司",
+        "debit": 15.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 15.0
+      }
+    ]
+  },
+  {
+    "source_row": 29,
+    "date": "2021-01-30",
+    "digest": "支付义乌墨言文化用品有限公司货款",
+    "amount": 197.27,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-义乌墨言文化用品有限公司",
+        "debit": 197.27,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 197.27
+      }
+    ]
+  },
+  {
+    "source_row": 31,
+    "date": "2021-01-30",
+    "digest": "支付扬州萌豆豆玩具有限公司货款",
+    "amount": 221.48,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-扬州萌豆豆玩具有限公司",
+        "debit": 221.48,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 221.48
+      }
+    ]
+  },
+  {
+    "source_row": 33,
+    "date": "2021-01-30",
+    "digest": "支付奥艺(上海)贸易有限公司货款",
+    "amount": 79.38,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-奥艺(上海)贸易有限公司",
+        "debit": 79.38,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 79.38
+      }
+    ]
+  },
+  {
+    "source_row": 34,
+    "date": "2021-01-30",
+    "digest": "支付深圳市奇佳工艺品有限公司货款",
+    "amount": 800.0,
+    "classification": "purchase_payment",
+    "risk": "medium",
+    "confidence": "medium",
+    "lines": [
+      {
+        "subject_name": "预付账款-深圳市奇佳工艺品有限公司",
+        "debit": 800.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款",
+        "debit": 0.0,
+        "credit": 800.0
+      }
+    ]
+  }
+]
