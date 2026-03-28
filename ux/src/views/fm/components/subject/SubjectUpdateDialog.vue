@@ -660,7 +660,7 @@ export default {
         const item = list[i]
         if (number.startsWith(item.number)) {
           if (item.grade === grade - 1) {
-            this.setCategory(item.type)
+            this.setCategory(item.type, item.category)
             this.selectParent = item
 
             this.getAdjuvantList(item)
@@ -676,7 +676,7 @@ export default {
         ) {
           // 全部科目数据中有可能出现没有父节点，只有兄弟节点的情况
           console.log('set category: ', item)
-          this.setCategory(item.type)
+          this.setCategory(item.type, item.category)
           return item.parentId
         }
       }
@@ -693,11 +693,11 @@ export default {
         if (String(this.form.number).length === len) return i + 1
       }
     },
-    setCategory(type) {
+    setCategory(type, category) {
       this.selfSubjectType = type
       this.$nextTick(() => {
-        const firstChild = this.categoryOptions[0]
-        this.$set(this.form, 'category', firstChild.value)
+        const matched = this.categoryOptions.find(o => o.value === category)
+        this.$set(this.form, 'category', (matched || this.categoryOptions[0]).value)
       })
     },
 

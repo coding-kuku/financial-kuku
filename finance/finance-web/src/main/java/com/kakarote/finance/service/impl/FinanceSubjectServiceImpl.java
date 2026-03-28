@@ -117,7 +117,7 @@ public class FinanceSubjectServiceImpl extends BaseServiceImpl<FinanceSubjectMap
         if (subject.getParentId() != null && subject.getParentId() != 0) {
             FinanceSubject pSubject = getById(subject.getParentId());
             if (!ObjectUtil.equal(subject.getCategory(), pSubject.getCategory()) || !ObjectUtil.equal(subject.getType(), pSubject.getType())) {
-                throw new CrmException(FinanceCodeEnum.FINANCE_SUBJECT_NUMBER_ERROR);
+                throw new CrmException(FinanceCodeEnum.FINANCE_SUBJECT_TYPE_ERROR);
             }
         }
 
@@ -144,6 +144,9 @@ public class FinanceSubjectServiceImpl extends BaseServiceImpl<FinanceSubjectMap
                     detailList.forEach(data -> {
                         data.setSubjectId(subject.getSubjectId()).setSubjectNumber(subject.getNumber());
                         FinanceSubjectVO subjectVO = JSON.parseObject(data.getSubjectContent(), FinanceSubjectVO.class);
+                        if (subjectVO == null) {
+                            return;
+                        }
                         String name = subjectVO.getSubjectName();
 
                         //根据科目id获取辅助核算信息
