@@ -71,7 +71,6 @@ cli-anything-wukong --url http://192.168.1.100:44316 status
 | `account list` | List account sets (账套) |
 | `account switch <id>` | Switch active account set |
 | `account create` | Create new account set |
-| `account init` | Initialize default subjects and voucher words |
 | `subject list` | List subjects / account codes (科目) |
 | `subject add` | Add a subject (`--code`, `--name`, `--type` 1–5, `--direction` 1=借方/2=贷方 all required) |
 | `subject delete` | Delete subjects |

@@ -237,7 +237,6 @@ cli_anything/wukong/tests/test_full_e2e.py::TestStatementWorkflow::test_query_st
 | Certificate next-num | `queryNumByTime` requires date in `yyyyMM` format, not `YYYY-MM-DD` |
 | Report periods | `balanceSheetReport` and `incomeStatementReport` require `fromPeriod`/`toPeriod` in `yyyyMM` format |
 | Snowflake IDs | API returns IDs as JSON strings; must `int()` before sending back as `List<Long>` |
-| `initFinanceData` | **Destructive** — deletes all rows from every finance table including `wk_finance_account_set` |
 | Certificate update | `creditBalance` is the correct credit field (not `ownerBalance`); update to current calendar month returns 500 (server bug) |
 | Adjuvant labels | 1=客户, 2=供应商, 3=职员, 4=项目, 5=部门, 6=存货, 7=自定义; `deleteById` takes `adjuvantId` as a query param |
 | Statement close | `/financeStatement/statement` with `type=1` closes, `type=2` reopens; `queryStatement` returns `settleTime` and `statements` list |

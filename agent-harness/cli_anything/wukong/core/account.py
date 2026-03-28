@@ -80,9 +80,3 @@ def configure_account(client: WukongClient, account_id: int, start_time: str = "
     })
 
 
-def init_finance_data(client: WukongClient) -> None:
-    """Clear all finance data tables (destructive reset).
-
-    WARNING: Deletes ALL rows from every finance table including account sets.
-    """
-    client.post("/financeAccountSet/initFinanceData")

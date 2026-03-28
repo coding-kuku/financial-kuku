@@ -404,22 +404,6 @@ def account_create(ctx: click.Context, company: str, start: str):
         _skin.success(f"Created account set: {company} (id={account_id})")
 
 
-@account.command("init")
-@click.pass_context
-def account_init(ctx: click.Context):
-    """Initialize default data (subjects, voucher words) for active account set."""
-    client = _get_client(ctx)
-    try:
-        _account.init_finance_data(client)
-    except WukongError as e:
-        _handle_error(ctx, e)
-        return
-    if ctx.obj.get("json"):
-        _out(ctx, {"initialized": True})
-    else:
-        _skin.success("Finance data initialized")
-
-
 # ── subject group ──────────────────────────────────────────────────────
 
 

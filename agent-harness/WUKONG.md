@@ -80,8 +80,6 @@ cli-anything-wukong account list
 # Switch to account set 1
 cli-anything-wukong account switch 1
 
-# Initialize default data (subjects, voucher words)
-cli-anything-wukong account init
 ```
 
 ### Journal Entry Workflow

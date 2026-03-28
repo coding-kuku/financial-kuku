@@ -54,7 +54,6 @@ cli-anything-wukong auth whoami                        # Current user info
 cli-anything-wukong account list                       # All accessible account sets
 cli-anything-wukong account switch <id>                # Switch active account set
 cli-anything-wukong account create --company "My Co Ltd" --start 2024-01
-cli-anything-wukong account init                       # Initialize default subjects/voucher words
 ```
 
 ### subject — Account Codes (科目)
