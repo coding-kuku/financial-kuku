@@ -90,6 +90,7 @@ cli-anything-wukong certificate delete <id1> <id2>
 ```bash
 cli-anything-wukong ledger detail --subject-id 123 --start 2024-01 --end 2024-06
 cli-anything-wukong ledger general --subject-id 123 --start 2024-01 --end 2024-12
+cli-anything-wukong ledger general --subject-id 123 --start 2024-01 --end 2024-12 --max-level 9  # all levels
 cli-anything-wukong ledger balance --start 2024-01 --end 2024-12 --level 1
 cli-anything-wukong ledger multi-column --subject-id 123 --start 2024-01 --end 2024-06
 ```

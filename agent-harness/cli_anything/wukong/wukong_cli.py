@@ -844,15 +844,17 @@ def ledger_detail(ctx: click.Context, subject_id: int, start: str, end: str):
 @ledger.command("general")
 @click.option("--subject-id", required=True, type=int, help="Subject ID")
 @_ledger_date_options
+@click.option("--min-level", type=int, default=1, show_default=True, help="Minimum subject level to include (1=top-level only)")
+@click.option("--max-level", type=int, default=1, show_default=True, help="Maximum subject level to include (e.g. 9 for all levels)")
 @click.pass_context
-def ledger_general(ctx: click.Context, subject_id: int, start: str, end: str):
+def ledger_general(ctx: click.Context, subject_id: int, start: str, end: str, min_level: int, max_level: int):
     """Query general ledger (总账) — summarized monthly balances."""
     _validate_period(ctx, "--start", start)
     _validate_period(ctx, "--end", end)
     start_p, end_p = _to_yyyymm(start), _to_yyyymm(end)
     client = _get_client(ctx)
     try:
-        rows = _ledger.query_general_ledger(client, subject_id, start_p, end_p)
+        rows = _ledger.query_general_ledger(client, subject_id, start_p, end_p, min_level, max_level)
     except WukongError as e:
         _handle_error(ctx, e)
         return

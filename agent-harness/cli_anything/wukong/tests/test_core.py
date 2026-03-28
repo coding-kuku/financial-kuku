@@ -334,6 +334,24 @@ class TestLedger:
         assert body["level"] == 1
         assert "subjectId" not in body
 
+    def test_query_general_ledger(self, client):
+        rows = [{"digestContent": "期初余额", "balance": 1000}]
+        with patch("requests.post", return_value=self._mock(rows)) as mock_post:
+            result = _ledger.query_general_ledger(client, 123, "202101", "202101")
+        body = mock_post.call_args.kwargs.get("json", {})
+        assert body["subjectId"] == 123
+        assert body["startTime"] == "202101"
+        assert body["minLevel"] == 1
+        assert body["maxLevel"] == 1
+        assert result == rows
+
+    def test_query_general_ledger_custom_levels(self, client):
+        with patch("requests.post", return_value=self._mock([])) as mock_post:
+            _ledger.query_general_ledger(client, 123, "202101", "202112", min_level=1, max_level=9)
+        body = mock_post.call_args.kwargs.get("json", {})
+        assert body["minLevel"] == 1
+        assert body["maxLevel"] == 9
+
 
 # ── certificate update tests ───────────────────────────────────────────
 

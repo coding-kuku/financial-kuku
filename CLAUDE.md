@@ -117,9 +117,8 @@ Web 前端无对应操作，CLI 命令已移除（`wukong_cli.py`、`core/accoun
 详情接口 `checkStatus` 与列表筛选实际状态不同步，不能作为审核状态判断依据。
 - 后端详情：`FinanceCertificateServiceImpl.java:382-427`
 
-### 11. `ledger general` 对有数据的科目返回空数组
-后端 `/financeCertificate/queryDetailUpAccount` 存在可用性问题，明细账有数据但总账返回空。
-- `FinanceCertificateServiceImpl.java:487-536`，SQL：`FinanceCertificateMapper.xml:508-620`
+### 11. ~~`ledger general` 对有数据的科目返回空数组~~ ✓ 已修复
+CLI 未传 `minLevel`/`maxLevel`，后端 SQL `grade >= NULL` 恒为 false 导致科目列表为空。CLI 增加 `--min-level`（默认 1）和 `--max-level`（默认 1）参数并透传，与 Web 端行为一致。
 
 ### 12. ~~Skill 文档 `adjuvant add --label` 示例错误~~ ✓ 已修复
 WUKONG.md 示例已改为整数（`--label 4`），并附上枚举说明。

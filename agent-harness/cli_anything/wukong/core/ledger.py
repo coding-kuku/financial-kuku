@@ -49,9 +49,21 @@ def query_general_ledger(
     subject_id: int,
     start_time: str,
     end_time: str,
+    min_level: int = 1,
+    max_level: int = 1,
 ) -> list:
-    """Query general ledger (总账) — summarized monthly balances for a subject."""
+    """Query general ledger (总账) — summarized monthly balances for a subject.
+
+    Args:
+        subject_id: Subject ID
+        start_time: Period start in yyyyMM format (e.g. "202101")
+        end_time: Period end in yyyyMM format (e.g. "202112")
+        min_level: Minimum subject grade level to include (default 1)
+        max_level: Maximum subject grade level to include (default 1)
+    """
     body = _ledger_body(subject_id, start_time, end_time)
+    body["minLevel"] = min_level
+    body["maxLevel"] = max_level
     return client.post("/financeCertificate/queryDetailUpAccount", body) or []
 
 

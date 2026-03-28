@@ -308,6 +308,27 @@ class TestCertificateWorkflow:
         print(f"  Deleted certificate: {cert_id}")
 
 
+# ── Ledger workflow ────────────────────────────────────────────────────
+
+class TestLedgerWorkflow:
+    def test_general_ledger_returns_data(self, live_client, active_account_id):
+        """General ledger must return rows when minLevel/maxLevel are passed."""
+        subjects = _subject.list_subjects(live_client)
+        assert subjects, "No subjects available"
+        subject_id = int(subjects[0]["subjectId"])
+        rows = _ledger.query_general_ledger(live_client, subject_id, "202101", "202101")
+        assert isinstance(rows, list)
+        print(f"\n  General ledger rows for subject {subject_id}: {len(rows)}")
+
+    def test_general_ledger_multi_month(self, live_client, active_account_id):
+        subjects = _subject.list_subjects(live_client)
+        assert subjects, "No subjects available"
+        subject_id = int(subjects[0]["subjectId"])
+        rows = _ledger.query_general_ledger(live_client, subject_id, "202101", "202103")
+        assert isinstance(rows, list)
+        print(f"\n  General ledger multi-month rows: {len(rows)}")
+
+
 # ── Report tests ───────────────────────────────────────────────────────
 
 class TestReports:
