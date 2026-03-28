@@ -21,6 +21,42 @@ pip install -e agent-harness/
 
 后端服务监听端口 `44316`。
 
+## 构建方式
+
+### 后端构建（必须用 Java 17）
+
+系统默认 Java 可能是 25，Lombok 在 Java 25 下注解处理失效会导致大量编译错误。**必须显式指定 Java 17**：
+
+```bash
+JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/17.0.18/libexec/openjdk.jdk/Contents/Home \
+  mvn package -pl finance/finance-web -am -DskipTests
+```
+
+构建产物：`finance/finance-web/target/finance-web-0.0.1-SNAPSHOT.jar`
+
+启动服务：
+```bash
+JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/17.0.18/libexec/openjdk.jdk/Contents/Home
+$JAVA_HOME/bin/java -jar finance/finance-web/target/finance-web-0.0.1-SNAPSHOT.jar --server.port=44316
+```
+
+> **注意**：不要用 `mvn clean`，会删除 target 目录。直接用 `mvn package` 增量构建即可。
+
+### 前端构建
+
+Node 版本需兼容（本机 Node 22，需加 legacy openssl 选项）：
+
+```bash
+cd ux
+HUSKY=0 NODE_OPTIONS=--openssl-legacy-provider npm run build
+```
+
+构建产物在 `ux/dist/`，需手动复制到后端 JAR 的 `static/` 路径（参见下方"修改 JAR 内容"）。
+
+### 修改 JAR 内容（代码改动后）
+
+后端代码改完后，直接用上面的 Maven 命令重新构建即可，**不需要手动 patch JAR**。
+
 ## 目录结构
 
 ```

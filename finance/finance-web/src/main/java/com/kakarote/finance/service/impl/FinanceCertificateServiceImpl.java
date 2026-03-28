@@ -174,6 +174,12 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
             save(certificate);
         } else {
             certificate.setAccountId(AccountSet.getAccountSetId());
+            if (certificate.getCertificateNum() == null) {
+                FinanceCertificate existing = getById(certificate.getCertificateId());
+                if (existing != null) {
+                    certificate.setCertificateNum(existing.getCertificateNum());
+                }
+            }
             FinanceCertificate financeCertificate = getBaseMapper().queryByTime(certificate);
             if (financeCertificate != null) {
                 throw new CrmException(FinanceCodeEnum.FINANCE_CERTIFICATE_VOUCHER_REPEATING_ERROR);

@@ -1447,6 +1447,7 @@
         select *
         from wk_finance_certificate
         where voucher_id = #{data.voucherId}
+        and account_id = #{data.accountId}
         <if test="data.certificateNum != null and data.certificateNum != ''">
             and certificate_num = #{data.certificateNum}
         </if>
