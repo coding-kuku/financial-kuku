@@ -1,0 +1,4 @@
+interface:
+  display_name: "SME Accounting Flow"
+  short_description: "SME bookkeeping flow with Wukong CLI"
+  default_prompt: "Use $sme-accounting-wukong-flow to assess evidence, decide posting treatment, and execute or validate Wukong bookkeeping steps with strict risk gates."

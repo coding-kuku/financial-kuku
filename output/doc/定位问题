@@ -1,0 +1,497 @@
+程序问题定位
+
+1. 科目余额表接口与 CLI 的时间参数约定不一致
+
+现象：
+调用 `ledger balance` 时返回 500。
+
+根因：
+CLI 把 `ledger balance --start/--end` 定义为自然日期 `YYYY-MM-DD`，但后端 `/financeCertificate/queryDetailBalanceAccount` 实际按会计期间 `yyyyMM` 处理。请求传入 `2021-01-01` 这类值后，后端会在期间解析阶段报错。
+
+代码位置：
+- CLI 参数定义：`agent-harness/cli_anything/wukong/wukong_cli.py:793-796`
+- CLI 请求体构造：`agent-harness/cli_anything/wukong/core/ledger.py:76-81`
+- 后端余额表入口：`finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceCertificateController.java:156-160`
+- 后端余额表实现，直接把 `startTime/endTime` 当会计期间使用：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:632-667`
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:717-745`
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:755-782`
+
+结论：
+这是接口契约问题。CLI 与后端对同一接口的时间格式定义不一致，导致调用直接触发服务端解析异常。
+
+2. 资产负债表校验接口会把辅助核算编号当成数字解析
+
+现象：
+调用 `report balance-sheet --check` 时返回 500。
+
+根因：
+余额表校验路径会先取科目余额，再按科目编码范围过滤。辅助核算科目在构造余额结果时，会把辅助卡片编号拼进 `number` 字段，例如 `1122_C0002`。后续过滤逻辑调用 `RuleUtils.fillUpNumber` 时只去掉下划线，不去掉字母，最终执行 `new BigDecimal("1122C0002")`，因此抛出数字解析异常。
+
+代码位置：
+- 资产负债表校验入口：`finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceBalanceSheetReportServiceImpl.java:516-593`
+- 校验时调用余额表：`finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceBalanceSheetReportServiceImpl.java:538-541`
+- 辅助核算余额结果拼接 `number`：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:1152-1216`
+  关键行为在 `1174-1178`
+- 余额表按编码过滤：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:540-575`
+- 数字补齐工具：
+  `finance/finance-web/src/main/java/com/kakarote/finance/common/RuleUtils.java:72-106`
+
+结论：
+这是后端过滤逻辑对辅助核算编码兼容性不足。辅助卡片编码进入 `number` 后，被错误地按纯数字科目编码处理。
+
+3. 有子科目时，父科目本身直接记账的余额会被漏算
+
+现象：
+资产负债表部分项目取数不正确。典型表现是一级科目下面已经有二级科目时，如果凭证又直接记在一级科目本身，则报表可能只汇总子科目，不包含父科目直营余额。
+
+根因：
+报表取数和余额汇总都依赖“只取第一层子科目”的逻辑。只要某科目存在子科目，程序就走“汇总子科目”分支，不再把父科目本身的发生额和余额纳入计算。这样会导致“父级有子级，同时父级自己也被直接使用”的场景漏数。
+
+代码位置：
+- 资产负债表按第一层子科目取值：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceBalanceSheetReportServiceImpl.java:301-370`
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceBalanceSheetReportServiceImpl.java:404-475`
+- 第一层子科目方法本身不包含父科目自身：
+  `finance/finance-web/src/main/java/com/kakarote/finance/common/CashFlowStatementReportHolder.java:110-112`
+- 科目余额计算时，只要存在子科目就只汇总子科目：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:2968-3132`
+  关键分支在 `2972-2975`、`3014-3020`、`3044-3077`
+- 科目树汇总时，父级也是基于子级结果继续累加：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:1240-1355`
+
+结论：
+这是余额汇总模型的问题。程序默认“非末级科目只做汇总、不允许自己有余额”，但当前账套数据允许父科目直接记账，因此会出现报表漏数。
+
+维护建议
+
+1. 统一 `/financeCertificate/queryDetailBalanceAccount` 的时间参数契约，明确到底使用 `yyyyMM` 还是 `YYYY-MM-DD`，并同步 CLI 与后端校验。
+2. 在余额表过滤和排序逻辑中，不要把包含辅助核算卡片编号的 `number` 直接按纯数字转 `BigDecimal`。
+3. 调整余额与报表汇总逻辑，父科目存在子科目时，也应同时纳入父科目自身直接记账的数据，或在记账层明确禁止这种数据进入。
+
+4. 凭证录入时新增二级科目，会把“父子科目类别不一致”误报成“科目编码重复”
+
+现象：
+在凭证录入页通过“新建科目”新增二级科目时，系统提示“科目编码重复，不能添加!”，但实际输入的编码并未重复。
+
+已复现样例：
+- 在 `1601 固定资产` 下新增 `160101`，若请求参数为 `type=1, category=1`，接口返回 `7010 科目编码重复，不能添加!`；改为 `category=2` 后可正常新增。
+- 在 `5711 营业外支出` 下新增 `571111`，若请求参数为 `type=5, category=1`，接口返回 `7010 科目编码重复，不能添加!`；改为 `category=4` 后可正常新增。
+
+根因一：前端在“凭证录入 -> 新建科目”场景下，会错误推导二级科目的 category
+
+问题路径：
+- 凭证录入页使用科目选择组件，并允许直接新建科目：
+  `ux/src/views/fm/voucher/Create.vue:250-269`
+- 科目选择组件打开新建科目弹窗：
+  `ux/src/views/fm/components/subject/SubjectSelectOptions.vue:126-131`
+- 新建科目弹窗在根据编码推导父科目时，只拿到了父科目的 `type`，然后把 `category` 强制设置为该类型的第一个类别：
+  `ux/src/views/fm/components/subject/SubjectUpdateDialog.vue:639-681`
+  `ux/src/views/fm/components/subject/SubjectUpdateDialog.vue:696-701`
+
+具体问题：
+- `getParentNodeId()` 找到父科目后调用 `setCategory(item.type)`
+- `setCategory(type)` 并不是按父科目的真实 `category` 赋值，而是取 `categoryOptions[0]`
+- 因此对于非首类别父科目，会把新建子科目的 category 组装错
+
+影响范围：
+- 非流动资产、非流动负债
+- 损益类中的其他收益、期间费用、其他损失、营业成本及税金、以前年度损益调整、所得税等非首类别科目
+
+结论：
+前端不是把编码算重了，而是把新建子科目的 `category` 传错了。
+
+根因二：后端把“类别/类型不一致”错误错误映射成“编码重复”
+
+问题位置：
+- 后端新增科目入口：
+  `finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceSubjectController.java:56-68`
+- 后端保存逻辑：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceSubjectServiceImpl.java:115-130`
+
+具体问题：
+- 当 `parentId` 不为空时，后端先校验“当前科目的 `category/type` 是否与父科目一致”
+- 这段逻辑在不一致时抛出的却是 `FINANCE_SUBJECT_NUMBER_ERROR`
+- 该错误码对应提示文案是“科目编码重复，不能添加!”
+
+相关错误码定义：
+- 当前实际抛出的错误码：
+  `finance/finance-web/src/main/java/com/kakarote/finance/constant/FinanceCodeEnum.java:25`
+- 实际更符合当前场景的错误码已经存在：
+  `finance/finance-web/src/main/java/com/kakarote/finance/constant/FinanceCodeEnum.java:41`
+  即 `FINANCE_SUBJECT_TYPE_ERROR(7026, "科目与上级科目，科目类别或科目类型不一致，不能添加!")`
+
+结论：
+后端真实失败原因不是“编码重复”，而是“父子科目类别/类型不一致”；只是抛错码用错了，导致前端显示成了误导性的重复提示。
+
+综合判断
+
+这是一个前后端叠加问题：
+
+1. 前端在凭证录入页新增二级科目时，可能把 `category` 自动带错。
+2. 后端收到错误的 `category` 后，本应提示“类别/类型不一致”，却错误提示成“编码重复”。
+
+因此用户看到的是“明明没重复却提示重复”，本质上并不是判重失效，而是参数推导错误 + 错误码映射错误。
+
+5. CLI 的 `account create` 命令实际不可用
+
+现象：
+执行 `cli-anything-wukong account create --name ... --company ... --start 2026-04` 时，命令未返回业务错误，而是直接抛出 Python `TypeError` 退出。
+
+实测报错：
+- `TypeError: create_account() takes from 2 to 3 positional arguments but 5 were given`
+
+根因：
+CLI 命令层定义了 `--name --company --start --currency` 四个参数，但调用底层方法时，传参与底层函数签名不一致。命令层把 `name, company, start, currency` 全部透传给 `_account.create_account(...)`，而底层实现只接受 `company_name, start_time`。
+
+代码位置：
+- CLI 账套创建命令：
+  `agent-harness/cli_anything/wukong/wukong_cli.py:356-375`
+- CLI 底层账套创建实现：
+  `agent-harness/cli_anything/wukong/core/account.py:32-52`
+
+结论：
+这是 CLI 自身的参数桥接错误，不是后端业务校验失败。当前命令无法用于创建隔离测试账套。
+
+6. CLI 显示“已切换账套”，但后续查询仍落在原账套
+
+现象：
+执行 `cli-anything-wukong account switch 1` 后：
+- CLI 返回 `{"account_id": 1, "switched": true}`
+- `status` 和本地 session 也显示当前账套为 `1`
+
+但紧接着查询 `statement status`，返回的仍是原测试账套：
+- `accountId = 2036268933673287680`
+- `settleTime = 2021-01-01 00:00:00`
+
+也就是说，CLI 的本地“当前账套”状态已经切换，但后续业务查询实际仍在旧账套上下文中执行。
+
+代码位置：
+- CLI 账套切换命令：
+  `agent-harness/cli_anything/wukong/wukong_cli.py:335-353`
+- CLI 底层账套切换实现：
+  `agent-harness/cli_anything/wukong/core/account.py:27-30`
+- 后端账套切换入口：
+  `finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceAccountSetController.java:109-113`
+- 后端账套切换实现：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceAccountSetServiceImpl.java:443-455`
+
+当前定位：
+CLI 本地 session 与后续接口实际生效的账套上下文不一致。问题可能在后端切换后的上下文持久化/恢复链路，也可能在当前登录态下切换结果未被后续请求沿用，仍需继续往服务端账套上下文恢复逻辑排查。
+
+结论：
+当前 CLI 不能可靠地把后续操作隔离到目标账套，账套切换结果不可信。
+
+7. CLI 通过接口更新凭证时返回 500
+
+现象：
+使用 CLI 新增一张最小测试凭证后，调用 `certificate update` 更新摘要、金额和日期，接口返回 500，CLI 显示：
+- `API error 500: 网络错误，请稍候再试`
+
+实测过程：
+- 先成功新增测试凭证
+- 再执行 `certificate update --id ... --voucher-id ... --date 2021-01-29 --detail ...`
+- 更新失败
+- 随后再次 `get`，确认原凭证未被偷偷改写
+- 测试凭证已删除，账套已清理
+
+日志线索：
+后台日志落出：
+- `TooManyResultsException: Expected one result (or null) to be returned by selectOne(), but found: 9`
+
+根因：
+凭证保存/更新共用 `saveAndUpdate()`。更新路径里会先调用 `queryByTime(certificate)` 做同月同凭证字判重，但该查询：
+- 没有限制 `account_id`
+- 当 `certificateNum` 为空时，也不会按凭证号精确过滤
+- 最终只按 `voucher_id + 月份` 查询
+
+因此在同一凭证字同月存在多张凭证时，`selectOne()` 会命中多条，直接抛 `TooManyResultsException`，导致更新接口返回 500。
+
+代码位置：
+- 更新入口：
+  `finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceCertificateController.java:88-98`
+- 保存/更新共用逻辑：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:152-185`
+- 更新前调用的判重查询：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:170-175`
+- 判重 SQL：
+  `finance/finance-web/src/main/java/com/kakarote/finance/mapper/xml/FinanceCertificateMapper.xml:1446-1456`
+- Mapper 方法定义：
+  `finance/finance-web/src/main/java/com/kakarote/finance/mapper/FinanceCertificateMapper.java:68`
+
+结论：
+这是后端更新判重逻辑的问题，不是 CLI 请求格式错误。当前只要目标月份同凭证字下存在多张凭证，更新接口就可能直接报 500。
+
+8. CLI 的 `account init` 帮助文案与实际行为高度不一致，存在误清库风险
+
+现象：
+CLI 帮助文案把 `account init` 描述为“初始化当前账套默认数据（subjects, voucher words）”，看起来像是给当前账套补默认科目和凭证字。
+
+但实际调用的却是后端 `/financeAccountSet/initFinanceData`，其实现会遍历全部财务表并执行全表清空。
+
+代码位置：
+- CLI 帮助与调用入口：
+  `agent-harness/cli_anything/wukong/wukong_cli.py:377-388`
+- CLI 底层实现注释已明确写成“Clear all finance data tables (destructive reset)”：
+  `agent-harness/cli_anything/wukong/core/account.py:79-85`
+- 后端接口入口：
+  `finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceAccountSetController.java:122-126`
+- 后端实际实现，遍历 `FinanceDatabaseEnum` 全量清表：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceAccountSetServiceImpl.java:476-486`
+
+当前判断：
+该问题本次未实调用，避免误删除现有测试数据；但从 CLI 文案、底层注释和后端实现对照看，命令语义与实际行为明显冲突，存在很高的误操作风险。
+
+结论：
+这是一个高风险 CLI 设计问题。即使还未实际触发，也应优先修正文案和命令映射，避免用户把“初始化当前账套”误用成“清空全部财务数据”。
+
+9. CLI 的凭证新增/更新帮助文案把贷方字段写成了 `ownerBalance`
+
+现象：
+CLI 的 `certificate add` / `certificate update` 帮助文案和示例 JSON 都写的是 `ownerBalance`，但按帮助文案原样传参时，CLI 校验会把该字段当作不存在，进而报：
+- `第 2 条：有科目但借贷金额均为 0`
+
+实测说明：
+- 使用 `creditBalance` 传贷方金额时，可正常新增凭证
+- 改按帮助文案传 `ownerBalance` 后，第二条分录会被视为“金额全为 0”
+
+根因：
+CLI 帮助文案仍沿用了 `ownerBalance` 的旧字段名，但底层校验和请求构造实际只识别 `creditBalance`。
+
+代码位置：
+- CLI 新增凭证帮助文案：
+  `agent-harness/cli_anything/wukong/wukong_cli.py:667-672`
+- CLI 更新凭证帮助文案：
+  `agent-harness/cli_anything/wukong/wukong_cli.py:757-762`
+- CLI 凭证详情校验只读取 `debtorBalance/creditBalance`：
+  `agent-harness/cli_anything/wukong/core/certificate.py:42-89`
+
+结论：
+这是 CLI 文案与实际实现不一致的问题。用户按帮助文案操作时，会直接触发错误校验，无法正常录入贷方分录。
+
+10. `certificate get` 返回的审核状态不可信
+
+现象：
+对同一张测试凭证执行审核、反审核后，`certificate list` 与 `certificate get` 返回的状态不一致。
+
+实测过程：
+- 执行 `certificate review <id> --approve` 后：
+  - `certificate list --status 1` 能查到该凭证，说明审核已成功
+  - 但 `certificate get <id>` 仍返回 `checkStatus = 0`
+- 再执行 `certificate review <id> --unapprove` 后：
+  - `certificate list --status 1` 已查不到该凭证
+  - `certificate delete <id>` 可成功删除，说明已恢复未审核状态
+  - 但删除前再次 `certificate get <id>` 却返回 `checkStatus = 1`
+
+根因：
+当前至少可以确认，凭证详情接口返回的 `checkStatus` 与真实审核状态不同步，不能作为审核状态判断依据。问题更可能出在详情查询返回值组装，而不是审核接口本身，因为列表筛选和删除校验都体现了真实状态。
+
+代码位置：
+- CLI 审核命令：
+  `agent-harness/cli_anything/wukong/wukong_cli.py:721-743`
+- CLI 凭证详情命令：
+  `agent-harness/cli_anything/wukong/wukong_cli.py:637-665`
+- 后端审核入口：
+  `finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceCertificateController.java:111-116`
+- 后端凭证详情入口：
+  `finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceCertificateController.java:133-137`
+
+结论：
+审核接口本身可生效，但凭证详情接口返回的审核状态不可靠，容易误导上层调用方。
+
+11. `ledger general` 返回空数组，但同科目的明细账和报表都有数据
+
+现象：
+使用 CLI 查询总账时，多个有实际发生额和余额的科目直接返回空数组 `[]`。
+
+已实测样例：
+- `1001 库存现金`
+- `2202 应付账款`
+
+对照结果：
+- `ledger general --subject-id ... --start 2021-01-01 --end 2021-01-31` 返回 `[]`
+- 但同时间段：
+  - `ledger detail` 能查到凭证流水
+  - `report balance-sheet` 能查到期初/期末余额
+  - 例如 `2202 应付账款` 的明细账期末余额为 `-24690.65`，资产负债表中也被取到
+
+根因：
+CLI 总账命令调用的是后端 `/financeCertificate/queryDetailUpAccount`，当前看更可能是后端总账查询链路本身有问题，而不是 CLI 参数没传到，因为 CLI 只做了简单透传。
+
+代码位置：
+- CLI 总账命令：
+  `agent-harness/cli_anything/wukong/wukong_cli.py:825-842`
+- CLI 总账请求构造：
+  `agent-harness/cli_anything/wukong/core/ledger.py:47-55`
+- 后端总账入口：
+  `finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceCertificateController.java:150-154`
+- 后端总账服务实现：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:487-536`
+- 后端总账 SQL：
+  `finance/finance-web/src/main/java/com/kakarote/finance/mapper/xml/FinanceCertificateMapper.xml:508-620`
+
+结论：
+当前总账接口存在明显可用性问题。即使科目已有明细和报表余额，总账查询仍可能直接返回空结果。
+
+12. 技能文档中的 `adjuvant add --label project` 示例不能在真实 CLI 中执行
+
+现象：
+技能文档示例写的是：
+- `cli-anything-wukong adjuvant add --name "研发项目A" --label project`
+
+但真实 CLI 参数定义要求 `--label` 必须是整数。按文档执行会被 Click 直接拒绝：
+- `Error: Invalid value for '--label': 'project' is not a valid integer.`
+
+根因：
+技能文档把辅助核算标签写成了字符串别名，但 CLI 实现只接受数字枚举：
+- `1=客户 2=供应商 3=职员 4=项目 5=部门 6=存货 7=自定义`
+
+代码位置：
+- 错误示例来源：
+  `agent-harness/WUKONG.md:116-117`
+- CLI 参数定义：
+  `agent-harness/cli_anything/wukong/wukong_cli.py` 中 `adjuvant add`
+- CLI 帮助输出已明确要求整数标签
+
+结论：
+这是技能文档/使用说明错误，不是后端故障。但会直接误导测试流程和真实用户操作。
+
+13. `certificate next-num` 返回的“下一个凭证号”明显错误
+
+现象：
+调用 `cli-anything-wukong certificate next-num` 查询某月某凭证字的下一个凭证号时，接口会错误返回 `1`，与当前账套中已有凭证数据不符。
+
+已实测样例：
+- `voucherId = 2036268933740396548`（`转`），`date = 2021-01-31`
+  - 当月实际已有 `转_1` 到 `转_9`
+  - `next-num` 仍返回 `{"certificateNum": 1}`
+- `voucherId = 2036268933740396545`（`收`），`date = 2021-01-21`
+  - 当日实际已有 `收_1`、`收_2`
+  - `next-num` 仍返回 `{"certificateNum": 1}`
+
+根因：
+CLI 传给 `/financeCertificate/queryNumByTime` 的 `certificateTime` 会被规范成 `yyyyMM`，后端再调用 `queryByTime(certificate)` 查“同月最后一张凭证”。
+
+但该查询 SQL 使用：
+- `DATE_FORMAT(certificate_time,'%Y%m') = DATE_FORMAT(#{data.certificateTime},'%Y%m')`
+
+当传入值本身就是 `202101` 这类纯期间字符串时，`DATE_FORMAT(#{data.certificateTime},'%Y%m')` 在 MySQL 中并不能稳定按预期得到有效月份日期，最终导致查询不到已有凭证，接口退回默认值 `1`。
+
+代码位置：
+- CLI 命令入口：
+  `agent-harness/cli_anything/wukong/wukong_cli.py:733-746`
+- CLI 底层请求构造，会把日期规范成 `yyyyMM`：
+  `agent-harness/cli_anything/wukong/core/certificate.py:216-237`
+- 后端接口入口：
+  `finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceCertificateController.java:176-180`
+- 后端实现：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:2845-2853`
+- 后端依赖的判重/取号 SQL：
+  `finance/finance-web/src/main/java/com/kakarote/finance/mapper/xml/FinanceCertificateMapper.xml:1446-1456`
+
+结论：
+当前 `next-num` 结果不可信，不能用于可靠地预取下一个凭证号。
+
+14. `certificate get` 返回的字段明显不完整
+
+现象：
+调用 `cli-anything-wukong certificate get <id>` 查询现有凭证详情时，返回结果中多个应有字段稳定为空。
+
+已实测样例：
+- 对已有的 `收_1`、`转_1` 等凭证调用 `certificate get`
+- 返回中出现：
+  - `voucherName = null`
+  - `voucherNum = null`
+  - 明细行中的 `subjectName = null`
+
+但同一张凭证通过 `certificate list` 查询时，上述字段都能正常返回，例如：
+- `voucherName = 收 / 转`
+- `voucherNum = 1 / 9`
+- `subjectName = 银行存款 / 应收账款 / 管理费用-社保费` 等
+
+根因：
+后端详情接口 `queryById()` 只是：
+- 直接 `getById(certificateId)`
+- 再单独查明细表
+
+但没有像分页列表接口 `queryPage()` 那样补齐：
+- 凭证字名称
+- `voucherNum`
+- 明细行科目名称
+- 附件列表等展示字段
+
+因此详情接口返回的是“基础 PO + 明细”，而不是前端列表那种完整 VO。
+
+代码位置：
+- 后端详情入口：
+  `finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceCertificateController.java:134-138`
+- 后端详情实现：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:382-427`
+- 对照：列表接口会补全名称和附件等字段：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCertificateServiceImpl.java:240-287`
+
+结论：
+凭证详情接口返回内容不完整，不能与列表接口保持一致，会影响 CLI 或其他调用方做详情展示和后续处理。
+
+15. 凭证字新增接口允许重名
+
+现象：
+当前账套中本来已经存在默认凭证字 `记`，再次执行：
+- `cli-anything-wukong voucher add 记`
+
+接口仍返回成功，并创建出第二个名称同样为 `记` 的凭证字。
+
+实测结果：
+- 原默认凭证字：
+  - `voucherId = 2036268933740396544`
+  - `voucherName = 记`
+- 新增出的重复凭证字：
+  - `voucherId = 2037840031321821184`
+  - `voucherName = 记`
+- 该测试数据已删除，账套已清理
+
+根因：
+当前至少可以确认，凭证字新增链路没有拦截名称重复。无论是后端未做唯一校验，还是数据库未加唯一约束，结果上都允许在同一账套下创建重名凭证字。
+
+代码位置：
+- CLI 新增凭证字命令：
+  `agent-harness/cli_anything/wukong/wukong_cli.py` 中 `voucher add`
+- 后端凭证字新增链路：
+  需继续从 `FinanceVoucherController` / `FinanceVoucherServiceImpl` 追踪具体验证位置
+
+结论：
+当前系统允许重复凭证字名称，存在明显数据约束缺失问题，可能影响后续凭证录入、筛选和展示。
+
+16. `report cash-flow --check` 会返回 500
+
+现象：
+调用现金流量表接口时：
+- `report cash-flow --period month --date 2021-01-31` 可正常返回报表数据
+- 但加上 `--check` 后：
+  - `report cash-flow --period month --date 2021-01-31 --check`
+  - 直接返回 `API error 500: 网络错误，请稍候再试`
+
+根因：
+现金流量表的平衡检查实现并不是独立校验，而是直接调用资产负债表的 `balanceCheck(requestBO)`。因此只要资产负债表校验链路在当前期间触发异常，现金流量表 `--check` 也会同步报 500。
+
+从日志调用链可见：
+- `FinanceCashFlowStatementReportImpl.balanceCheck(...)`
+  -> `balanceSheetService.balanceCheck(requestBO)`
+  -> 已知的资产负债表校验异常链路
+
+因此该问题更准确地说，是“现金流量表校验接口直接复用了脆弱的资产负债表校验链路”，导致错误向外扩散。
+
+代码位置：
+- CLI 现金流量表命令：
+  `agent-harness/cli_anything/wukong/wukong_cli.py:976-999`
+- CLI 校验调用：
+  `agent-harness/cli_anything/wukong/core/report.py:79-81`
+- 后端现金流量表校验入口：
+  `finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceReportController.java:91-95`
+- 后端现金流量表校验实现，直接调用资产负债表校验：
+  `finance/finance-web/src/main/java/com/kakarote/finance/service/impl/FinanceCashFlowStatementReportImpl.java:274-286`
+
+结论：
+`cash-flow --check` 当前不可独立信任。它会因为资产负债表校验链路出错而一起返回 500。
