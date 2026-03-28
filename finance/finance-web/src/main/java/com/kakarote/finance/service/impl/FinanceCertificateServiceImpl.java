@@ -543,7 +543,12 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
             if (numberStr == null) {
                 continue;
             }
-            BigDecimal number = RuleUtils.fillUpNumber(numberStr, rule);
+            // Auxiliary account entries carry number like "1122_C0002" (subjectCode_cardNumber).
+            // Only the subject-code part (before '_') is meaningful for range comparison.
+            String numberForFilter = numberStr.contains("_")
+                    ? numberStr.split("_")[0]
+                    : numberStr;
+            BigDecimal number = RuleUtils.fillUpNumber(numberForFilter, rule);
             Boolean flag = true;
             if (ObjectUtil.isNotNull(minNumberStr)) {
                 if (number.compareTo(RuleUtils.fillUpNumber(minNumberStr, rule)) < 0) {
