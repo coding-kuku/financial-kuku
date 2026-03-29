@@ -133,8 +133,59 @@ def list_certificates(
 
 
 def get_certificate(client: WukongClient, certificate_id: int) -> dict:
-    """Return detailed certificate by ID, including all debit/credit lines."""
-    return client.post("/financeCertificate/queryById", params={"certificateId": certificate_id}) or {}
+    """Return detailed certificate by ID, including all debit/credit lines.
+
+    Enriches the response to match Web frontend behaviour:
+    - voucherName: resolved by fetching the voucher word list and matching voucherId
+      (the raw queryById response only contains voucherId, not the name)
+    - subjectName in each detail line: extracted from the subjectContent JSON column
+      (the raw response omits the transient subjectName field populated only by JOIN queries)
+    - Normalises certificateDetails → details for consistency with list records
+    """
+    import json as _json
+    from cli_anything.wukong.core.voucher_word import list_voucher_words
+
+    result = client.post("/financeCertificate/queryById", params={"certificateId": certificate_id}) or {}
+
+    # Enrich voucherName (Web loads voucher list separately and matches by voucherId)
+    voucher_id = result.get("voucherId")
+    if voucher_id:
+        vouchers = list_voucher_words(client)
+        voucher_map = {v["voucherId"]: v.get("voucherName", "") for v in vouchers if v.get("voucherId")}
+        result["voucherName"] = voucher_map.get(voucher_id, "")
+
+    # Normalise certificateDetails → details; enrich subjectName/subjectNumber
+    raw_details = result.pop("certificateDetails", None) or []
+
+    # First pass: try to extract from subjectContent JSON (populated for newer records)
+    needs_subject_lookup = []
+    for d in raw_details:
+        if not d.get("subjectName") and d.get("subjectContent"):
+            try:
+                subject = _json.loads(d["subjectContent"])
+                d["subjectName"] = subject.get("subjectName", "")
+                if not d.get("subjectNumber"):
+                    d["subjectNumber"] = subject.get("number", "")
+            except (ValueError, TypeError):
+                pass
+        if not d.get("subjectName") and d.get("subjectId"):
+            needs_subject_lookup.append(d)
+
+    # Second pass: fall back to subject list lookup for old records where subjectContent is null
+    if needs_subject_lookup:
+        from cli_anything.wukong.core.subject import list_subjects
+        subjects = list_subjects(client)
+        subject_map = {str(s["subjectId"]): s for s in subjects if s.get("subjectId")}
+        for d in needs_subject_lookup:
+            s = subject_map.get(str(d["subjectId"]))
+            if s:
+                d["subjectName"] = s.get("subjectName", "")
+                if not d.get("subjectNumber"):
+                    d["subjectNumber"] = s.get("number", "")
+
+    result["details"] = raw_details
+
+    return result
 
 
 def add_certificate(

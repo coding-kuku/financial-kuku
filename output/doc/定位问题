@@ -273,33 +273,32 @@ CLI 帮助文案仍沿用了 `ownerBalance` 的旧字段名，但底层校验和
 
 10. `certificate get` 返回的审核状态不可信
 
-现象：
-对同一张测试凭证执行审核、反审核后，`certificate list` 与 `certificate get` 返回的状态不一致。
+原始描述（来自用户反馈）：
+凭证详情接口返回的 `checkStatus` 与列表筛选实际状态不同步，不能作为审核状态判断依据。
 
-实测过程：
-- 执行 `certificate review <id> --approve` 后：
-  - `certificate list --status 1` 能查到该凭证，说明审核已成功
-  - 但 `certificate get <id>` 仍返回 `checkStatus = 0`
-- 再执行 `certificate review <id> --unapprove` 后：
-  - `certificate list --status 1` 已查不到该凭证
-  - `certificate delete <id>` 可成功删除，说明已恢复未审核状态
-  - 但删除前再次 `certificate get <id>` 却返回 `checkStatus = 1`
+2026-03-29 实测结论（未能复现原始现象）：
 
-根因：
-当前至少可以确认，凭证详情接口返回的 `checkStatus` 与真实审核状态不同步，不能作为审核状态判断依据。问题更可能出在详情查询返回值组装，而不是审核接口本身，因为列表筛选和删除校验都体现了真实状态。
+测试方式：在隔离测试账套（切换测试账套A）新建测试凭证，逐步执行审核、反审核，对比 `certificate list` 与 `certificate get` 的 `checkStatus`。
+
+测试结果：
+- 创建后：list = 0，get = 0，一致
+- 审核后：list = 1，get = 1，一致
+- 反审核后：list = 0，get = 0，一致
+
+两个接口的 `checkStatus` 在本次测试中始终保持一致。后端 list 接口（`queryPage`）和 get 接口（`queryById`）都从同一 DB 字段 `check_status` 读取，没有发现组装差异。
+
+追加发现：
+- `isStatement`（期间是否已结账）在 `certificate get` 中有返回，但 `certificate list` 不返回该字段
+- 结账后仍可反审（`--unapprove`），反审后可正常删除——这是正确的业务逻辑，不是 bug
+- `certificate get` 的 CLI 输出目前不展示 `checkStatus` 和 `isStatement`，用户无法从 get 结果判断凭证的审核状态和所在期间是否已结账
+
+待跟进：
+原始现象（list 与 get 不一致）在当前版本未能复现。需等待用户提供具体复现步骤或环境信息后再排查。
 
 代码位置：
-- CLI 审核命令：
-  `agent-harness/cli_anything/wukong/wukong_cli.py:721-743`
-- CLI 凭证详情命令：
-  `agent-harness/cli_anything/wukong/wukong_cli.py:637-665`
-- 后端审核入口：
-  `finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceCertificateController.java:111-116`
-- 后端凭证详情入口：
-  `finance/finance-web/src/main/java/com/kakarote/finance/controller/FinanceCertificateController.java:133-137`
-
-结论：
-审核接口本身可生效，但凭证详情接口返回的审核状态不可靠，容易误导上层调用方。
+- 后端审核写入：`FinanceCertificateServiceImpl.java:304`（`lambdaUpdate().set(checkStatus, status)`）
+- 后端 get 实现：`FinanceCertificateServiceImpl.java:388-435`
+- 后端 list 实现：`FinanceCertificateServiceImpl.java:246-294`
 
 11. `ledger general` 返回空数组，但同科目的明细账和报表都有数据
 

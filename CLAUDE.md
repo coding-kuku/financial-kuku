@@ -2,6 +2,12 @@
 
 悟空财务（Wukong Accounting）的本地开发仓库，包含后端 Java 服务、前端 Vue、以及补充的 CLI Agent 接口。
 
+## 修复原则
+
+**如果 Web 上可以跑通、CLI 上不能跑通，改 CLI 的代码，不改后端。**
+
+后端接口是 Web 和 CLI 共用的，改后端风险更大。CLI 应当复现 Web 端的数据获取策略（如额外调用辅助接口、解析 JSON 字段等）。
+
 ## 系统架构
 
 这是一个双接口财务系统：
@@ -126,9 +132,9 @@ WUKONG.md 示例已改为整数（`--label 4`），并附上枚举说明。
 ### 13. ~~`certificate next-num` 返回值不可信~~ ✓ 已修复
 两处修复：(1) CLI 改为传 `YYYY-MM-01 00:00:00` 格式，BeanUtil 能正确解析为 LocalDateTime；(2) 后端 `queryNumByTime` 补设 `accountId`；(3) `queryByTime` SQL 加 `LIMIT 1` 避免同月多张凭证时 `selectOne()` 抛 TooManyResultsException。
 
-### 14. `certificate get` 返回字段不完整
-详情接口只返回基础 PO，缺少 `voucherName`、`voucherNum`、明细行 `subjectName` 等展示字段，与列表接口不一致。
-- `FinanceCertificateServiceImpl.java:382-427`（对比列表补全逻辑 `240-287`）
+### 14. ~~`certificate get` 返回字段不完整~~ ✓ 已修复
+CLI 端复现 Web 端策略：(1) 调凭证字列表按 `voucherId` 匹配填入 `voucherName`；(2) 解析 detail 里 `subjectContent` JSON 提取 `subjectName`/`subjectNumber`；(3) 对 `subjectContent` 为 null 的老数据，回退调科目列表按 `subjectId` 查询；(4) 修正字段名 `certificateDetails` → `details`。
+- `core/certificate.py` `get_certificate()`
 
 ### 15. 凭证字新增接口允许重名
 同一账套下可创建同名凭证字，无唯一校验。
