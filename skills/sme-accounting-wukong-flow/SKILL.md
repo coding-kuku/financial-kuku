@@ -51,6 +51,30 @@ For every task, structure work as:
 
 When presenting progress or results, keep this structure explicit so another agent or reviewer can audit the decision path.
 
+## Standard Deliverables
+
+For each monthly bookkeeping task, generate these deliverables in addition to vouchers and exception decisions:
+
+- machine-readable workpaper json
+- posting proposal csv
+- accountant review report md
+- accountant review report docx generated from the md report
+
+Use stable English filenames so downstream steps can reference them directly.
+
+Required md template path:
+
+- `normalization_deal/accounting_review_report_min_template.md`
+
+Default naming convention for a monthly period `YYYYMM`:
+
+- `jietu/YYYYMM_skill_workpaper.json`
+- `jietu/YYYYMM_posting_proposals_skill.csv`
+- `jietu/YYYYMM_accounting_review_report.md`
+- `output/doc/YYYYMM_accounting_review_report.docx`
+
+Do not invent ad hoc filenames unless the user explicitly asks for a different naming scheme.
+
 ## Decision Gates
 
 ### 1. Environment Initialization
@@ -77,6 +101,32 @@ Normalize each record into at least:
 - source
 
 If a payer/payee is an intermediary account such as Alipay, WeChat, or reserve funds, do not treat it as the final counterparty. Read the note or receipt details and restore the real business counterparty.
+
+### 2A. Bank Flow Secondary Normalization
+
+When the user provides only raw bank-statement data, do not classify business nature or post directly from the raw file.
+First normalize the raw bank rows with:
+
+- `normalization_deal/bank_flow_secondary_normalization_template.md`
+
+Use that file as the required intermediate standard before posting decisions, voucher preparation, or system posting.
+
+Minimum requirements:
+
+- preserve raw bank rows in `01_raw_import`
+- standardize each valid bank row into `02_normalized_txn`
+- place every normalized row into exactly one decision state in `03_decision_queue`:
+  - `post`
+  - `hold`
+  - `escalate`
+- place only directly postable rows into `04_post_ready`
+- keep full source traceability from normalized rows back to the original file, sheet, and row
+- for every held row, state:
+  - hold reason
+  - minimum missing information
+
+Do not post directly from the raw bank-statement sheet.
+Do not continue to voucher generation until the normalization structure is complete.
 
 ### 3. Business Identification
 
@@ -118,6 +168,29 @@ Apply accrual accounting:
 
 If bank date and business date differ, prefer the business date.
 Mark cross-period matters and propose adjusting entries.
+
+### 5A. Source Conflict Gate
+
+When ledger totals, bank flows, invoices, payroll sheets, social security sheets, or user statements conflict, do not silently blend them into one posting result.
+
+Handle conflicts in this order:
+
+1. raw source evidence
+2. user-confirmed facts
+3. historical ledger balances
+4. derived or previously posted summaries
+
+Required actions:
+
+- identify the exact conflicting fields
+- state which source is being treated as authoritative for the current decision
+- separate:
+  - postable items
+  - held items
+  - disputed items
+- do not close the period while disputed items remain unresolved
+
+If the task goal is to reproduce an existing ledger rather than rebuild from raw evidence, state that mode explicitly before following the old ledger treatment.
 
 ### 6. Accounting Decision Comparison
 
@@ -222,6 +295,35 @@ After close:
 - reverse by red-entry method
 - post the corrected voucher
 - rerun all validations
+
+### 12A. Accountant Review Report
+
+Before close, first generate an accountant-facing markdown review report from the standard md template, then generate the docx report from that md report.
+
+Execution order:
+
+1. generate the markdown report
+2. generate the docx report from the markdown report
+
+The markdown report must contain these sections:
+
+1. review conclusion
+2. posting summary
+3. posted item list
+4. held item list
+5. follow-up recommendations
+
+Minimum content requirements:
+
+- period
+- entity name
+- count and total amount of suggested postings
+- count and reason summary of held items
+- whether close is recommended
+- key source conflicts, if any
+
+The md template path must use the path defined in `Standard Deliverables`.
+Do not maintain a separate content template for docx.
 
 ## Enhanced Auto-Decision Rules
 
@@ -467,6 +569,141 @@ For each transaction, output:
 - rejected alternatives
 - source-row traceability
 - reason if held
+
+### 13. Minimum-Sufficient Posting Rule
+
+Do not hold transactions by category alone.
+Decide based on whether the minimum information required for a defensible accounting treatment is available.
+
+If the minimum sufficient facts are available, post.
+If the minimum sufficient facts are not available, hold.
+If a batch contains both clear and unclear transactions, post the clear subset first and hold only the unclear subset.
+
+Minimum sufficient facts must support all of:
+
+- money direction is clear
+- period attribution is usable
+- business nature is identifiable
+- counterparty role is identifiable
+- subject path is reasonably determined
+- risk can be stated explicitly in the output
+
+Avoid both failure modes:
+
+- over-posting uncertain flows
+- over-holding flows that are already determinable
+
+### 14. User-Confirmed Fact Rule
+
+Do not require formal documents if the user has already provided enough concrete business facts to determine the treatment with acceptable risk.
+
+Treat explicit user confirmation as usable evidence when it clearly states:
+
+- who the counterparty is
+- what the money is for
+- which period it belongs to
+- whether it is income, expense, payroll, social security, refund, current account, or shareholder funds
+- any key split needed for posting, such as employer versus employee burden
+
+When relying on user-confirmed facts:
+
+- record that the treatment is based on user confirmation
+- keep the transaction traceable to the bank row
+- still hold the transaction if the user statement remains materially ambiguous
+
+Do not use blanket rules such as:
+
+- all payroll must be held
+- all social security must be held
+- all natural-person flows must be held
+- all unclear incoming flows must be held
+
+These categories may be posted when the user-supplied facts are sufficient.
+
+### 15. Minimum Missing-Information Rule
+
+When a transaction cannot be posted, ask only for the minimum additional information required to make it postable.
+Do not ask for broad document sets unless they are actually necessary.
+
+Use the smallest fact set that resolves the accounting decision.
+
+Typical minimum missing information by transaction type:
+
+- payroll:
+  - employee identity
+  - payroll month
+  - whether the bank amount is net pay
+  - whether payroll accrual already exists
+- social security:
+  - contribution month
+  - employer burden
+  - employee burden
+  - whether housing fund or tax is included
+- natural-person counterparty:
+  - person identity
+  - relationship to the company
+  - business nature of the payment
+  - whether the person is acting on behalf of an entity
+- incoming flow of unclear nature:
+  - whether it is revenue, refund, current-account return, or shareholder funds
+  - related customer or supplier if any
+  - whether performance or delivery has occurred if revenue is claimed
+- refund or return flow:
+  - which original payment or transaction it relates to
+  - whether the original nature was purchase, expense, deposit, or current account
+
+### 16. Held-Item Output Rule
+
+For every held transaction, output all of:
+
+- hold reason
+- minimum missing information
+- posting becomes possible if the missing information is supplied
+- preferred treatment after confirmation
+- alternative treatment when relevant
+- risk if posted without clarification
+
+Keep held-item explanations short and operational.
+The goal is to help the user unblock posting, not to produce generic caution text.
+
+### 17. Partial-Batch Completion Rule
+
+A batch is considered properly processed only when every source transaction is in exactly one of:
+
+- posted
+- held with explicit reason and minimum missing information
+- escalated with explicit risk reason
+
+Do not leave any transaction in an implicit or silent state.
+
+At the end of each batch, output:
+
+- posted transactions summary
+- held transactions summary
+- escalated transactions summary
+- missing information checklist for held items
+- next actions if the user wants the held subset posted
+
+### 18. Preferred Response Pattern For Unclear Transactions
+
+When reporting unclear transactions to the user, use this structure:
+
+- current decision: post / hold / escalate
+- why it cannot yet be posted
+- minimum information needed
+- what will be posted immediately once that information is confirmed
+- what accounting treatment is expected after confirmation
+
+Example pattern:
+
+- current decision: hold
+- why: incoming cash is clear, but business nature is not
+- minimum information needed: confirm whether this is customer payment, supplier refund, or shareholder transfer
+- once confirmed: the transaction can be posted immediately
+- expected treatment:
+  - customer payment -> bank deposits against receivable or revenue path
+  - supplier refund -> bank deposits against prepayments or payables
+  - shareholder transfer -> bank deposits against other payables or equity-related path under policy
 
 ## Wukong System Operations
 

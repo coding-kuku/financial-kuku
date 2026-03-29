@@ -91,9 +91,11 @@ def query_subject_balance(
     """
     body: dict = {"startTime": start_time, "endTime": end_time}
     if subject_id is not None:
-        body["subjectId"] = subject_id
+        body["startSubjectId"] = subject_id
+        body["endSubjectId"] = subject_id
     if level is not None:
-        body["level"] = level
+        body["minLevel"] = level
+        body["maxLevel"] = level
     return client.post("/financeCertificate/queryDetailBalanceAccount", body) or []
 
 

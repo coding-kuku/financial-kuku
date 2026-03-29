@@ -9,3 +9,7 @@ rebel.xml
 rebel-remote.xml
 .playwright-cli/
 __pycache__/
+agent-harness/logs/
+finance/finance-web/logs/
+*.class
+D:/

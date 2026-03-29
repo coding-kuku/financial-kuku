@@ -1,0 +1,421 @@
+[
+  {
+    "id": "V001",
+    "date": "2022-01-04",
+    "status": "post",
+    "source_type": "bank",
+    "source_rows": [
+      1
+    ],
+    "digest": "收到蓬江区世祥商行货款",
+    "classification": "sales_receipt",
+    "amount": 3757.0,
+    "counterparty": "蓬江区世祥商行",
+    "evidence_layer": "B",
+    "confidence": "medium",
+    "risk": "medium",
+    "basis": "资金流入；交易对手为历史客户样式名称；备注“采购”按方向优先解释为客户采购我方商品后的回款。",
+    "rejected_alternatives": [
+      "记为采购退款或其他往来款，因缺直接退款证据未采用。"
+    ],
+    "lines": [
+      {
+        "subject_name": "银行存款-建设银行基本户44050167065300000136",
+        "debit": 3757.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "应收账款-蓬江区世祥商行",
+        "debit": 0.0,
+        "credit": 3757.0
+      }
+    ]
+  },
+  {
+    "id": "V002",
+    "date": "2022-01-07",
+    "status": "post",
+    "source_type": "bank",
+    "source_rows": [
+      2
+    ],
+    "digest": "支付单位结算卡年费",
+    "classification": "bank_fee",
+    "amount": 10.0,
+    "counterparty": "",
+    "evidence_layer": "A",
+    "confidence": "high",
+    "risk": "low",
+    "basis": "银行收费，摘要明确。",
+    "rejected_alternatives": [],
+    "lines": [
+      {
+        "subject_name": "财务费用-手续费",
+        "debit": 10.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款-建设银行基本户44050167065300000136",
+        "debit": 0.0,
+        "credit": 10.0
+      }
+    ]
+  },
+  {
+    "id": "V003",
+    "date": "2022-01-08",
+    "status": "post",
+    "source_type": "bank",
+    "source_rows": [
+      3,
+      4
+    ],
+    "digest": "支付跨行转账手续费",
+    "classification": "bank_fee",
+    "amount": 5.5,
+    "counterparty": "",
+    "evidence_layer": "A",
+    "confidence": "high",
+    "risk": "low",
+    "basis": "同日同类银行收费，满足 same-day merge 规则。",
+    "rejected_alternatives": [],
+    "lines": [
+      {
+        "subject_name": "财务费用-手续费",
+        "debit": 5.5,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款-建设银行基本户44050167065300000136",
+        "debit": 0.0,
+        "credit": 5.5
+      }
+    ]
+  },
+  {
+    "id": "V004",
+    "date": "2022-01-17",
+    "status": "post",
+    "source_type": "bank+numbers",
+    "source_rows": [
+      5
+    ],
+    "digest": "支付1月社保并代扣员工个人部分",
+    "classification": "payroll_social_security",
+    "amount": 2461.84,
+    "counterparty": "省ETS待清算户",
+    "evidence_layer": "A+B",
+    "confidence": "medium",
+    "risk": "medium",
+    "basis": "银行备注“ETS社保扣款”；numbers 预览显示个人部分 396.88 x 2 = 793.76，其余 1668.08 作为单位承担社保。",
+    "rejected_alternatives": [
+      "全额直接计入费用，因存在个人承担部分未采用。",
+      "全额挂暂估清算，因个人部分可识别未采用。"
+    ],
+    "lines": [
+      {
+        "subject_name": "应付职工薪酬-社保费",
+        "debit": 1668.08,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "其他应收款-员工个人社保",
+        "debit": 793.76,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款-建设银行基本户44050167065300000136",
+        "debit": 0.0,
+        "credit": 2461.84
+      }
+    ]
+  },
+  {
+    "id": "V005",
+    "date": "2022-01-17",
+    "status": "post",
+    "source_type": "bank",
+    "source_rows": [
+      6
+    ],
+    "digest": "缴纳印花税",
+    "classification": "tax",
+    "amount": 2.5,
+    "counterparty": "待报解预算收入（财库联网集中户）",
+    "evidence_layer": "A",
+    "confidence": "high",
+    "risk": "low",
+    "basis": "电子缴税凭证，备注“印花税2.50”明确。",
+    "rejected_alternatives": [],
+    "lines": [
+      {
+        "subject_name": "应交税费-印花税",
+        "debit": 2.5,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款-建设银行基本户44050167065300000136",
+        "debit": 0.0,
+        "credit": 2.5
+      }
+    ]
+  },
+  {
+    "id": "V006",
+    "date": "2022-01-17",
+    "status": "post",
+    "source_type": "bank",
+    "source_rows": [
+      7
+    ],
+    "digest": "支付上海衫城贸易有限公司货款",
+    "classification": "procurement_payment",
+    "amount": 618.0,
+    "counterparty": "上海衫城贸易有限公司",
+    "evidence_layer": "B",
+    "confidence": "medium",
+    "risk": "medium",
+    "basis": "资金流出；对手为公司主体；备注“货款”；缺到货/入库依据，按预付路径处理。",
+    "rejected_alternatives": [
+      "记应付账款，因缺可追溯的期初供应商明细未采用。"
+    ],
+    "lines": [
+      {
+        "subject_name": "预付账款-上海衫城贸易有限公司",
+        "debit": 618.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款-建设银行基本户44050167065300000136",
+        "debit": 0.0,
+        "credit": 618.0
+      }
+    ]
+  },
+  {
+    "id": "V007",
+    "date": "2022-01-19",
+    "status": "post",
+    "source_type": "bank+opening_ledger",
+    "source_rows": [
+      8
+    ],
+    "digest": "收到陈慧莹往来款",
+    "classification": "shareholder_funds_or_current_account",
+    "amount": 1130.0,
+    "counterparty": "陈慧莹",
+    "evidence_layer": "B",
+    "confidence": "medium",
+    "risk": "medium",
+    "basis": "自然人流入款项；期初余额已存在“其他应付款-陈慧莹” 9985.00，可沿历史往来口径处理。",
+    "rejected_alternatives": [
+      "记营业外收入，因缺收益性质依据未采用。"
+    ],
+    "lines": [
+      {
+        "subject_name": "银行存款-建设银行基本户44050167065300000136",
+        "debit": 1130.0,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "其他应付款-陈慧莹",
+        "debit": 0.0,
+        "credit": 1130.0
+      }
+    ]
+  },
+  {
+    "id": "V008",
+    "date": "2022-01-20",
+    "status": "post",
+    "source_type": "bank",
+    "source_rows": [
+      9
+    ],
+    "digest": "收到蓬江区世祥商行设计费款",
+    "classification": "sales_receipt",
+    "amount": 1959.88,
+    "counterparty": "蓬江区世祥商行",
+    "evidence_layer": "A+B",
+    "confidence": "medium",
+    "risk": "medium",
+    "basis": "资金流入；备注“设计费”与销售服务款语义一致。",
+    "rejected_alternatives": [
+      "记其他往来款，因备注已指向业务收入未采用。"
+    ],
+    "lines": [
+      {
+        "subject_name": "银行存款-建设银行基本户44050167065300000136",
+        "debit": 1959.88,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "应收账款-蓬江区世祥商行",
+        "debit": 0.0,
+        "credit": 1959.88
+      }
+    ]
+  },
+  {
+    "id": "V009",
+    "date": "2022-01-20",
+    "status": "post",
+    "source_type": "bank+invoice",
+    "source_rows": [
+      10
+    ],
+    "digest": "支付打印机耗材费",
+    "classification": "expense_payment",
+    "amount": 1090.8,
+    "counterparty": "深圳东申艺术彩印有限公司",
+    "evidence_layer": "A",
+    "confidence": "high",
+    "risk": "low",
+    "basis": "银行备注“打印机耗材费”；收到发票目录存在同额凭证 `打印机耗材1090.8.pdf`。",
+    "rejected_alternatives": [
+      "记预付账款，因用途和金额已有发票佐证未采用。"
+    ],
+    "lines": [
+      {
+        "subject_name": "管理费用-办公耗材",
+        "debit": 1090.8,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款-建设银行基本户44050167065300000136",
+        "debit": 0.0,
+        "credit": 1090.8
+      }
+    ]
+  },
+  {
+    "id": "V010",
+    "date": "2022-01-27",
+    "status": "post",
+    "source_type": "bank",
+    "source_rows": [
+      11
+    ],
+    "digest": "支付自助设备使用费",
+    "classification": "bank_fee",
+    "amount": 7.5,
+    "counterparty": "",
+    "evidence_layer": "A",
+    "confidence": "high",
+    "risk": "low",
+    "basis": "银行收费，摘要明确。",
+    "rejected_alternatives": [],
+    "lines": [
+      {
+        "subject_name": "财务费用-手续费",
+        "debit": 7.5,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "银行存款-建设银行基本户44050167065300000136",
+        "debit": 0.0,
+        "credit": 7.5
+      }
+    ]
+  },
+  {
+    "id": "V011",
+    "date": "2022-01-31",
+    "status": "post",
+    "source_type": "invoice_name+bank_pattern",
+    "source_rows": [],
+    "digest": "确认2022年1月常规短袖销售收入",
+    "classification": "sales_accrual",
+    "amount": 4688.28,
+    "counterparty": "蓬江区世祥商行（暂按收款方匹配）",
+    "evidence_layer": "B",
+    "confidence": "medium",
+    "risk": "medium",
+    "basis": "开票目录存在 `202202开具的发票/202201常规短袖4688.28.pdf`，文件名直接指向业务归属为 2022-01；1 月银行亦存在同客户采购回款。",
+    "rejected_alternatives": [
+      "递延到2月按开票月确认，因 skill 要求优先业务归属月未采用。"
+    ],
+    "lines": [
+      {
+        "subject_name": "应收账款-蓬江区世祥商行",
+        "debit": 4688.28,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "主营业务收入-短袖",
+        "debit": 0.0,
+        "credit": 4641.86
+      },
+      {
+        "subject_name": "应交税费-应交增值税（小规模纳税人专用）",
+        "debit": 0.0,
+        "credit": 46.42
+      }
+    ]
+  },
+  {
+    "id": "V012",
+    "date": "2022-01-31",
+    "status": "post",
+    "source_type": "invoice_name+bank_pattern",
+    "source_rows": [],
+    "digest": "确认2022年1月设计费收入",
+    "classification": "sales_accrual",
+    "amount": 2287.16,
+    "counterparty": "蓬江区世祥商行（暂按收款方匹配）",
+    "evidence_layer": "B",
+    "confidence": "medium",
+    "risk": "medium",
+    "basis": "开票目录存在 `202202开具的发票/202201设计费2287.16.pdf`，文件名直接指向业务归属为 2022-01；1 月20日同客户存在“设计费”回款。",
+    "rejected_alternatives": [
+      "递延到2月按开票月确认，因 skill 要求优先业务归属月未采用。"
+    ],
+    "lines": [
+      {
+        "subject_name": "应收账款-蓬江区世祥商行",
+        "debit": 2287.16,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "主营业务收入-设计费",
+        "debit": 0.0,
+        "credit": 2264.51
+      },
+      {
+        "subject_name": "应交税费-应交增值税（小规模纳税人专用）",
+        "debit": 0.0,
+        "credit": 22.65
+      }
+    ]
+  },
+  {
+    "id": "V013",
+    "date": "2022-01-31",
+    "status": "post",
+    "source_type": "numbers+bank_arithmetic",
+    "source_rows": [],
+    "digest": "计提1月单位承担社保费",
+    "classification": "payroll_social_security_accrual",
+    "amount": 1668.08,
+    "counterparty": "",
+    "evidence_layer": "B",
+    "confidence": "medium",
+    "risk": "medium",
+    "basis": "银行社保扣款 2461.84 扣除个人部分 793.76 后得到单位承担 1668.08。",
+    "rejected_alternatives": [
+      "全额挂暂估，因个人部分已可识别未采用。"
+    ],
+    "lines": [
+      {
+        "subject_name": "管理费用-社保费",
+        "debit": 1668.08,
+        "credit": 0.0
+      },
+      {
+        "subject_name": "应付职工薪酬-社保费",
+        "debit": 0.0,
+        "credit": 1668.08
+      }
+    ]
+  }
+]
