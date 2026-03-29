@@ -24,6 +24,11 @@ def get_account(client: WukongClient, account_id: int) -> dict:
     return client.post("/financeAccountSet/getAccountSetById", params={"accountId": account_id}) or {}
 
 
+def update_account(client: WukongClient, data: dict) -> None:
+    """Update account set fields (companyCode, companyName, contacts, etc.)."""
+    client.post("/financeAccountSet/updateAccount", data)
+
+
 def switch_account(client: WukongClient, account_id: int) -> None:
     """Switch the server-side session to a different account set."""
     client.post("/financeAccountSet/switchAccountSet", params={"accountId": account_id})

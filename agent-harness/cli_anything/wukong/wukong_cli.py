@@ -424,6 +424,88 @@ def account_switch(ctx: click.Context, account_id: int):
         _skin.success(f"Switched to account set {account_id}")
 
 
+@account.command("get")
+@click.argument("account_id", type=int)
+@click.pass_context
+def account_get(ctx: click.Context, account_id: int):
+    """查询账套详情 (Get account set details)."""
+    client = _get_client(ctx)
+    try:
+        info = _account.get_account(client, account_id)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if not info:
+        _err(ctx, f"Account set {account_id} not found")
+        sys.exit(1)
+    if ctx.obj.get("json"):
+        _out(ctx, info)
+    else:
+        rows = [
+            ["accountId",   str(info.get("accountId", ""))],
+            ["companyCode", info.get("companyCode", "")],
+            ["companyName", info.get("companyName", "")],
+            ["startTime",   info.get("startTime") or info.get("enableTime", "")],
+            ["status",      str(info.get("status", ""))],
+            ["contacts",    info.get("contacts", "")],
+            ["mobile",      info.get("mobile", "")],
+            ["email",       info.get("email", "")],
+            ["address",     info.get("address", "")],
+            ["remark",      info.get("remark", "")],
+            ["createTime",  info.get("createTime", "")],
+        ]
+        _skin.table(["Field", "Value"], rows)
+
+
+@account.command("update")
+@click.argument("account_id", type=int)
+@click.option("--company-code", default=None, help="公司编码")
+@click.option("--company-name", default=None, help="公司名称")
+@click.option("--contacts", default=None, help="联系人")
+@click.option("--mobile", default=None, help="手机号")
+@click.option("--email", default=None, help="邮箱")
+@click.option("--address", default=None, help="地址")
+@click.option("--remark", default=None, help="备注")
+@click.pass_context
+def account_update(ctx: click.Context, account_id: int, company_code: Optional[str],
+                   company_name: Optional[str], contacts: Optional[str], mobile: Optional[str],
+                   email: Optional[str], address: Optional[str], remark: Optional[str]):
+    """编辑账套信息 (Update account set fields)."""
+    client = _get_client(ctx)
+    try:
+        info = _account.get_account(client, account_id)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if not info:
+        _err(ctx, f"Account set {account_id} not found")
+        sys.exit(1)
+    # Merge changes onto existing data
+    if company_code is not None:
+        info["companyCode"] = company_code
+    if company_name is not None:
+        info["companyName"] = company_name
+    if contacts is not None:
+        info["contacts"] = contacts
+    if mobile is not None:
+        info["mobile"] = mobile
+    if email is not None:
+        info["email"] = email
+    if address is not None:
+        info["address"] = address
+    if remark is not None:
+        info["remark"] = remark
+    try:
+        _account.update_account(client, info)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if ctx.obj.get("json"):
+        _out(ctx, {"updated": True, "account_id": account_id})
+    else:
+        _skin.success(f"Updated account set {account_id}")
+
+
 @account.command("create")
 @click.option("--company", required=True, help="Company name")
 @click.option("--start", required=True, help="Accounting start month (YYYY-MM)")

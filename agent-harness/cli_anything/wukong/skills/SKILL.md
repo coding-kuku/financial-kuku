@@ -52,8 +52,11 @@ cli-anything-wukong auth whoami                        # Current user info
 ### account — Account Set Management (账套)
 ```bash
 cli-anything-wukong account list                       # All accessible account sets
+cli-anything-wukong account get <id>                   # Get account set details (companyCode, companyName, etc.)
 cli-anything-wukong account switch <id>                # Switch active account set
 cli-anything-wukong account create --company "My Co Ltd" --start 2024-01
+cli-anything-wukong account update <id> --company-name "New Name" --company-code "CODE001"
+# update options: --company-code, --company-name, --contacts, --mobile, --email, --address, --remark
 ```
 
 ### subject — Account Codes (科目)
