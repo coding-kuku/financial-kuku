@@ -25,6 +25,11 @@ CLI 安装：
 pip install -e agent-harness/
 ```
 
+CLI 运行（使用项目内虚拟环境）：
+```bash
+.venv-wukong/bin/cli-anything-wukong <command>
+```
+
 后端服务监听端口 `44316`。
 
 ## 构建方式
@@ -80,63 +85,4 @@ output/doc/       # 分析报告、问题定位文档
 
 以下是通过 Agent 测试发现的已知 Bug，修改前请先阅读：
 
-### 1. `ledger balance` 时间参数格式不一致
-CLI 定义 `--start/--end` 为 `YYYY-MM-DD`，但后端 `/financeCertificate/queryDetailBalanceAccount` 按会计期间 `yyyyMM` 解析，传入日期格式会 500。
-- CLI 参数：`wukong_cli.py:793-796`，`core/ledger.py:76-81`
-- 后端：`FinanceCertificateServiceImpl.java:632-667`
-
-### 2. ~~`report balance-sheet --check` 把辅助核算编号当数字解析导致 500~~ ✓ 已修复
-`filterByNumber()` 传入 `"1122_C0002"` 给 `RuleUtils.fillUpNumber()`，去掉 `_` 后变成 `"1122C0002"`，`new BigDecimal("1122C0002")` 抛异常。修复：取 `_` 前的科目编码部分做区间比较，卡片编号不参与过滤。
-- `FinanceCertificateServiceImpl.java`（commit `3db1463`）
-
-### 3. 父科目直接记账的余额被漏算
-只要科目有子科目，报表和余额汇总就只走"汇总子科目"分支，父科目本身的直营余额被丢弃。
-- `FinanceBalanceSheetReportServiceImpl.java:301-370`、`404-475`
-- `FinanceCertificateServiceImpl.java:2968-3132`（关键分支 2972-2975）
-
-### 4. 凭证录入新增二级科目——"编码重复"误报
-前端 `SubjectUpdateDialog.vue` 推导父科目 `category` 时只取第一个，导致非首类别父科目下新建子科目时 `category` 传错；后端校验"类别/类型不一致"时却抛 `FINANCE_SUBJECT_NUMBER_ERROR`（编码重复），造成双重误导。
-- 前端：`SubjectUpdateDialog.vue:639-701`
-- 后端：`FinanceSubjectServiceImpl.java:115-130`；正确错误码应为 `FinanceCodeEnum.java:41`
-
-### 5. `account create` 命令不可用
-CLI 命令定义了 4 个参数但底层方法只接受 2 个，直接抛 `TypeError`。
-- `wukong_cli.py:356-375`，`core/account.py:32-52`
-
-### 6. `account switch` 切换后后续查询仍落在原账套
-CLI 本地 session 更新，但后端账套上下文不同步，切换结果不可信。
-- `core/account.py:27-30`，`FinanceAccountSetServiceImpl.java:443-455`
-
-### 7. `certificate update` 返回 500（TooManyResultsException）
-更新前的判重查询 `queryByTime` 没有限制 `account_id`，同月同凭证字有多张时 `selectOne()` 抛异常。
-- `FinanceCertificateServiceImpl.java:152-185`（判重 SQL：`FinanceCertificateMapper.xml:1446-1456`）
-
-### 8. ~~`account init` 文案与实际行为不一致（高风险）~~ ✓ 已修复
-Web 前端无对应操作，CLI 命令已移除（`wukong_cli.py`、`core/account.py`、所有文档）。
-
-### 9. ~~`certificate add/update` 帮助文案贷方字段名错误~~ ✓ 已修复
-`ownerBalance` 在后端 Java 实体中根本不存在，统一改为 `creditBalance`（显示逻辑 + 帮助文案共 6 处）。
-
-### 10. `certificate get` 返回的 `checkStatus` 不可信
-详情接口 `checkStatus` 与列表筛选实际状态不同步，不能作为审核状态判断依据。
-- 后端详情：`FinanceCertificateServiceImpl.java:382-427`
-
-### 11. ~~`ledger general` 对有数据的科目返回空数组~~ ✓ 已修复
-CLI 未传 `minLevel`/`maxLevel`，后端 SQL `grade >= NULL` 恒为 false 导致科目列表为空。CLI 增加 `--min-level`（默认 1）和 `--max-level`（默认 1）参数并透传，与 Web 端行为一致。
-
-### 12. ~~Skill 文档 `adjuvant add --label` 示例错误~~ ✓ 已修复
-WUKONG.md 示例已改为整数（`--label 4`），并附上枚举说明。
-
-### 13. ~~`certificate next-num` 返回值不可信~~ ✓ 已修复
-两处修复：(1) CLI 改为传 `YYYY-MM-01 00:00:00` 格式，BeanUtil 能正确解析为 LocalDateTime；(2) 后端 `queryNumByTime` 补设 `accountId`；(3) `queryByTime` SQL 加 `LIMIT 1` 避免同月多张凭证时 `selectOne()` 抛 TooManyResultsException。
-
-### 14. ~~`certificate get` 返回字段不完整~~ ✓ 已修复
-CLI 端复现 Web 端策略：(1) 调凭证字列表按 `voucherId` 匹配填入 `voucherName`；(2) 解析 detail 里 `subjectContent` JSON 提取 `subjectName`/`subjectNumber`；(3) 对 `subjectContent` 为 null 的老数据，回退调科目列表按 `subjectId` 查询；(4) 修正字段名 `certificateDetails` → `details`。
-- `core/certificate.py` `get_certificate()`
-
-### 15. ~~凭证字新增接口允许重名~~ ✓ 已修复
-`saveAndUpdate` 新建分支加重名校验，抛 `FINANCE_VOUCHER_NAME_REPEAT_ERROR(7031)`。
-- `FinanceVoucherServiceImpl.java` `saveAndUpdate()`，`FinanceCodeEnum.java:7031`
-
-### 16. ~~`report cash-flow --check` 返回 500~~ ✓ 已修复（随 #2 一并修复）
-现金流量表校验复用资产负债表校验链路，#2 修复后同步消除。
+在文件：output/doc/定位问题 中。
