@@ -72,6 +72,23 @@ cli-anything-wukong voucher add "记"
 cli-anything-wukong voucher delete <id>
 ```
 
+### adjuvant — Auxiliary Accounting (辅助核算)
+```bash
+cli-anything-wukong adjuvant list                          # List categories (客户/供应商/职员…)
+cli-anything-wukong adjuvant add --name "部门"             # Add custom category
+cli-anything-wukong adjuvant delete <id>
+
+# Carte (卡片) — individual entries within a category
+cli-anything-wukong adjuvant carte list --adjuvant-id <id>              # List cartes
+cli-anything-wukong adjuvant carte list --adjuvant-id <id> --search "张" # Filter
+cli-anything-wukong adjuvant carte add --adjuvant-id <id> --number "C001" --name "蓬江区世祥商行"
+cli-anything-wukong adjuvant carte update <carte-id> --adjuvant-id <id> --name "新名称"
+cli-anything-wukong adjuvant carte delete <carte-id1> <carte-id2>
+```
+
+When recording a certificate line for a subject with auxiliary accounting enabled,
+set `adjuvantList[].relationId` to the `carteId` returned by `adjuvant carte list`.
+
 ### certificate — Journal Entries (凭证)
 ```bash
 cli-anything-wukong certificate list --start 2024-01 --end 2024-12

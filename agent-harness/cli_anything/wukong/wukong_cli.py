@@ -155,9 +155,13 @@ def repl(ctx: click.Context):
         "certificate get":   "Get a certificate by ID",
         "certificate review":"Review/approve certificates",
         "certificate update":"Update an existing certificate",
-        "adjuvant list":     "List auxiliary accounting categories (辅助核算)",
-        "adjuvant add":      "Add an auxiliary accounting category",
-        "adjuvant delete":   "Delete an auxiliary accounting category",
+        "adjuvant list":          "List auxiliary accounting categories (辅助核算)",
+        "adjuvant add":           "Add an auxiliary accounting category",
+        "adjuvant delete":        "Delete an auxiliary accounting category",
+        "adjuvant carte list":    "List cartes (卡片) under an adjuvant category",
+        "adjuvant carte add":     "Add a carte to an adjuvant category",
+        "adjuvant carte update":  "Update an existing carte",
+        "adjuvant carte delete":  "Delete cartes by ID",
         "statement status":  "Query period closing status (结账状态)",
         "statement close":   "Close the accounting period (结账)",
         "statement reopen":  "Reopen a closed period (反结账)",
@@ -1112,6 +1116,125 @@ def adjuvant_delete(ctx: click.Context, adjuvant_id: int):
         _out(ctx, {"deleted": adjuvant_id})
     else:
         _skin.success(f"Deleted adjuvant {adjuvant_id}")
+
+
+# ── adjuvant carte subgroup ──────────────────────────────────────────────
+
+
+@adjuvant.group("carte")
+def adjuvant_carte():
+    """Carte (卡片) management — individual entries within an adjuvant category.
+
+    Cartes are the concrete items under each auxiliary accounting category.
+    For example, category "客户" contains cartes like "蓬江区世祥商行".
+    When recording a certificate line for a subject with auxiliary accounting,
+    you need the carteId to fill in adjuvantList[].relationId.
+    """
+
+
+@adjuvant_carte.command("list")
+@click.option("--adjuvant-id", required=True, type=int, help="Adjuvant category ID")
+@click.option("--search", default=None, help="Filter by code or name")
+@click.option("--page-size", type=int, default=50, show_default=True, help="Records per page")
+@click.pass_context
+def adjuvant_carte_list(ctx: click.Context, adjuvant_id: int, search: str, page_size: int):
+    """List cartes (卡片) under an adjuvant category."""
+    client = _get_client(ctx)
+    try:
+        result = _adjuvant.list_cartes(client, adjuvant_id, search=search, page_size=page_size)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    cartes = result.get("list") or []
+    if ctx.obj.get("json"):
+        _out(ctx, result)
+    else:
+        if not cartes:
+            _skin.info("No cartes found.")
+            return
+        headers = ["Carte ID", "Code", "Name", "Status"]
+        rows = []
+        for c in cartes:
+            status = "启用" if c.get("status") == 1 else "禁用"
+            rows.append([
+                str(c.get("carteId", "")),
+                c.get("carteNumber", ""),
+                c.get("carteName", ""),
+                status,
+            ])
+        _skin.table(headers, rows)
+        total = result.get("totalCount") or len(cartes)
+        if total > len(cartes):
+            _skin.info(f"Showing {len(cartes)} of {total} cartes. Use --page-size to load more.")
+
+
+@adjuvant_carte.command("add")
+@click.option("--adjuvant-id", required=True, type=int, help="Adjuvant category ID")
+@click.option("--number", required=True, help="Carte code (carteNumber)")
+@click.option("--name", required=True, help="Carte name (carteName)")
+@click.option("--spec", default=None, help="Specification (for inventory cartes)")
+@click.option("--unit", default=None, help="Unit of measure (for inventory cartes)")
+@click.option("--remark", default=None, help="Notes (for customer/supplier cartes)")
+@click.pass_context
+def adjuvant_carte_add(ctx: click.Context, adjuvant_id: int, number: str, name: str,
+                       spec: str, unit: str, remark: str):
+    """Add a new carte to an adjuvant category."""
+    client = _get_client(ctx)
+    try:
+        result = _adjuvant.add_carte(client, adjuvant_id, number, name,
+                                     specification=spec, unit=unit, remark=remark)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if ctx.obj.get("json"):
+        _out(ctx, result or {"created": True, "carteNumber": number, "carteName": name})
+    else:
+        _skin.success(f"Added carte: {number} {name}")
+
+
+@adjuvant_carte.command("update")
+@click.argument("carte_id", type=int)
+@click.option("--adjuvant-id", required=True, type=int, help="Parent adjuvant category ID")
+@click.option("--name", default=None, help="New carte name")
+@click.option("--number", default=None, help="New carte code")
+@click.option("--spec", default=None, help="Specification")
+@click.option("--unit", default=None, help="Unit of measure")
+@click.option("--remark", default=None, help="Notes")
+@click.pass_context
+def adjuvant_carte_update(ctx: click.Context, carte_id: int, adjuvant_id: int,
+                          name: str, number: str, spec: str, unit: str, remark: str):
+    """Update an existing carte."""
+    if not any([name, number, spec, unit, remark]):
+        _err(ctx, "至少提供一个要修改的字段 (provide at least one field to update)")
+        sys.exit(1)
+    client = _get_client(ctx)
+    try:
+        result = _adjuvant.update_carte(client, carte_id, adjuvant_id, name=name, number=number,
+                                        specification=spec, unit=unit, remark=remark)
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if ctx.obj.get("json"):
+        _out(ctx, result or {"updated": carte_id})
+    else:
+        _skin.success(f"Updated carte {carte_id}")
+
+
+@adjuvant_carte.command("delete")
+@click.argument("carte_ids", nargs=-1, type=int, required=True)
+@click.pass_context
+def adjuvant_carte_delete(ctx: click.Context, carte_ids: tuple):
+    """Delete one or more cartes by ID."""
+    client = _get_client(ctx)
+    try:
+        _adjuvant.delete_cartes(client, list(carte_ids))
+    except WukongError as e:
+        _handle_error(ctx, e)
+        return
+    if ctx.obj.get("json"):
+        _out(ctx, {"deleted": list(carte_ids)})
+    else:
+        _skin.success(f"Deleted {len(carte_ids)} carte(s)")
 
 
 # ── statement group ─────────────────────────────────────────────────────

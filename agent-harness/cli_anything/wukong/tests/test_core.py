@@ -515,6 +515,38 @@ class TestAdjuvant:
         call_params = mock_post.call_args.kwargs.get("params", {})
         assert call_params.get("adjuvantId") == 99
 
+    def test_list_cartes(self, client):
+        data = {"list": [{"carteId": "111", "carteNumber": "C0001", "carteName": "测试客户", "status": 1}], "totalCount": 1}
+        with patch("requests.post", return_value=self._mock(data)) as mock_post:
+            result = _adjuvant.list_cartes(client, adjuvant_id=1, search="测试")
+        body = mock_post.call_args.kwargs.get("json", {})
+        assert body["adjuvantId"] == 1
+        assert body["search"] == "测试"
+        assert result["list"][0]["carteNumber"] == "C0001"
+
+    def test_add_carte(self, client):
+        with patch("requests.post", return_value=self._mock(None)) as mock_post:
+            _adjuvant.add_carte(client, adjuvant_id=1, number="C0002", name="新客户", remark="备注")
+        body = mock_post.call_args.kwargs.get("json", {})
+        assert body["adjuvantId"] == 1
+        assert body["carteNumber"] == "C0002"
+        assert body["carteName"] == "新客户"
+        assert body["remark"] == "备注"
+
+    def test_update_carte(self, client):
+        with patch("requests.post", return_value=self._mock(None)) as mock_post:
+            _adjuvant.update_carte(client, carte_id=111, adjuvant_id=1, name="改名客户")
+        body = mock_post.call_args.kwargs.get("json", {})
+        assert body["carteId"] == 111
+        assert body["adjuvantId"] == 1
+        assert body["carteName"] == "改名客户"
+
+    def test_delete_cartes(self, client):
+        with patch("requests.post", return_value=self._mock(None)) as mock_post:
+            _adjuvant.delete_cartes(client, ["111", "222"])
+        body = mock_post.call_args.kwargs.get("json", [])
+        assert body == [111, 222]
+
 
 # ── statement.py tests ────────────────────────────────────────────────
 
