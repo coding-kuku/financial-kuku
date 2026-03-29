@@ -61,9 +61,12 @@ def query_general_ledger(
         min_level: Minimum subject grade level to include (default 1)
         max_level: Maximum subject grade level to include (default 1)
     """
-    body = _ledger_body(subject_id, start_time, end_time)
+    body = _ledger_body(None, start_time, end_time)
     body["minLevel"] = min_level
     body["maxLevel"] = max_level
+    if subject_id is not None:
+        body["startSubjectId"] = subject_id
+        body["endSubjectId"] = subject_id
     return client.post("/financeCertificate/queryDetailUpAccount", body) or []
 
 
