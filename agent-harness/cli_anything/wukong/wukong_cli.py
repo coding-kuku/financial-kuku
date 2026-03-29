@@ -625,16 +625,18 @@ def certificate_list(ctx: click.Context, start, end, voucher_id, check_status, p
             _skin.warning("No certificates found")
             return
         _skin.info(f"Total: {total}")
-        headers = ["Date", "Voucher", "Digest", "Subject", "Debit", "Credit", "Status"]
+        headers = ["ID", "Date", "Voucher", "Digest", "Subject", "Debit", "Credit", "Status"]
         rows = []
         for r in records:
             details = r.get("certificateDetails") or []
+            cert_id = str(r.get("certificateId", ""))
             date = str(r.get("certificateTime", ""))[:10]
             voucher = f"{r.get('voucherName', '')}_{r.get('voucherNum', '')}"
             status = "reviewed" if r.get("checkStatus") == 1 else "pending"
             if details:
                 for d in details:
                     rows.append([
+                        cert_id,
                         date,
                         voucher,
                         d.get("digestContent", ""),
@@ -644,7 +646,7 @@ def certificate_list(ctx: click.Context, start, end, voucher_id, check_status, p
                         status,
                     ])
             else:
-                rows.append([date, voucher, "", "", "", str(r.get("total", "")), status])
+                rows.append([cert_id, date, voucher, "", "", "", str(r.get("total", "")), status])
         _skin.table(headers, rows)
 
 
