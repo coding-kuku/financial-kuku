@@ -65,6 +65,7 @@ public class FinanceVoucherController {
         return OperationResult.ok(ListUtil.toList(operationLog));
     }
 
+    // NOTE: 此接口目前没有任何前端或 CLI 调用方，暂未使用
     @PostMapping("/sort")
     @ApiOperation("排序")
     public Result sort(@RequestParam("voucherStartId") Long voucherStartId, @RequestParam("voucherEndId") Long voucherEndId) {
