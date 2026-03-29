@@ -374,6 +374,10 @@ def account_switch(ctx: click.Context, account_id: int):
     """Switch active account set by ID."""
     client = _get_client(ctx)
     try:
+        accounts = _account.list_accounts(client)
+        if not any(str(a.get("accountId")) == str(account_id) for a in accounts):
+            _handle_error(ctx, WukongError(f"账套 {account_id} 不存在或无权限访问"))
+            return
         _account.switch_account(client, account_id)
     except WukongError as e:
         _handle_error(ctx, e)
