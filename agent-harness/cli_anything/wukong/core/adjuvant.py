@@ -57,7 +57,7 @@ def list_cartes(
     Returns:
         {"list": [...], "totalCount": N}  — each item has carteId, carteNumber, carteName, status
     """
-    body: dict = {"adjuvantId": adjuvant_id, "pageNo": page_no, "pageSize": page_size}
+    body: dict = {"adjuvantId": adjuvant_id, "page": page_no, "limit": page_size}
     if search:
         body["search"] = search
     result = client.post("/financeAdjuvantCarte/queryByAdjuvantId", body) or {}
