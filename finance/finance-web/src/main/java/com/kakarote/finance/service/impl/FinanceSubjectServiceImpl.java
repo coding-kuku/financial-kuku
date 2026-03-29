@@ -547,6 +547,9 @@ public class FinanceSubjectServiceImpl extends BaseServiceImpl<FinanceSubjectMap
             throw new CrmException(FinanceCodeEnum.FINANCE_SUBJECT_DELETE_ERROR);
         }
         List<FinanceSubject> financeSubjects = listByIds(ids);
+        if (financeSubjects.isEmpty()) {
+            throw new CrmException(FinanceCodeEnum.FINANCE_DATA_NOT_FOUND_ERROR);
+        }
 
         List<OperationLog> operationLogList = new ArrayList<>();
         for (FinanceSubject financeSubject : financeSubjects) {
