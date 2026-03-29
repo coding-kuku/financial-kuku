@@ -455,8 +455,8 @@ def _flatten_subjects(subjects: list, indent: int = 0) -> list:
         type_id = s.get("subjectType") or s.get("type")
         rows.append([
             str(s.get("subjectId", "")),
-            ("  " * indent) + str(s.get("subjectNumber", "")),
-            s.get("subjectName", ""),
+            str(s.get("number", "")),
+            ("  " * indent) + s.get("subjectName", ""),
             _SUBJECT_TYPE_NAMES.get(type_id, str(type_id or "")),
             str(s.get("grade") or s.get("level", "")),
             "yes" if s.get("status") == 1 else "no",
