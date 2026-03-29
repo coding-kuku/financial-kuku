@@ -120,7 +120,7 @@ def list_certificates(
     Returns:
         {"records": [...], "total": N, "pages": N}
     """
-    body: dict = {"pageNo": page_no, "pageSize": page_size}
+    body: dict = {"page": page_no, "limit": page_size}
     if start_time:
         body["startTime"] = start_time
     if end_time:
