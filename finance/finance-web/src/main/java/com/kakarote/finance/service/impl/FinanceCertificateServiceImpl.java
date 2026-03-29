@@ -328,6 +328,9 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
     @Transactional(rollbackFor = Exception.class)
     public List<OperationLog> deleteByIds(List<Long> ids) {
         List<FinanceCertificate> certificates = lambdaQuery().in(FinanceCertificate::getCertificateId, ids).list();
+        if (certificates.isEmpty()) {
+            throw new CrmException(FinanceCodeEnum.FINANCE_DATA_NOT_FOUND_ERROR);
+        }
         if (!certificates.isEmpty()) {
             long count = certificates.stream().filter(certificate -> certificate.getCheckStatus() == 1).count();
             if (count > 0) {

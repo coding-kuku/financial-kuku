@@ -103,6 +103,9 @@ public class FinanceAdjuvantCarteServiceImpl extends BaseServiceImpl<FinanceAdju
             operationLog.setOperationObject(adjuvantCarte.getCarteName());
             operationLog.setOperationInfo("新建辅助核算(" + adjuvant.getAdjuvantName() + ")：" + adjuvantCarte.getCarteName());
         } else {
+            if (ObjectUtil.isNull(getById(adjuvantCarte.getCarteId()))) {
+                throw new CrmException(FinanceCodeEnum.FINANCE_DATA_NOT_FOUND_ERROR);
+            }
             if (ObjectUtil.isNotNull(carte) && ObjectUtil.notEqual(adjuvantCarte.getCarteId(), carte.getCarteId())) {
                 throw new CrmException(FinanceCodeEnum.FINANCE_ADJUVANT_CARTE_NUM_EXIST_ERROR);
             }
@@ -150,6 +153,9 @@ public class FinanceAdjuvantCarteServiceImpl extends BaseServiceImpl<FinanceAdju
         }
         // 获取要删除的辅助核算项
         List<FinanceAdjuvantCarte> carteList = lambdaQuery().in(FinanceAdjuvantCarte::getCarteId, ids).list();
+        if (carteList.isEmpty()) {
+            throw new CrmException(FinanceCodeEnum.FINANCE_DATA_NOT_FOUND_ERROR);
+        }
         List<Long> adjuavntIds = carteList.stream().map(FinanceAdjuvantCarte::getAdjuvantId).collect(Collectors.toList());
         // 获取辅助核算所属分类
         List<FinanceAdjuvant> adjuvantList = adjuvantService.lambdaQuery().in(FinanceAdjuvant::getAdjuvantId, adjuavntIds).list();
