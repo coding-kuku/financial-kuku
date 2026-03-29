@@ -85,11 +85,9 @@ CLI 定义 `--start/--end` 为 `YYYY-MM-DD`，但后端 `/financeCertificate/que
 - CLI 参数：`wukong_cli.py:793-796`，`core/ledger.py:76-81`
 - 后端：`FinanceCertificateServiceImpl.java:632-667`
 
-### 2. `report balance-sheet --check` 把辅助核算编号当数字解析导致 500
-辅助核算科目的 `number` 字段会拼入卡片编号如 `1122_C0002`，过滤逻辑剥掉下划线后执行 `new BigDecimal("1122C0002")` 抛异常。
-- `FinanceBalanceSheetReportServiceImpl.java:516-593`
-- `FinanceCertificateServiceImpl.java:1152-1216`（关键行 1174-1178）
-- `RuleUtils.java:72-106`
+### 2. ~~`report balance-sheet --check` 把辅助核算编号当数字解析导致 500~~ ✓ 已修复
+`filterByNumber()` 传入 `"1122_C0002"` 给 `RuleUtils.fillUpNumber()`，去掉 `_` 后变成 `"1122C0002"`，`new BigDecimal("1122C0002")` 抛异常。修复：取 `_` 前的科目编码部分做区间比较，卡片编号不参与过滤。
+- `FinanceCertificateServiceImpl.java`（commit `3db1463`）
 
 ### 3. 父科目直接记账的余额被漏算
 只要科目有子科目，报表和余额汇总就只走"汇总子科目"分支，父科目本身的直营余额被丢弃。
@@ -140,6 +138,5 @@ CLI 端复现 Web 端策略：(1) 调凭证字列表按 `voucherId` 匹配填入
 `saveAndUpdate` 新建分支加重名校验，抛 `FINANCE_VOUCHER_NAME_REPEAT_ERROR(7031)`。
 - `FinanceVoucherServiceImpl.java` `saveAndUpdate()`，`FinanceCodeEnum.java:7031`
 
-### 16. `report cash-flow --check` 返回 500
-现金流量表校验直接复用资产负债表校验链路，后者存在 Bug 时一并 500。
-- `FinanceCashFlowStatementReportImpl.java:274-286`
+### 16. ~~`report cash-flow --check` 返回 500~~ ✓ 已修复（随 #2 一并修复）
+现金流量表校验复用资产负债表校验链路，#2 修复后同步消除。
