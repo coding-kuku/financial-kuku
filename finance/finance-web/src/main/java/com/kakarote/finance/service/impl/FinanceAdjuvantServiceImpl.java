@@ -147,6 +147,9 @@ public class FinanceAdjuvantServiceImpl extends BaseServiceImpl<FinanceAdjuvantM
         }
 
         FinanceAdjuvant byId = getById(id);
+        if (byId == null) {
+            throw new CrmException(FinanceCodeEnum.FINANCE_DATA_NOT_FOUND_ERROR);
+        }
         OperationLog operationLog = new OperationLog();
         operationLog.setOperationObject(byId.getAdjuvantName());
         operationLog.setOperationInfo("删除辅助核算分类：" + byId.getAdjuvantName());

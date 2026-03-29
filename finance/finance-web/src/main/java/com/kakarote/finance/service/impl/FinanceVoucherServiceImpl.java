@@ -98,8 +98,11 @@ public class FinanceVoucherServiceImpl extends BaseServiceImpl<FinanceVoucherMap
         if (certificates.size() > 0) {
             throw new CrmException(FinanceCodeEnum.FINANCE_VOUCHER_DELETE_ERROR);
         }
-        OperationLog operationLog = new OperationLog();
         FinanceVoucher byId = getById(id);
+        if (byId == null) {
+            throw new CrmException(FinanceCodeEnum.FINANCE_DATA_NOT_FOUND_ERROR);
+        }
+        OperationLog operationLog = new OperationLog();
         operationLog.setOperationObject(byId.getVoucherName());
         operationLog.setOperationInfo("删除凭证字：" + byId.getVoucherName());
         removeById(id);

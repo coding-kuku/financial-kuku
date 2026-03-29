@@ -387,6 +387,9 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
     @Override
     public FinanceCertificateVO queryById(Long certificateId) {
         FinanceCertificate certificate = getById(certificateId);
+        if (certificate == null) {
+            throw new CrmException(FinanceCodeEnum.FINANCE_DATA_NOT_FOUND_ERROR);
+        }
         FinanceCertificateVO certificateVO = BeanUtil.copyProperties(certificate, FinanceCertificateVO.class);
         FinanceStatementCertificate statementCertificate = financeStatementCertificateService.lambdaQuery()
                 .eq(FinanceStatementCertificate::getCertificateId, certificate.getCertificateId())

@@ -45,6 +45,7 @@ public enum FinanceCodeEnum implements ResultCode {
     FINANCE_IMPORT_EXCEL_ERROR(7029, "请使用最新的导入模板"),
     FINANCE_IMPORT_EXCEL_DOWN_ERROR(7030, "已结账不允许导入"),
     FINANCE_VOUCHER_NAME_REPEAT_ERROR(7031, "凭证字名称重复，不能添加!"),
+    FINANCE_DATA_NOT_FOUND_ERROR(7032, "数据不存在"),
     ;
 
     FinanceCodeEnum(int code, String msg) {
