@@ -1298,6 +1298,20 @@ def statement_reopen(ctx: click.Context, date: str):
     """Reopen (反结账) a previously closed period."""
     client = _get_client(ctx)
     try:
+        # 复现 Web 端 showBackSettle 逻辑：
+        # 比较当前结账状态的 settleTime 与账套 enableTime，
+        # 若 YYYYMM 相同说明从未结过账，不能反结账。
+        status = _statement.query_statement(client)
+        settle_time = status.get("settleTime") or ""
+        account_id = _session.get_account_id()
+        if account_id:
+            acc = _account.get_account(client, account_id)
+            enable_time = acc.get("enableTime") or acc.get("startTime") or ""
+            if settle_time and enable_time:
+                settle_ym = str(settle_time)[:7].replace("-", "")[:6]
+                enable_ym = str(enable_time)[:7].replace("-", "")[:6]
+                if settle_ym == enable_ym:
+                    raise WukongError("没有已结账的期间可以反结账")
         _statement.reopen_period(client, date)
     except WukongError as e:
         _handle_error(ctx, e)

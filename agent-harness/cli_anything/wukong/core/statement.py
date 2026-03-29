@@ -8,7 +8,7 @@
 """
 
 from typing import Optional
-from cli_anything.wukong.utils.wukong_backend import WukongClient
+from cli_anything.wukong.utils.wukong_backend import WukongClient, WukongError
 
 
 def query_statement(client: WukongClient) -> dict:
