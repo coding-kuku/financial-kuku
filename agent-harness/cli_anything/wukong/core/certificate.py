@@ -64,6 +64,14 @@ def validate_certificate_details(details: list[dict]) -> list[dict]:
             raise ValueError(
                 f"第 {i + 1} 条：有金额但没有科目 (row {i + 1}: amount set but subjectId is missing)"
             )
+        if debit < 0.0 or credit < 0.0:
+            raise ValueError(
+                f"第 {i + 1} 条：金额不能为负数 (row {i + 1}: negative amount is not allowed)"
+            )
+        if debit != 0.0 and credit != 0.0:
+            raise ValueError(
+                f"第 {i + 1} 条：同一分录不能同时有借方和贷方金额 (row {i + 1}: debit and credit cannot both be non-zero)"
+            )
 
     # Collect valid entries: subjectId + at least one non-zero balance
     valid_entries = [
