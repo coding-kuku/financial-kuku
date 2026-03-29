@@ -324,7 +324,8 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
         if (flag == 0) {
             throw new CrmException(FinanceCodeEnum.FINANCE_CERTIFICATE_UPDATE_STATUS_ERROR);
         }
-        lambdaUpdate().set(FinanceCertificate::getCheckStatus, status).set(FinanceCertificate::getExamineUserId, UserUtil.getUserId())
+        Long examineUserId = status == 1 ? UserUtil.getUserId() : null;
+        lambdaUpdate().set(FinanceCertificate::getCheckStatus, status).set(FinanceCertificate::getExamineUserId, examineUserId)
                 .in(FinanceCertificate::getCertificateId, ids).update();
 
         BehaviorEnum behaviorEnum = status == 1 ? BehaviorEnum.EXAMINE : BehaviorEnum.REVERSE_EXAMINE;

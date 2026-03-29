@@ -89,6 +89,9 @@ public class FinanceAdjuvantCarteServiceImpl extends BaseServiceImpl<FinanceAdju
 
 
         FinanceAdjuvant adjuvant = adjuvantService.getById(adjuvantCarte.getAdjuvantId());
+        if (ObjectUtil.isNull(adjuvant)) {
+            throw new CrmException(FinanceCodeEnum.FINANCE_DATA_NOT_FOUND_ERROR);
+        }
 
         OperationLog operationLog = new OperationLog();
         if (ObjectUtil.isNull(adjuvantCarte.getCarteId())) {
