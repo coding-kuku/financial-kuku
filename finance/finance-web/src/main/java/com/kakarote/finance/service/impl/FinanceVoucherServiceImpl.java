@@ -111,10 +111,22 @@ public class FinanceVoucherServiceImpl extends BaseServiceImpl<FinanceVoucherMap
 
     @Override
     public void sort(Long voucherStartId, Long voucherEndId) {
-        Integer sort;
+        // Ensure all vouchers have sort values before swapping
+        List<FinanceVoucher> allVouchers = lambdaQuery()
+                .eq(FinanceVoucher::getAccountId, AccountSet.getAccountSetId())
+                .list();
+        boolean anyNull = allVouchers.stream().anyMatch(v -> v.getSort() == null);
+        if (anyNull) {
+            // Initialize sort by voucherId order
+            allVouchers.sort(java.util.Comparator.comparingLong(FinanceVoucher::getVoucherId));
+            for (int i = 0; i < allVouchers.size(); i++) {
+                allVouchers.get(i).setSort(i + 1);
+            }
+            updateBatchById(allVouchers);
+        }
         FinanceVoucher financeStartVoucher = getById(voucherStartId);
         FinanceVoucher financeEndVoucher = getById(voucherEndId);
-        sort = financeStartVoucher.getSort();
+        Integer sort = financeStartVoucher.getSort();
         financeStartVoucher.setSort(financeEndVoucher.getSort());
         financeEndVoucher.setSort(sort);
         updateById(financeStartVoucher);

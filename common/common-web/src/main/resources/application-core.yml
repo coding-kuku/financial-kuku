@@ -13,8 +13,8 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
-      # 上传文件临时目录，需要先创建此目录
-      location: /mnt/upload/
+      # 上传文件临时目录，使用系统临时目录确保可写
+      location: /tmp/upload/
   jackson:
     dateFormat: yyyy-MM-dd HH:mm:ss
     timeZone: GMT+8

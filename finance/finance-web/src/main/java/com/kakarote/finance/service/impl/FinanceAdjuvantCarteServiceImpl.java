@@ -416,8 +416,8 @@ public class FinanceAdjuvantCarteServiceImpl extends BaseServiceImpl<FinanceAdju
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // 关闭writer，释放内存
-        writer.close();
+        // 将Excel内容写入response输出流，再关闭writer
+        writer.flush(out, true);
         //此处记得关闭输出Servlet流
         IoUtil.close(out);
 
