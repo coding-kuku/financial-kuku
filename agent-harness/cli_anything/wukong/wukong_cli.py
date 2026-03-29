@@ -259,11 +259,12 @@ def status(ctx: click.Context):
     account_id = sess.get("account_id")
 
     if ctx.obj.get("json"):
+        masked_token = (token[:4] + "****") if token else None
         _out(ctx, {
             "server_url": base_url,
             "server_reachable": up,
             "authenticated": bool(token),
-            "token": token,
+            "token": masked_token,
             "active_account_id": account_id,
         })
     else:
