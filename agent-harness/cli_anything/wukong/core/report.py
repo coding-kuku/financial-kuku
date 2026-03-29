@@ -13,14 +13,28 @@ def _report_body(period_type: int, date: str) -> dict:
     """Build the report request body.
 
     Args:
-        period_type: 1=month, 2=quarter
+        period_type: 1=month, 2=quarter, 3=year
         date: Period end date (YYYY-MM-DD or YYYY-MM)
 
     The API expects fromPeriod/toPeriod as yyyyMM strings.
+    For month: fromPeriod == toPeriod.
+    For quarter: fromPeriod = first month of the quarter containing date.
+    For year: fromPeriod = January of the same year.
     """
     # Normalize: "2026-03-31" or "2026-03" → "202603"
     period = date[:7].replace("-", "")  # "2026-03" → "202603"
-    return {"type": period_type, "fromPeriod": period, "toPeriod": period}
+    year = period[:4]
+    month = int(period[4:6])
+
+    if period_type == 2:  # quarter
+        quarter_start = ((month - 1) // 3) * 3 + 1
+        from_period = f"{year}{quarter_start:02d}"
+    elif period_type == 3:  # year
+        from_period = f"{year}01"
+    else:  # month
+        from_period = period
+
+    return {"type": period_type, "fromPeriod": from_period, "toPeriod": period}
 
 
 def balance_sheet(client: WukongClient, period_type: int, date: str) -> list:
