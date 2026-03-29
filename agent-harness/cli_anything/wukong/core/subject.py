@@ -29,6 +29,16 @@ def list_subjects(
     return client.post("/financeSubject/queryListByType", params=params) or []
 
 
+def get_subject_by_id(client: WukongClient, subject_id: int) -> Optional[dict]:
+    """Find a subject by ID from the full subject list."""
+    subjects = list_subjects(client)
+    sid = str(subject_id)
+    for s in subjects:
+        if str(s.get("subjectId")) == sid:
+            return s
+    return None
+
+
 def add_subject(
     client: WukongClient,
     subject_number: str,
@@ -50,16 +60,22 @@ def add_subject(
         currency_type: 1=人民币, 2=外币
         is_end: 1=leaf node (末级), 0=parent node
     """
+    from cli_anything.wukong.utils.wukong_backend import WukongError
     body = {
-        "number": subject_number,           # API uses "number", not "subjectNumber"
+        "number": subject_number,
         "subjectName": subject_name,
-        "type": subject_type,               # API uses "type", not "subjectType"
+        "type": subject_type,
         "balanceDirection": balance_direction,
         "currencyType": currency_type,
         "isEnd": is_end,
     }
     if parent_id is not None:
-        body["parentId"] = parent_id        # API uses "parentId", not "pid"
+        body["parentId"] = parent_id
+        # Inherit category from parent — backend validates child.category == parent.category
+        parent = get_subject_by_id(client, parent_id)
+        if parent is None:
+            raise WukongError(f"父科目 {parent_id} 不存在")
+        body["category"] = parent["category"]
     client.post("/financeSubject/add", body)
 
 
