@@ -69,6 +69,20 @@ def _validate_period(ctx: click.Context, name: str, value: str) -> str:
     return value
 
 
+def _validate_date(ctx: click.Context, name: str, value: str) -> str:
+    """Validate a YYYY-MM-DD date string is a real calendar date, or abort."""
+    from datetime import datetime
+    if not _DATE_RE.match(value):
+        _err(ctx, f"{name} must be YYYY-MM-DD (e.g. 2024-06-01), got: {value!r}")
+        sys.exit(1)
+    try:
+        datetime.strptime(value, "%Y-%m-%d")
+    except ValueError:
+        _err(ctx, f"{name} is not a valid calendar date: {value!r}")
+        sys.exit(1)
+    return value
+
+
 def _to_yyyymm(period: str) -> str:
     """Convert YYYY-MM → yyyyMM (e.g. '2024-01' → '202401')."""
     return period.replace("-", "")
@@ -700,6 +714,7 @@ def certificate_add(ctx: click.Context, voucher_id: int, date: str, details_json
     Each detail line requires: subjectId, digestContent, debtorBalance, creditBalance.
     Total debits must equal total credits.
     """
+    _validate_date(ctx, "--date", date)
     try:
         details = json.loads(details_json)
     except json.JSONDecodeError as e:
@@ -764,6 +779,7 @@ def certificate_review(ctx: click.Context, certificate_ids: tuple, approve: bool
 @click.pass_context
 def certificate_next_num(ctx: click.Context, voucher_id: int, date: str):
     """Get the next available certificate number for a voucher + date."""
+    _validate_date(ctx, "--date", date)
     client = _get_client(ctx)
     try:
         result = _cert.get_next_certificate_num(client, voucher_id, date)
@@ -790,6 +806,7 @@ def certificate_update(ctx: click.Context, certificate_id: int, voucher_id: int,
     Each detail line requires: subjectId, digestContent, debtorBalance, creditBalance.
     Total debits must equal total credits.
     """
+    _validate_date(ctx, "--date", date)
     try:
         details = json.loads(details_json)
     except json.JSONDecodeError as e:
@@ -1299,6 +1316,7 @@ def statement_status(ctx: click.Context):
 @click.pass_context
 def statement_close(ctx: click.Context, date: str):
     """Close (结账) the accounting period."""
+    _validate_date(ctx, "--date", date)
     client = _get_client(ctx)
     try:
         _statement.close_period(client, date)
@@ -1316,6 +1334,7 @@ def statement_close(ctx: click.Context, date: str):
 @click.pass_context
 def statement_reopen(ctx: click.Context, date: str):
     """Reopen (反结账) a previously closed period."""
+    _validate_date(ctx, "--date", date)
     client = _get_client(ctx)
     try:
         # 复现 Web 端 showBackSettle 逻辑：
