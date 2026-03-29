@@ -44,6 +44,13 @@ public class FinanceVoucherServiceImpl extends BaseServiceImpl<FinanceVoucherMap
             voucher.setCreateUserId(UserUtil.getUserId());
             voucher.setCreateTime(LocalDateTime.now());
             voucher.setAccountId(AccountSet.getAccountSetId());
+            boolean exists = lambdaQuery()
+                    .eq(FinanceVoucher::getAccountId, AccountSet.getAccountSetId())
+                    .eq(FinanceVoucher::getVoucherName, voucher.getVoucherName())
+                    .exists();
+            if (exists) {
+                throw new CrmException(FinanceCodeEnum.FINANCE_VOUCHER_NAME_REPEAT_ERROR);
+            }
             if (ObjectUtil.equal(1, voucher.getIsDefault())) {
                 lambdaUpdate().set(FinanceVoucher::getIsDefault, 0)
                         .eq(FinanceVoucher::getAccountId, AccountSet.getAccountSetId())

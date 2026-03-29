@@ -136,8 +136,9 @@ WUKONG.md 示例已改为整数（`--label 4`），并附上枚举说明。
 CLI 端复现 Web 端策略：(1) 调凭证字列表按 `voucherId` 匹配填入 `voucherName`；(2) 解析 detail 里 `subjectContent` JSON 提取 `subjectName`/`subjectNumber`；(3) 对 `subjectContent` 为 null 的老数据，回退调科目列表按 `subjectId` 查询；(4) 修正字段名 `certificateDetails` → `details`。
 - `core/certificate.py` `get_certificate()`
 
-### 15. 凭证字新增接口允许重名
-同一账套下可创建同名凭证字，无唯一校验。
+### 15. ~~凭证字新增接口允许重名~~ ✓ 已修复
+`saveAndUpdate` 新建分支加重名校验，抛 `FINANCE_VOUCHER_NAME_REPEAT_ERROR(7031)`。
+- `FinanceVoucherServiceImpl.java` `saveAndUpdate()`，`FinanceCodeEnum.java:7031`
 
 ### 16. `report cash-flow --check` 返回 500
 现金流量表校验直接复用资产负债表校验链路，后者存在 Bug 时一并 500。
