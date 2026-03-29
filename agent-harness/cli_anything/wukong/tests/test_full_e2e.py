@@ -198,7 +198,7 @@ class TestSubjectWorkflow:
             _subject.delete_subjects(live_client, [s["subjectId"] for s in stale])
             print(f"\n  Cleaned up {len(stale)} stale test subject(s)")
 
-        _subject.add_subject(live_client, test_code, test_name, subject_type=1)
+        _subject.add_subject(live_client, test_code, test_name, subject_type=1, balance_direction=1)
 
         # Verify it appears — field is "number" in the response VO
         subjects = _subject.list_subjects(live_client)
