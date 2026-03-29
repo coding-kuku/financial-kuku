@@ -936,7 +936,9 @@ def _print_report_table(rows: list):
         return
     if isinstance(rows[0], dict):
         key_cols = ["name", "rowKey", "subjectNumber"]
-        val_cols = [k for k in rows[0].keys() if k not in key_cols and "balance" in k.lower()]
+        exclude_cols = {"fromPeriod", "toPeriod"}
+        val_cols = [k for k in rows[0].keys() if k not in key_cols and k not in exclude_cols and
+                    any(kw in k.lower() for kw in ("balance", "period", "value"))]
         name_key = next((k for k in key_cols if k in rows[0]), list(rows[0].keys())[0])
         headers = [name_key] + val_cols
         table_rows = [[str(r.get(k, "")) for k in headers] for r in rows]
