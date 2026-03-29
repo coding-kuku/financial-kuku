@@ -941,8 +941,25 @@ def ledger_multi_column(ctx: click.Context, subject_id: int, start: str, end: st
         _out(ctx, result)
     else:
         _skin.section(f"Multi-column Ledger — Subject {subject_id}  [{start} ~ {end}]")
-        rows = result.get("list") or result.get("data") or []
-        _print_ledger_table(ctx, rows)
+        json_rows = result.get("jsonObjects") or []
+        subjects_meta = result.get("subjects") or []
+        if not json_rows:
+            _skin.warning("No data")
+            return
+        # Build subject ID → name mapping
+        sub_map = {str(s["subjectId"]): s.get("subjectName") or s.get("number", str(s["subjectId"]))
+                   for s in subjects_meta if s.get("subjectId")}
+        # Dynamic subject ID columns (keys that are all digits and in sub_map)
+        sub_ids = [k for k in json_rows[0].keys() if k.isdigit() and k in sub_map]
+        headers = ["Date", "Digest"] + [sub_map[sid] for sid in sub_ids] + ["Dir", "Balance"]
+        table_rows = []
+        for r in json_rows:
+            table_rows.append(
+                [r.get("accountTime", ""), r.get("digestContent", "")]
+                + [str(r.get(sid, "")) for sid in sub_ids]
+                + [r.get("balanceDirection", ""), str(r.get("balance", ""))]
+            )
+        _skin.table(headers, table_rows)
 
 
 # ── report group ───────────────────────────────────────────────────────
