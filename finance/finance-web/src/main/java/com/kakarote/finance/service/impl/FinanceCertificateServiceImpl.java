@@ -150,6 +150,9 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
     @Override
     @Synchronized
     public FinanceCertificate saveAndUpdate(FinanceCertificateBO financeCertificateBO) {
+        if (financeVoucherService.getById(financeCertificateBO.getVoucherId()) == null) {
+            throw new CrmException(FinanceCodeEnum.FINANCE_DATA_NOT_FOUND_ERROR);
+        }
         FinanceCertificate certificate = BeanUtil.copyProperties(financeCertificateBO, FinanceCertificate.class);
         if (certificate.getCertificateId() == null) {
             if (certificate.getCertificateNum() == null) {
@@ -174,11 +177,12 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
             save(certificate);
         } else {
             certificate.setAccountId(AccountSet.getAccountSetId());
+            FinanceCertificate existing = getById(certificate.getCertificateId());
+            if (existing == null) {
+                throw new CrmException(FinanceCodeEnum.FINANCE_DATA_NOT_FOUND_ERROR);
+            }
             if (certificate.getCertificateNum() == null) {
-                FinanceCertificate existing = getById(certificate.getCertificateId());
-                if (existing != null) {
-                    certificate.setCertificateNum(existing.getCertificateNum());
-                }
+                certificate.setCertificateNum(existing.getCertificateNum());
             }
             FinanceCertificate financeCertificate = getBaseMapper().queryByTime(certificate);
             if (financeCertificate != null) {
@@ -300,6 +304,21 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
         List<FinanceCertificate> existing = listByIds(ids);
         if (existing.isEmpty()) {
             throw new CrmException(FinanceCodeEnum.FINANCE_DATA_NOT_FOUND_ERROR);
+        }
+        if (status == 1) {
+            // Validate detail rows: no negative amounts and no row with both debit and credit non-zero
+            List<FinanceCertificateDetail> details = financeCertificateDetailService.lambdaQuery()
+                    .in(FinanceCertificateDetail::getCertificateId, ids).list();
+            for (FinanceCertificateDetail detail : details) {
+                double debit = detail.getDebtorBalance() != null ? detail.getDebtorBalance().doubleValue() : 0.0;
+                double credit = detail.getCreditBalance() != null ? detail.getCreditBalance().doubleValue() : 0.0;
+                if (debit < 0 || credit < 0) {
+                    throw new CrmException(FinanceCodeEnum.FINANCE_CERTIFICATE_UPDATE_STATUS_ERROR);
+                }
+                if (debit != 0 && credit != 0) {
+                    throw new CrmException(FinanceCodeEnum.FINANCE_CERTIFICATE_UPDATE_STATUS_ERROR);
+                }
+            }
         }
         Integer flag = getBaseMapper().queryBalanceByIds(ids, AccountSet.getAccountSetId());
         if (flag == 0) {

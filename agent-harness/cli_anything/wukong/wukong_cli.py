@@ -76,6 +76,20 @@ def _validate_period_range(ctx: click.Context, start: str, end: str) -> None:
         sys.exit(1)
 
 
+def _validate_subject_ids(ctx: click.Context, client, details: list) -> None:
+    """Validate that all subjectIds in details exist in the current account set."""
+    from cli_anything.wukong.core.subject import list_subjects
+    ids_in_details = {str(d["subjectId"]) for d in details if d.get("subjectId")}
+    if not ids_in_details:
+        return
+    subjects = list_subjects(client)
+    valid_ids = {str(s["subjectId"]) for s in subjects if s.get("subjectId")}
+    missing = ids_in_details - valid_ids
+    if missing:
+        _err(ctx, f"科目不存在: {', '.join(sorted(missing))} (subjectId not found)")
+        sys.exit(1)
+
+
 def _validate_date(ctx: click.Context, name: str, value: str) -> str:
     """Validate a YYYY-MM-DD date string is a real calendar date, or abort."""
     from datetime import datetime
@@ -733,6 +747,7 @@ def certificate_add(ctx: click.Context, voucher_id: int, date: str, details_json
         sys.exit(1)
     client = _get_client(ctx)
     try:
+        _validate_subject_ids(ctx, client, details)
         result = _cert.add_certificate(client, voucher_id, date, details)
     except ValueError as e:
         _err(ctx, str(e))
@@ -825,6 +840,7 @@ def certificate_update(ctx: click.Context, certificate_id: int, voucher_id: int,
         sys.exit(1)
     client = _get_client(ctx)
     try:
+        _validate_subject_ids(ctx, client, details)
         _cert.update_certificate(client, certificate_id, voucher_id, date, details)
     except ValueError as e:
         _err(ctx, str(e))
