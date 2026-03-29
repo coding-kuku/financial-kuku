@@ -1079,15 +1079,19 @@ def adjuvant_list(ctx: click.Context):
 @adjuvant.command("add")
 @click.option("--name", required=True, help="Category name (e.g. 部门)")
 @click.option("--label", type=int, default=7, show_default=True,
-              help="1=客户 2=供应商 3=职员 4=项目 5=部门 6=存货 7=自定义")
+              help="Must be 7 (Custom). Standard types 1-6 are system-preset and cannot be created.")
 @click.pass_context
 def adjuvant_add(ctx: click.Context, name: str, label: int):
-    """Add a new auxiliary accounting category."""
+    """Add a new custom auxiliary accounting category (自定义辅助核算).
+
+    Only custom categories (label=7) can be created. Standard types
+    (1=客户 2=供应商 3=职员 4=项目 5=部门 6=存货) are system-preset.
+    """
     if not name.strip():
         _err(ctx, "名称不能为空 (adjuvant name must not be blank)")
         sys.exit(1)
-    if label not in range(1, 8):
-        _err(ctx, f"--label must be 1–7 (got {label}): 1=客户 2=供应商 3=职员 4=项目 5=部门 6=存货 7=自定义")
+    if label != 7:
+        _err(ctx, f"只能新建自定义辅助核算（--label 7）。标准类别 1-6（客户/供应商/职员/项目/部门/存货）为系统预置，无法通过此命令创建。")
         sys.exit(1)
     client = _get_client(ctx)
     try:
