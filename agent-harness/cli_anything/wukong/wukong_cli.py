@@ -1270,8 +1270,13 @@ def statement_status(ctx: click.Context):
             rows = []
             for s in statements:
                 name = s.get("statementName") or s.get("name", "")
-                st = s.get("status") or s.get("statementStatus", "")
-                rows.append([name, str(st)])
+                certs = s.get("certificates") or []
+                if certs:
+                    cert_nums = "/".join(str(c.get("certificateNum", "")) for c in certs)
+                    st = f"已生成 ({cert_nums})"
+                else:
+                    st = "未生成"
+                rows.append([name, st])
             _skin.table(headers, rows)
 
 
