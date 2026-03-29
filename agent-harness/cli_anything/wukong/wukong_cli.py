@@ -69,6 +69,13 @@ def _validate_period(ctx: click.Context, name: str, value: str) -> str:
     return value
 
 
+def _validate_period_range(ctx: click.Context, start: str, end: str) -> None:
+    """Validate that start period <= end period, or abort."""
+    if start > end:
+        _err(ctx, f"--start ({start}) must not be after --end ({end})")
+        sys.exit(1)
+
+
 def _validate_date(ctx: click.Context, name: str, value: str) -> str:
     """Validate a YYYY-MM-DD date string is a real calendar date, or abort."""
     from datetime import datetime
@@ -624,9 +631,13 @@ def certificate_list(ctx: click.Context, start, end, voucher_id, check_status, p
     """
     if start:
         _validate_period(ctx, "--start", start)
-        start = _to_yyyymm(start)
     if end:
         _validate_period(ctx, "--end", end)
+    if start and end:
+        _validate_period_range(ctx, start, end)
+    if start:
+        start = _to_yyyymm(start)
+    if end:
         end = _to_yyyymm(end)
     client = _get_client(ctx)
     try:
@@ -862,6 +873,7 @@ def ledger_detail(ctx: click.Context, subject_id: int, start: str, end: str):
     """Query detail ledger (明细账) for a subject."""
     _validate_period(ctx, "--start", start)
     _validate_period(ctx, "--end", end)
+    _validate_period_range(ctx, start, end)
     start_p, end_p = _to_yyyymm(start), _to_yyyymm(end)
     client = _get_client(ctx)
     try:
@@ -886,6 +898,7 @@ def ledger_general(ctx: click.Context, subject_id: int, start: str, end: str, mi
     """Query general ledger (总账) — summarized monthly balances."""
     _validate_period(ctx, "--start", start)
     _validate_period(ctx, "--end", end)
+    _validate_period_range(ctx, start, end)
     start_p, end_p = _to_yyyymm(start), _to_yyyymm(end)
     client = _get_client(ctx)
     try:
@@ -909,6 +922,7 @@ def ledger_balance(ctx: click.Context, start: str, end: str, subject_id, level):
     """Query subject balance table (科目余额表)."""
     _validate_period(ctx, "--start", start)
     _validate_period(ctx, "--end", end)
+    _validate_period_range(ctx, start, end)
     start_p, end_p = _to_yyyymm(start), _to_yyyymm(end)
     client = _get_client(ctx)
     try:
@@ -931,6 +945,7 @@ def ledger_multi_column(ctx: click.Context, subject_id: int, start: str, end: st
     """Query multi-column ledger (多栏账)."""
     _validate_period(ctx, "--start", start)
     _validate_period(ctx, "--end", end)
+    _validate_period_range(ctx, start, end)
     start_p, end_p = _to_yyyymm(start), _to_yyyymm(end)
     client = _get_client(ctx)
     try:
