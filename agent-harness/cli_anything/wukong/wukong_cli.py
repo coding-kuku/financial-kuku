@@ -367,15 +367,14 @@ def account_list(ctx: click.Context):
             _skin.warning("No account sets found")
             return
         active_id = _session.get_account_id()
-        headers = ["ID", "Name", "Company", "Start Date", "Active"]
+        headers = ["ID", "Company", "Start Date", "Active"]
         rows = []
         for a in accounts:
             aid = a.get("accountSetId") or a.get("accountId")
             rows.append([
                 str(aid or ""),
-                a.get("accountName") or a.get("name", ""),
                 a.get("companyName", ""),
-                a.get("startDate") or a.get("enableDate", ""),
+                a.get("startTime") or a.get("enableTime", ""),
                 "*" if str(aid) == str(active_id) else "",
             ])
         _skin.table(headers, rows)
