@@ -297,6 +297,10 @@ public class FinanceCertificateServiceImpl extends BaseServiceImpl<FinanceCertif
 
     @Override
     public List<OperationLog> updateCheckStatusByIds(List<Long> ids, Integer status) {
+        List<FinanceCertificate> existing = listByIds(ids);
+        if (existing.isEmpty()) {
+            throw new CrmException(FinanceCodeEnum.FINANCE_DATA_NOT_FOUND_ERROR);
+        }
         Integer flag = getBaseMapper().queryBalanceByIds(ids, AccountSet.getAccountSetId());
         if (flag == 0) {
             throw new CrmException(FinanceCodeEnum.FINANCE_CERTIFICATE_UPDATE_STATUS_ERROR);
