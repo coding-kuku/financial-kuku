@@ -138,7 +138,10 @@ public class FinanceAdjuvantServiceImpl extends BaseServiceImpl<FinanceAdjuvantM
             throw new CrmException(FinanceCodeEnum.FINANCE_ADJUVANT_SUBJECT_DELETE_ERROR);
         }
         //判断是否有关联的明细，如果有就不能删除
-        List<FinanceAdjuvantCarte> carteList = carteService.lambdaQuery().eq(FinanceAdjuvantCarte::getAdjuvantId, id).list();
+        List<FinanceAdjuvantCarte> carteList = carteService.lambdaQuery()
+                .eq(FinanceAdjuvantCarte::getAdjuvantId, id)
+                .ne(FinanceAdjuvantCarte::getStatus, 3)
+                .list();
         if (!carteList.isEmpty()) {
             throw new CrmException(FinanceCodeEnum.FINANCE_ADJUVANT_DELETE_ERROR);
         }
