@@ -6,7 +6,7 @@ import fcntl
 from pathlib import Path
 from typing import Optional
 
-_SESSION_DIR = Path.home() / ".cli-anything-finbook"
+_SESSION_DIR = Path.home() / ".cli-anything-finclaw"
 _SESSION_FILE = _SESSION_DIR / "session.json"
 
 _DEFAULT_BASE_URL = "http://localhost:44316"
@@ -59,7 +59,7 @@ def save_session(session: dict) -> None:
 
 def get_base_url(session: Optional[dict] = None) -> str:
     """Get the base URL from session or environment."""
-    env_url = os.environ.get("FINBOOK_URL")
+    env_url = os.environ.get("FINCLAW_URL")
     if env_url:
         return env_url.rstrip("/")
     if session:

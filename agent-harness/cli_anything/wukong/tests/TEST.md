@@ -1,4 +1,4 @@
-# Test Plan — cli-anything-finbook
+# Test Plan — cli-anything-finclaw
 
 ## Test Inventory Plan
 
@@ -72,7 +72,7 @@ Unit tests use synthetic data, no running server required. All tests mock `Wukon
 
 ## E2E Test Plan (`test_full_e2e.py`)
 
-E2E tests require the Wukong server running at `http://localhost:44316` with admin/123456.
+E2E tests require the FinClaw server running at `http://localhost:44316` with admin/123456.
 
 ### Server Connectivity Tests (2 tests)
 - `test_server_reachable` — `client.health_check()` returns True

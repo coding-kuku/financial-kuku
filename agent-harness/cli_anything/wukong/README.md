@@ -1,10 +1,10 @@
-# cli-anything-finbook
+# cli-anything-finclaw
 
-Command-line interface for **FinBook (做账快)** — a Spring Boot accounting system.
+Command-line interface for **FinClaw (财务虾)** — a Spring Boot accounting system.
 
 ## Required Dependency
 
-The FinBook server must be running before using this CLI.
+The FinClaw server must be running before using this CLI.
 
 ```bash
 # From the project root
@@ -23,9 +23,9 @@ pip install -e .
 ## Verify Installation
 
 ```bash
-which cli-anything-finbook
-cli-anything-finbook --help
-cli-anything-finbook status
+which cli-anything-finclaw
+cli-anything-finclaw --help
+cli-anything-finclaw status
 ```
 
 ## Date Format Convention
@@ -39,26 +39,26 @@ cli-anything-finbook status
 
 ```bash
 # Interactive REPL (default when no subcommand given)
-cli-anything-finbook
+cli-anything-finclaw
 
 # Login
-cli-anything-finbook auth login -u admin -p 123456
+cli-anything-finclaw auth login -u admin -p 123456
 
 # List account sets and switch to one
-cli-anything-finbook account list
-cli-anything-finbook account switch 1
+cli-anything-finclaw account list
+cli-anything-finclaw account switch 1
 
 # List subjects (account codes)
-cli-anything-finbook subject list
+cli-anything-finclaw subject list
 
 # List journal entries (--start/--end use YYYY-MM format)
-cli-anything-finbook certificate list --start 2024-01 --end 2024-12
+cli-anything-finclaw certificate list --start 2024-01 --end 2024-12
 
 # Financial reports (JSON output for agents)
-cli-anything-finbook --json report balance-sheet --period month --date 2024-06
+cli-anything-finclaw --json report balance-sheet --period month --date 2024-06
 
 # Custom server URL
-cli-anything-finbook --url http://192.168.1.100:44316 status
+cli-anything-finclaw --url http://192.168.1.100:44316 status
 ```
 
 ## Command Groups
@@ -104,23 +104,23 @@ cli-anything-finbook --url http://192.168.1.100:44316 status
 All commands support `--json` for machine-readable output:
 
 ```bash
-cli-anything-finbook --json auth whoami
-cli-anything-finbook --json account list
-cli-anything-finbook --json certificate list --start 2024-01 --end 2024-06
+cli-anything-finclaw --json auth whoami
+cli-anything-finclaw --json account list
+cli-anything-finclaw --json certificate list --start 2024-01 --end 2024-06
 ```
 
 ## Session Storage
 
 Session (token, active account) is stored in:
 ```
-~/.cli-anything-finbook/session.json
+~/.cli-anything-finclaw/session.json
 ```
 
 ## Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `FINBOOK_URL` | Override server URL (default: http://localhost:44316) |
+| `FINCLAW_URL` | Override server URL (default: http://localhost:44316) |
 
 ## Running Tests
 

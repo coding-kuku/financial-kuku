@@ -5,7 +5,7 @@
     </div>
     <div class="main-des">
       <i class="wk wk-announcement icon" />
-      <div class="content">做账快会不定期进行日常bug更新及新增功能更新。</div>
+      <div class="content">财务虾会不定期进行日常bug更新及新增功能更新。</div>
     </div>
     <div class="main-body">
       <el-timeline>

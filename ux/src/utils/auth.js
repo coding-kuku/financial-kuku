@@ -68,9 +68,9 @@ export function redirectLogin() {
     .then(res => {
       const id = res.data
       const redirect = encodeURIComponent(window.location.origin + window.location.pathname)
-      window.location.href = `${process.env.VUE_APP_ID_CENTER_LOGIN_URL}?redirectUrl=${redirect}&appId=${id}`
+      window.location.href = `/local-login.html?redirectUrl=${redirect}&appId=${id}`
     })
     .catch(e => {
-      window.location.href = process.env.VUE_APP_ID_CENTER_LOGIN_URL
+      window.location.href = '/local-login.html'
     })
 }

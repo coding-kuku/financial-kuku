@@ -1,6 +1,0 @@
-#!/Users/czj/Desktop/kauiji/financial-kuku/.venv-wukong/bin/python3.11
-import sys
-from cli_anything.wukong.wukong_cli import main
-if __name__ == '__main__':
-    sys.argv[0] = sys.argv[0].removesuffix('.exe')
-    sys.exit(main())

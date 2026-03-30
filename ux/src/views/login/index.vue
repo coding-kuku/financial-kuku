@@ -2,7 +2,7 @@
   <div class="login">
     <div class="login__content">
       <div class="login-title">
-        {{ companyInfo.name !== null && companyInfo.name !== '' ? companyInfo.name : '做账快' }}
+        {{ companyInfo.name !== null && companyInfo.name !== '' ? companyInfo.name : '财务虾' }}
       </div>
 
       <login-by-pwd
@@ -14,8 +14,8 @@
 
     <div class="footer">
       <img v-if="companyInfo.logo" :src="companyInfo.logo" class="company-logo">
-      <div v-else class="footer-title"><img src="@/assets/img/logo.png" class="logo"><span>做账快</span></div>
-      <div class="footer-des">FinBook — 做账快财务管理系统</div>
+      <img v-else src="@/assets/img/logo-full.png" class="company-logo company-logo--default">
+      <div class="footer-des">FinClaw — 财务虾财务管理系统</div>
     </div>
   </div>
 </template>
@@ -175,6 +175,10 @@ export default {
 
     > .company-logo {
       width: 160px;
+
+      &--default {
+        width: 220px;
+      }
     }
 
     &-des {

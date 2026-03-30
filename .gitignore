@@ -13,3 +13,4 @@ agent-harness/logs/
 finance/finance-web/logs/
 *.class
 D:/
+.venv-wukong/

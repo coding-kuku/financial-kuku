@@ -5,9 +5,9 @@
     :before-close="handleClose"
     append-to-body>
     <div class="dialog-content">
-      <div class="title">做账快模拟数据</div>
+      <div class="title">财务虾模拟数据</div>
       <div class="article">
-        为了帮助您更好地了解和使用做账快，我们在系统的各个版块为您模拟了相应的虚拟数据，您可以通过这些数据获得更好的系统使用体验。
+        为了帮助您更好地了解和使用财务虾，我们在系统的各个版块为您模拟了相应的虚拟数据，您可以通过这些数据获得更好的系统使用体验。
       </div>
       <div class="tips">注：模拟数据清除后方可添加您的真实数据。</div>
       <el-button type="primary" @click="handleClose">

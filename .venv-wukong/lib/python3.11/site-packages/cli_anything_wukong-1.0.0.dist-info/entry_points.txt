@@ -1,2 +1,0 @@
-[console_scripts]
-cli-anything-wukong = cli_anything.wukong.wukong_cli:main

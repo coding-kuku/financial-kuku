@@ -1,9 +1,9 @@
 from setuptools import setup, find_namespace_packages
 
 setup(
-    name="cli-anything-finbook",
+    name="cli-anything-finclaw",
     version="1.0.0",
-    description="CLI harness for FinBook (做账快) — command-line interface to the finance REST API",
+    description="CLI harness for FinClaw (财务虾) — command-line interface to the finance REST API",
     packages=find_namespace_packages(include=["cli_anything.*"]),
     install_requires=[
         "click>=8.0.0",
@@ -12,7 +12,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "cli-anything-finbook=cli_anything.wukong.wukong_cli:main",
+            "cli-anything-finclaw=cli_anything.wukong.wukong_cli:main",
         ],
     },
     package_data={
