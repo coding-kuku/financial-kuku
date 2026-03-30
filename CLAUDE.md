@@ -34,6 +34,8 @@ CLI 运行（使用项目内虚拟环境）：
 
 ## 构建方式
 
+**`common-web`**：`com.kakarote:common-web` 的版本由根 `pom.xml` 的 `core.version`（当前如 `2.3.211`）决定，**对应源码在本仓库** `common/common-web/`。排查或修改基础 Web/核心能力时请改该模块，并与 `finance-web` 一起构建（例如对 `finance-web` 使用 `-am`）。
+
 ### 后端构建（必须用 Java 17）
 
 系统默认 Java 可能是 25，Lombok 在 Java 25 下注解处理失效会导致大量编译错误。**必须显式指定 Java 17**：
@@ -72,6 +74,7 @@ HUSKY=0 NODE_OPTIONS=--openssl-legacy-provider npm run build
 
 ```
 finance/          # Java Spring Boot 后端（含 Web 前端构建产物）
+common/           # Java 公共子模块（含 common-web，版本 = 根 pom 的 core.version）
 ux/               # Vue 前端源码
 agent-harness/    # Python CLI + Agent Skill
   cli_anything/wukong/
