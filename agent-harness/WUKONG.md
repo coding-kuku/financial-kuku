@@ -1,8 +1,8 @@
-# Wukong Accounting — CLI Harness SOP
+# FinBook — CLI Harness SOP
 
 ## Software Overview
 
-**Wukong Accounting (悟空财务)** is an open-source Chinese accounting system built on Spring Boot 2.7 + MyBatis-Plus. It provides double-entry bookkeeping with:
+**FinBook (做账快)** is an open-source Chinese accounting system built on Spring Boot 2.7 + MyBatis-Plus. It provides double-entry bookkeeping with:
 
 - Journal entry management (凭证)
 - Subject/account code tree (科目)
@@ -16,13 +16,13 @@ The system runs as a REST API server on port 44316. All CLI operations call this
 
 ### Backend Engine
 
-The real software is the Wukong Java server (`finance-web-0.0.1-SNAPSHOT.jar`). The CLI is a command-line client — it calls the server's REST API. There is no client-side reimplementation of any business logic.
+The real software is the FinBook Java server (`finance-web-0.0.1-SNAPSHOT.jar`). The CLI is a command-line client — it calls the server's REST API. There is no client-side reimplementation of any business logic.
 
 ### Authentication
 
 - `POST /login` — username + SHA256(password+salt) → returns UUID token
 - Token stored in `AUTH-TOKEN` header for all subsequent requests
-- Session state stored locally in `~/.cli-anything-wukong/session.json`
+- Session state stored locally in `~/.cli-anything-finbook/session.json`
 
 ### Account Set Context
 
@@ -69,16 +69,16 @@ The CLI validates and converts `YYYY-MM` to `yyyyMM` internally before sending t
 
 ```bash
 # Check server is running
-cli-anything-wukong status
+cli-anything-finbook status
 
 # Login
-cli-anything-wukong auth login -u admin -p 123456
+cli-anything-finbook auth login -u admin -p 123456
 
 # List account sets
-cli-anything-wukong account list
+cli-anything-finbook account list
 
 # Switch to account set 1
-cli-anything-wukong account switch 1
+cli-anything-finbook account switch 1
 
 ```
 
@@ -86,13 +86,13 @@ cli-anything-wukong account switch 1
 
 ```bash
 # List voucher words to get ID
-cli-anything-wukong voucher list
+cli-anything-finbook voucher list
 
 # List subjects to get IDs
-cli-anything-wukong subject list
+cli-anything-finbook subject list
 
 # Add a journal entry (debit cash 1000, credit revenue 1000)
-cli-anything-wukong certificate add \
+cli-anything-finbook certificate add \
   --voucher-id 1 \
   --date 2024-06-01 \
   --detail '[
@@ -101,7 +101,7 @@ cli-anything-wukong certificate add \
   ]'
 
 # Update an existing journal entry
-cli-anything-wukong certificate update \
+cli-anything-finbook certificate update \
   --id 42 \
   --voucher-id 1 \
   --date 2024-06-15 \
@@ -111,62 +111,62 @@ cli-anything-wukong certificate update \
   ]'
 
 # Review the certificate
-cli-anything-wukong certificate review 42 --approve
+cli-anything-finbook certificate review 42 --approve
 ```
 
 ### Auxiliary Accounting (辅助核算)
 
 ```bash
 # List all auxiliary accounting categories
-cli-anything-wukong adjuvant list
+cli-anything-finbook adjuvant list
 
 # Add a custom category (label 4 = project)
 # Label values: 1=客户 2=供应商 3=职员 4=项目 5=部门 6=存货 7=自定义
-cli-anything-wukong adjuvant add --name "研发项目A" --label 4
+cli-anything-finbook adjuvant add --name "研发项目A" --label 4
 
 # Delete by ID
-cli-anything-wukong adjuvant delete 123
+cli-anything-finbook adjuvant delete 123
 ```
 
 ### Period Closing (结账)
 
 ```bash
 # Check current period status
-cli-anything-wukong statement status
+cli-anything-finbook statement status
 
 # Close the current accounting period
-cli-anything-wukong statement close --date 2024-01-31
+cli-anything-finbook statement close --date 2024-01-31
 
 # Reopen a period if corrections are needed
-cli-anything-wukong statement reopen --date 2024-01-31
+cli-anything-finbook statement reopen --date 2024-01-31
 ```
 
 ### Financial Reports
 
 ```bash
 # Monthly balance sheet
-cli-anything-wukong report balance-sheet --period month --date 2024-06 --check
+cli-anything-finbook report balance-sheet --period month --date 2024-06 --check
 
 # Income statement Q2
-cli-anything-wukong report income --period quarter --date 2024-06
+cli-anything-finbook report income --period quarter --date 2024-06
 
 # JSON output for agent consumption
-cli-anything-wukong --json report balance-sheet --period month --date 2024-06
+cli-anything-finbook --json report balance-sheet --period month --date 2024-06
 ```
 
 ### Account Books
 
 ```bash
 # Detail ledger for subject 1001 (cash)
-cli-anything-wukong ledger detail --subject-id 123 --start 2024-01 --end 2024-12
+cli-anything-finbook ledger detail --subject-id 123 --start 2024-01 --end 2024-12
 
 # Subject balance table
-cli-anything-wukong ledger balance --start 2024-01 --end 2024-12 --level 1
+cli-anything-finbook ledger balance --start 2024-01 --end 2024-12 --level 1
 ```
 
 ## Required Dependency
 
-The Wukong Accounting server must be running. Build and start:
+The FinBook server must be running. Build and start:
 
 ```bash
 mvn clean package -pl finance/finance-web -am -Dmaven.test.skip=true

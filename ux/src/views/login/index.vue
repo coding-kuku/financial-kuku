@@ -2,7 +2,7 @@
   <div class="login">
     <div class="login__content">
       <div class="login-title">
-        {{ companyInfo.name !== null && companyInfo.name !== '' ? companyInfo.name : '悟空软件' }}
+        {{ companyInfo.name !== null && companyInfo.name !== '' ? companyInfo.name : '做账快' }}
       </div>
 
       <login-by-pwd
@@ -14,8 +14,8 @@
 
     <div class="footer">
       <img v-if="companyInfo.logo" :src="companyInfo.logo" class="company-logo">
-      <div v-else class="footer-title"><img src="@/assets/img/logo.png" class="logo"><span>悟空软件</span></div>
-      <div class="footer-des">一个账户可以访问 悟空CRM、悟空FS、悟空HRM 以及其他产品</div>
+      <div v-else class="footer-title"><img src="@/assets/img/logo.png" class="logo"><span>做账快</span></div>
+      <div class="footer-des">FinBook — 做账快财务管理系统</div>
     </div>
   </div>
 </template>

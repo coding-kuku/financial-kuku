@@ -1,13 +1,13 @@
-"""cli-anything-wukong — CLI harness for Wukong Accounting (悟空财务).
+"""cli-anything-finbook — CLI harness for FinBook (做账快).
 
 Usage:
-    cli-anything-wukong                          # enter REPL
-    cli-anything-wukong --url http://HOST:PORT   # custom server URL
-    cli-anything-wukong --json auth login -u admin -p 123456
-    cli-anything-wukong account list
-    cli-anything-wukong subject list
-    cli-anything-wukong certificate list --start 2024-01 --end 2024-12
-    cli-anything-wukong report balance-sheet --period month --date 2024-06
+    cli-anything-finbook                          # enter REPL
+    cli-anything-finbook --url http://HOST:PORT   # custom server URL
+    cli-anything-finbook --json auth login -u admin -p 123456
+    cli-anything-finbook account list
+    cli-anything-finbook subject list
+    cli-anything-finbook certificate list --start 2024-01 --end 2024-12
+    cli-anything-finbook report balance-sheet --period month --date 2024-06
 
 Date format convention
 ----------------------
@@ -49,7 +49,7 @@ from cli_anything.wukong.utils.wukong_backend import (
 from cli_anything.wukong.utils.repl_skin import ReplSkin
 
 _VERSION = "1.0.0"
-_skin = ReplSkin("wukong", version=_VERSION)
+_skin = ReplSkin("finbook", version=_VERSION)
 
 # ── Period type mapping ────────────────────────────────────────────────
 
@@ -114,7 +114,7 @@ def _to_yyyymm(period: str) -> str:
 def _get_client(ctx: click.Context) -> WukongClient:
     """Build client from context (url + token from session).
 
-    URL priority: --url flag > WUKONG_URL env var > session file > default.
+    URL priority: --url flag > FINBOOK_URL env var > session file > default.
     """
     url = ctx.obj.get("url") or _session.get_base_url()
     token = _session.get_token()
@@ -146,16 +146,16 @@ def _handle_error(ctx: click.Context, exc: WukongError):
 
 
 @click.group(invoke_without_command=True, context_settings={"help_option_names": ["-h", "--help"]})
-@click.option("--url", default=None, help="Wukong server URL (default: http://localhost:44316)")
+@click.option("--url", default=None, help="FinBook server URL (default: http://localhost:44316)")
 @click.option("--json", "use_json", is_flag=True, default=False, help="Output as JSON")
 @click.version_option(_VERSION, "--version", "-V")
 @click.pass_context
 def cli(ctx: click.Context, url: Optional[str], use_json: bool):
-    """cli-anything-wukong — command-line interface for Wukong Accounting (悟空财务).
+    """cli-anything-finbook — command-line interface for FinBook (做账快).
 
     Run without a subcommand to enter the interactive REPL.
 
-    The Wukong server must be running at the configured URL.
+    The FinBook server must be running at the configured URL.
     Default server: http://localhost:44316
     """
     ctx.ensure_object(dict)

@@ -192,7 +192,7 @@ const app = {
             defaultData.showButton = !hideBuy
             defaultData.buttonLabel = isTrial ? '立即购买' : '立即续费→'
             defaultData.priority = 2
-            defaultData.title = isTrial ? `正在免费试用悟空云服务，建议升级到付费版本。试用剩余天数<span style="color: #FF5630;">${validDays}</span>天。`
+            defaultData.title = isTrial ? `正在免费试用做账快，建议升级到付费版本。试用剩余天数<span style="color: #FF5630;">${validDays}</span>天。`
               : `您好，您的云服务将于${data.endTime}正式到期，截止目前仅剩${validDays}天，到期后将无法正常登录使用，为了保证正常使用，请及时续费！如果已启动付费流程，请忽略此消息。`
             defaultData.data = {
               isTrial,

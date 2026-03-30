@@ -119,8 +119,8 @@ export function adminFileUploadAPI(data) {
 export function adminFilePreviewAPI(data) {
   const fileUrl = data.fileUrl
   delete data.fileUrl
-  data.htmlName = '悟空CRM'
-  data.htmlTitle = '悟空CRM'
+  data.htmlName = '做账快'
+  data.htmlTitle = '做账快'
   return request({
     baseURL: '/api-file/',
     url: `composite/httpfile?${fileUrl}`,

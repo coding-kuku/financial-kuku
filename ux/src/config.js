@@ -8,7 +8,7 @@ const androidUrl = 'https://sj.qq.com/myapp/detail.htm?apkName=com.kakarote.crm1
 
 const contactUrl = process.env.VUE_APP_CONTACT_URL // 联系我们
 
-const companyName = '悟空CRM'
+const companyName = '做账快'
 const version = 'V12.3.13'
 const baiduKey = 'BAIDU_KEY'
 

@@ -1,10 +1,10 @@
-# cli-anything-wukong
+# cli-anything-finbook
 
-Command-line interface for **Wukong Accounting (悟空财务)** — a Spring Boot accounting system.
+Command-line interface for **FinBook (做账快)** — a Spring Boot accounting system.
 
 ## Required Dependency
 
-The Wukong Accounting server must be running before using this CLI.
+The FinBook server must be running before using this CLI.
 
 ```bash
 # From the project root
@@ -23,9 +23,9 @@ pip install -e .
 ## Verify Installation
 
 ```bash
-which cli-anything-wukong
-cli-anything-wukong --help
-cli-anything-wukong status
+which cli-anything-finbook
+cli-anything-finbook --help
+cli-anything-finbook status
 ```
 
 ## Date Format Convention
@@ -39,26 +39,26 @@ cli-anything-wukong status
 
 ```bash
 # Interactive REPL (default when no subcommand given)
-cli-anything-wukong
+cli-anything-finbook
 
 # Login
-cli-anything-wukong auth login -u admin -p 123456
+cli-anything-finbook auth login -u admin -p 123456
 
 # List account sets and switch to one
-cli-anything-wukong account list
-cli-anything-wukong account switch 1
+cli-anything-finbook account list
+cli-anything-finbook account switch 1
 
 # List subjects (account codes)
-cli-anything-wukong subject list
+cli-anything-finbook subject list
 
 # List journal entries (--start/--end use YYYY-MM format)
-cli-anything-wukong certificate list --start 2024-01 --end 2024-12
+cli-anything-finbook certificate list --start 2024-01 --end 2024-12
 
 # Financial reports (JSON output for agents)
-cli-anything-wukong --json report balance-sheet --period month --date 2024-06
+cli-anything-finbook --json report balance-sheet --period month --date 2024-06
 
 # Custom server URL
-cli-anything-wukong --url http://192.168.1.100:44316 status
+cli-anything-finbook --url http://192.168.1.100:44316 status
 ```
 
 ## Command Groups
@@ -104,23 +104,23 @@ cli-anything-wukong --url http://192.168.1.100:44316 status
 All commands support `--json` for machine-readable output:
 
 ```bash
-cli-anything-wukong --json auth whoami
-cli-anything-wukong --json account list
-cli-anything-wukong --json certificate list --start 2024-01 --end 2024-06
+cli-anything-finbook --json auth whoami
+cli-anything-finbook --json account list
+cli-anything-finbook --json certificate list --start 2024-01 --end 2024-06
 ```
 
 ## Session Storage
 
 Session (token, active account) is stored in:
 ```
-~/.cli-anything-wukong/session.json
+~/.cli-anything-finbook/session.json
 ```
 
 ## Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `WUKONG_URL` | Override server URL (default: http://localhost:44316) |
+| `FINBOOK_URL` | Override server URL (default: http://localhost:44316) |
 
 ## Running Tests
 

@@ -5,7 +5,7 @@ function resolve(dir) {
   return path.join(__dirname, dir)
 }
 
-const name = '悟空CRM' // page title
+const name = '做账快' // page title
 
 // If your port is set to 80,
 // use administrator privileges to execute the command line.

@@ -1,3 +1,3 @@
-"""cli-anything-wukong: CLI harness for Wukong Accounting (悟空财务)."""
+"""cli-anything-finbook: CLI harness for FinBook (做账快)."""
 
 __version__ = "1.0.0"

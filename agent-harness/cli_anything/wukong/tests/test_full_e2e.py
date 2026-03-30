@@ -1,6 +1,6 @@
-"""E2E and subprocess tests for cli-anything-wukong.
+"""E2E and subprocess tests for cli-anything-finbook.
 
-Requires the Wukong Accounting server running at http://localhost:44316
+Requires the FinBook server running at http://localhost:44316
 with default credentials: admin / 123456
 
 Run:
@@ -37,7 +37,7 @@ from cli_anything.wukong.core import (
 
 # ── Config ─────────────────────────────────────────────────────────────
 
-WUKONG_URL = os.environ.get("WUKONG_URL", "http://localhost:44316")
+FINBOOK_URL = os.environ.get("FINBOOK_URL", "http://localhost:44316")
 ADMIN_USER = os.environ.get("WUKONG_USER", "admin")
 ADMIN_PASS = os.environ.get("WUKONG_PASS", "123456")
 
@@ -65,11 +65,11 @@ def _resolve_cli(name):
 @pytest.fixture(scope="session")
 def live_client():
     """Authenticated WukongClient for the live server."""
-    client = WukongClient(base_url=WUKONG_URL)
+    client = WukongClient(base_url=FINBOOK_URL)
     try:
         token = _auth.login(client, ADMIN_USER, ADMIN_PASS)
     except WukongConnectionError:
-        pytest.skip(f"Wukong server not reachable at {WUKONG_URL}")
+        pytest.skip(f"FinBook server not reachable at {FINBOOK_URL}")
     except WukongAPIError as e:
         pytest.fail(f"Login failed: {e}")
     client.token = token
@@ -122,15 +122,15 @@ def active_account_id(live_client):
 class TestServerConnectivity:
     def test_server_reachable(self):
         """Server must be running — no graceful degradation."""
-        client = WukongClient(base_url=WUKONG_URL)
+        client = WukongClient(base_url=FINBOOK_URL)
         up = client.health_check()
         if not up:
             pytest.fail(
-                f"Wukong server is NOT reachable at {WUKONG_URL}.\n"
+                f"FinBook server is NOT reachable at {FINBOOK_URL}.\n"
                 f"Start it with: java -jar finance/finance-web/target/finance-web-0.0.1-SNAPSHOT.jar"
             )
         assert up is True
-        print(f"\n  Server: {WUKONG_URL} — reachable")
+        print(f"\n  Server: {FINBOOK_URL} — reachable")
 
     def test_login_and_whoami(self, live_client):
         """Login must succeed and whoami must return the user."""
@@ -357,11 +357,11 @@ class TestReports:
 # ── CLI subprocess tests ───────────────────────────────────────────────
 
 class TestCLISubprocess:
-    CLI_BASE = _resolve_cli("cli-anything-wukong")
+    CLI_BASE = _resolve_cli("cli-anything-finbook")
 
     def _run(self, args: list, check: bool = True, input_text: str = None) -> subprocess.CompletedProcess:
         env = os.environ.copy()
-        env["WUKONG_URL"] = WUKONG_URL
+        env["FINBOOK_URL"] = FINBOOK_URL
         return subprocess.run(
             self.CLI_BASE + args,
             capture_output=True,
@@ -412,7 +412,7 @@ class TestCertificateUpdate:
     def test_add_and_update_certificate(self, live_client, active_account_id):
         """Add a certificate in a past month, then update its content and verify.
 
-        NOTE: The Wukong server returns 500 when updating a certificate whose
+        NOTE: The FinBook server returns 500 when updating a certificate whose
         target date falls in the current calendar month. Use past months only.
         """
         words = _voucher.list_voucher_words(live_client)

@@ -3,9 +3,9 @@
     <div class="xr-download__header">
       <img src="./download.png" class="download-img">
     </div>
-    <div class="xr-download__title">悟空移动办公平台</div>
+    <div class="xr-download__title">做账快移动端</div>
     <div class="down-des">
-      您可以通过悟空移动端，实现销售管理CRM、人资管理HRM、财务管理FS。全面支持安卓、IOS，无缝接入企业微信、钉钉。
+      您可以通过做账快移动端，随时随地管理财务数据。全面支持安卓、IOS。
     </div>
     <flexbox
       justify="center"

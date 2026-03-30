@@ -5,7 +5,7 @@
     </div>
     <div class="main-des">
       <i class="wk wk-announcement icon" />
-      <div class="content">悟空SAAS云平台会不定期进行日常bug更新及新增功能更新， 可实时关注悟空社区或悟空CRM交流群获取更新信息。</div>
+      <div class="content">做账快会不定期进行日常bug更新及新增功能更新。</div>
     </div>
     <div class="main-body">
       <el-timeline>

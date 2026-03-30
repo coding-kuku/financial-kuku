@@ -1,4 +1,4 @@
-# Test Plan — cli-anything-wukong
+# Test Plan — cli-anything-finbook
 
 ## Test Inventory Plan
 
