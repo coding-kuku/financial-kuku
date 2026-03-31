@@ -1,4 +1,5 @@
 import {
+  loginAPI,
   authorizationAPI,
   logoutAPI
 } from '@/api/login'
@@ -10,7 +11,7 @@ import {
   adminFinanceAuthListAPI
 } from '@/api/common'
 
-import {
+import router, {
   resetRouter
 } from '@/router'
 
@@ -127,6 +128,20 @@ const user = {
     /**
      * 登录换取 token
      */
+    Login({ commit }, data) {
+      return new Promise((resolve, reject) => {
+        loginAPI(data)
+          .then(res => {
+            if (res.code !== 0) return reject(res)
+            commit('SET_AUTH', { token: res.data })
+            resolve(res)
+          })
+          .catch(error => {
+            reject(error)
+          })
+      })
+    },
+
     AuthorizationLogin({ commit, dispatch }, data) {
       return new Promise((resolve, reject) => {
         const cacheCode = window.localStorage.getItem('code')
@@ -219,7 +234,7 @@ const user = {
           resetRouter()
           Lockr.rm(LOCAL_CLEAR_PAGE_TIME)
           Lockr.rm(LOCAL_FREE_TIME)
-          window.location.href = process.env.VUE_APP_ID_CENTER_LOGIN_URL
+          router.replace('/login', () => {}, () => {})
           resolve()
         }).catch(error => {
           removeAuth({
@@ -228,7 +243,7 @@ const user = {
           resetRouter()
           Lockr.rm(LOCAL_CLEAR_PAGE_TIME)
           Lockr.rm(LOCAL_FREE_TIME)
-          window.location.href = process.env.VUE_APP_ID_CENTER_LOGIN_URL
+          router.replace('/login', () => {}, () => {})
           reject(error)
         })
       })

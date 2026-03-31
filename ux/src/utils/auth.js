@@ -1,8 +1,8 @@
 import axios from '@/utils/request'
-import baseAxios from 'axios'
 import cache from './cache'
 import Lockr from 'lockr'
 import store from '@/store'
+import router from '@/router'
 import Cookies from 'js-cookie'
 import { getCookiesDomain } from '@/utils'
 import { LOCAL_ADMIN_TOKEN, COOKIE_ADMIN_TOKEN } from '@/utils/constants.js'
@@ -32,7 +32,7 @@ export function addAuth(adminToken) {
 /** 获取授权信息 */
 export function getAuth() {
   return new Promise((resolve, reject) => {
-    const token = Cookies.get(COOKIE_ADMIN_TOKEN) || Lockr.get(LOCAL_ADMIN_TOKEN)
+    const token = Lockr.get(LOCAL_ADMIN_TOKEN) || Cookies.get(COOKIE_ADMIN_TOKEN)
     if (!token) return reject('Not Found Token')
 
     cache.updateAxiosCache(token)
@@ -54,23 +54,6 @@ export function getAuth() {
  * 重定向到登录页
  */
 export function redirectLogin() {
-  baseAxios.get(
-    '/APPLICATION_ID.txt',
-    {
-      transformResponse: [data => {
-        data = data ? data.toString() : ''
-        data = data.replace(/\r\n/g, '')
-        data = data.replace(/\r|\n/g, '')
-        return data
-      }]
-    }
-  )
-    .then(res => {
-      const id = res.data
-      const redirect = encodeURIComponent(window.location.origin + window.location.pathname)
-      window.location.href = `/local-login.html?redirectUrl=${redirect}&appId=${id}`
-    })
-    .catch(e => {
-      window.location.href = '/local-login.html'
-    })
+  const redirect = window.location.pathname
+  router.replace({ path: '/login', query: { redirect } }, () => {}, () => {})
 }

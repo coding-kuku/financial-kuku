@@ -51,7 +51,9 @@ const cache = {
    * @param {*}
    */
   rmAxiosCache: function() {
-    Cookies.remove(COOKIE_ADMIN_TOKEN, { domain: getCookiesDomain() })
+    const domain = getCookiesDomain()
+    Cookies.remove(COOKIE_ADMIN_TOKEN, { domain: domain })
+    Cookies.remove(COOKIE_ADMIN_TOKEN) // also remove cookie set without domain
     Lockr.rm(LOCAL_ADMIN_TOKEN)
   }
 }

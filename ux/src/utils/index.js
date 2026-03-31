@@ -834,7 +834,8 @@ export function printHTML(id) {
 export function getCookiesDomain() {
   const host = window.location.hostname || ''
   const hosts = host.split('.')
-  if (hosts.length > 1) {
+  // IP addresses (all numeric segments) should not have a domain cookie attribute
+  if (hosts.length > 1 && !hosts.every(seg => /^\d+$/.test(seg))) {
     return `.${hosts[hosts.length - 2]}.${hosts[hosts.length - 1]}`
   }
   return ''

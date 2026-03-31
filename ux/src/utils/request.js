@@ -11,6 +11,7 @@ import { debounce } from 'throttle-debounce'
 import store from '@/store'
 import { isBlob } from '@/utils/types'
 import { LOCAL_ADMIN_TOKEN } from '@/utils/constants.js'
+import Lockr from 'lockr'
 
 //
 // axios 0.18 支持不过滤掉自定义参数
@@ -67,6 +68,11 @@ service.interceptors.request.use(
     const { customConfig } = config
     if (customConfig?.removeToken) {
       delete config.headers[LOCAL_ADMIN_TOKEN]
+    } else {
+      const token = Lockr.get(LOCAL_ADMIN_TOKEN)
+      if (token) {
+        config.headers[LOCAL_ADMIN_TOKEN] = token
+      }
     }
     return config
   },

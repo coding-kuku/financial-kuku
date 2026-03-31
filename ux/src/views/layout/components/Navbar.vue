@@ -33,12 +33,28 @@
     </flexbox>
 
     <flexbox style="width: auto;">
-      <xr-avatar
+      <el-dropdown
         v-if="userInfo && Object.keys(userInfo).length > 0"
-        disabled
-        :name="$getUserName(userInfo)"
-        :size="24"
-        :src="$getUserImg(userInfo)" />
+        trigger="click"
+        @command="moreMenuClick">
+        <span style="cursor: pointer; display: flex; align-items: center;">
+          <xr-avatar
+            :name="$getUserName(userInfo)"
+            :size="24"
+            :src="$getUserImg(userInfo)" />
+        </span>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item
+            v-for="item in moreMenu"
+            :key="item.command"
+            :command="item.command"
+            :disabled="item.disabled"
+            :divided="item.divided">
+            <i :class="item.icon" />
+            {{ item.label }}
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
     </flexbox>
   </div>
 </template>
