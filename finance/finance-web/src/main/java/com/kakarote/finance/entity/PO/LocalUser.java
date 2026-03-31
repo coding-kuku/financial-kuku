@@ -30,4 +30,6 @@ public class LocalUser implements Serializable {
     private Boolean isAdmin;
 
     private LocalDateTime createTime;
+
+    private String phone;
 }

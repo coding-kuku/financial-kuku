@@ -2,14 +2,24 @@
   <div class="login">
     <div class="login__content">
       <div class="login-title">
-        {{ companyInfo.name !== null && companyInfo.name !== '' ? companyInfo.name : '财务虾' }}
+        {{ companyInfo.name || '财务虾' }}
       </div>
 
       <login-by-pwd
         v-if="loginType === 'loginPwd'"
         :username.sync="username"
+        @toggle="toggle"
       />
 
+      <login-by-code
+        v-else-if="loginType === 'loginCode'"
+        @toggle="toggle"
+      />
+
+      <login-forget-pwd
+        v-else-if="loginType === 'forgetPwd'"
+        @toggle="toggle"
+      />
     </div>
 
     <div class="footer">
@@ -22,54 +32,31 @@
 
 <script>
 import { adminSystemIndexAPI } from '@/api/admin/config'
-
 import LoginByPwd from './component/LoginByPwd'
-
+import LoginByCode from './component/LoginByCode'
+import LoginForgetPwd from './component/LoginForgetPwd'
 import Lockr from 'lockr'
 import { updateNavLinkName } from '@/utils'
 import { LOCAL_LOGIN_LOGO_NAME } from '@/utils/constants.js'
 
 export default {
-  // 登录
   name: 'Login',
-
-  components: {
-    LoginByPwd
-  },
-
-  props: {},
-
+  components: { LoginByPwd, LoginByCode, LoginForgetPwd },
   data() {
     return {
-      loginType: 'loginPwd', // loginPwd loginCode foregetPwd multiple
-      username: '', // 登录账号
-      companyList: [],
-      companyInfo: {
-        name: '',
-        logo: ''
-      },
-      loginParams: null // 登录参数，多企业二次登录需要
+      loginType: 'loginPwd',
+      username: '',
+      companyInfo: { name: '', logo: '' }
     }
   },
-
-  computed: {},
-
-  watch: {
-  },
-
   created() {
     this.handleLoginCache('get')
     this.getLogoAndName()
   },
-
-  mounted() {},
-
-  beforeDestroy() {},
-
   methods: {
-    /**
-     * 获取logo 和 名称
-     */
+    toggle(type) {
+      this.loginType = type
+    },
     getLogoAndName() {
       adminSystemIndexAPI().then(res => {
         const resData = res.data
@@ -78,27 +65,14 @@ export default {
         }
       }).catch(() => {})
     },
-
-    /**
-     * @description: 操作登录缓存
-     * @param {*} type get  set
-     * @return {*}
-     */
     handleLoginCache(type, data) {
       const hostname = window.location.hostname
       if (type === 'get') {
-        // 读取缓存
         updateNavLinkName()
-
         const logCacheInfo = Lockr.get(LOCAL_LOGIN_LOGO_NAME)
         if (logCacheInfo && logCacheInfo[hostname]) {
           const domainData = logCacheInfo[hostname]
-          this.companyInfo = {
-            name: domainData.companyName,
-            logo: domainData.companyLoginLogo
-          }
-
-          // 更新导航菜单头信息
+          this.companyInfo = { name: domainData.companyName, logo: domainData.companyLoginLogo }
           updateNavLinkName(domainData)
         }
       } else if (type === 'set') {
@@ -107,8 +81,6 @@ export default {
         Lockr.set(LOCAL_LOGIN_LOGO_NAME, logCacheInfo)
         this.companyInfo.logo = data.companyLoginLogo
         this.companyInfo.name = data.companyName
-
-        // 更新导航菜单头信息
         updateNavLinkName(data)
       }
     }
@@ -133,7 +105,6 @@ export default {
   background-attachment: fixed, fixed;
   background-position: left bottom, right bottom;
   background-size: 360px, 480px;
-  -webkit-box-pack: justify;
 
   &__content {
     width: 400px;
@@ -157,22 +128,6 @@ export default {
     color: $--color-text-secondary;
     text-align: center;
 
-    &-title {
-      font-size: 28px;
-      font-weight: bold;
-      color: $--color-text-regular;
-
-      .logo {
-        width: 32px;
-        margin-right: $--interval-base;
-      }
-
-      .logo,
-      span {
-        vertical-align: middle;
-      }
-    }
-
     > .company-logo {
       width: 160px;
 
@@ -185,15 +140,6 @@ export default {
       margin-top: 16px;
       font-size: 12px;
       color: $--color-text-secondary;
-    }
-  }
-
-  .statement {
-    margin-top: 24px;
-    text-align: center;
-
-    span {
-      padding: 0 8px;
     }
   }
 }

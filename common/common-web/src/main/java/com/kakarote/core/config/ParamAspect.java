@@ -39,7 +39,10 @@ public class ParamAspect implements Ordered {
             if (attributes != null) {
                 HttpServletRequest request = attributes.getRequest();
                 String requestUri = request.getRequestURI();
-                if (StrUtil.equalsAny(requestUri, "/login", "/adminUser/authorization")) {
+                if (StrUtil.equalsAny(requestUri, "/login", "/adminUser/authorization",
+                        "/adminUser/sendSms", "/adminUser/smsLogin", "/adminUser/verifySms",
+                        "/adminUser/forgetPwd", "/adminUser/resetPwd", "/adminUser/register",
+                        "/cloud/getCaptcha", "/cloud/checkCaptcha")) {
                     return point.proceed();
                 }
                 String token = request.getHeader(Const.DEFAULT_TOKEN_NAME);

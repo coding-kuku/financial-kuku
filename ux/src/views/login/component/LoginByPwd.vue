@@ -15,7 +15,7 @@
         ref="userInput"
         v-model.trim="ruleForm.username"
         :disabled="loading"
-        placeholder="请输入手机号"
+        placeholder="请输入账号"
         @keyup.enter.native="continueClick" />
       <show-item
         v-else
@@ -45,6 +45,17 @@
         :disabled="loading"
         type="primary"
         @click="continueClick">{{ loginBtnName }}</el-button>
+    </div>
+
+    <div class="other-login">
+      <div class="other-login-or">或</div>
+      <button @click.prevent="$emit('toggle', 'loginCode')">使用验证码登录</button>
+    </div>
+
+    <div class="other-handle">
+      <el-button type="text" @click="$emit('toggle', 'forgetPwd')">忘记密码</el-button>
+      <span>·</span>
+      <el-button type="text" @click="$router.push('/register')">注册账号</el-button>
     </div>
   </el-form>
 </template>

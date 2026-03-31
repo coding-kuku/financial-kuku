@@ -10,7 +10,7 @@ import {
   redirectLogin
 } from '@/utils/auth' // 验权
 
-const pathWhiteList = ['/404', '/noAuth', '/login'] // 不重定向白名单
+const pathWhiteList = ['/404', '/noAuth', '/login', '/register'] // 不重定向白名单
 let tryCount = 3 // 如果0 清空授权
 // 是否能继续出错
 function canTryFun() {
@@ -77,8 +77,8 @@ router.beforeEach(async(to, from, next) => {
     return
   }
 
-  // 登录页直接放行
-  if (to.name === 'login') {
+  // 登录/注册页直接放行
+  if (to.name === 'login' || to.name === 'register') {
     next()
     NProgress.done()
     return
