@@ -124,6 +124,15 @@ export default {
         icon: 'wk wk-user'
       }]
 
+      if (this.manage && Object.keys(this.manage).length > 0) {
+        temps.push({
+          command: 'systemSet',
+          divided: false,
+          label: '系统设置',
+          icon: 'wk wk-system-set'
+        })
+      }
+
       return temps.concat([{
         command: 'logOut',
         divided: false,
@@ -293,6 +302,8 @@ export default {
             time
           }
         })
+      } else if (command == 'systemSet') {
+        this.enterSystemSet()
       } else if (command == 'logOut') {
         this.$confirm('退出登录？', '提示', {
           confirmButtonText: '确定',
