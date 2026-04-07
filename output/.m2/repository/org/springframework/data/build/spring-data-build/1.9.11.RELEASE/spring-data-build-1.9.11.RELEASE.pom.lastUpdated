@@ -1,5 +1,0 @@
-#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
-#Mon Mar 23 00:31:58 CST 2026
-https\://repo.maven.apache.org/maven2/.lastUpdated=1774197118725
-http\://0.0.0.0/.error=Could not transfer artifact org.springframework.data.build\:spring-data-build\:pom\:1.9.11.RELEASE from/to maven-default-http-blocker (http\://0.0.0.0/)\: Blocked mirror for repositories\: [jcenter-snapshots (http\://oss.jfrog.org/artifactory/oss-snapshot-local/, default, releases+snapshots)]
-@default-maven-default-http-blocker-http\://0.0.0.0/.lastUpdated=1774197118543
