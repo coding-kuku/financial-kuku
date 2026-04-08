@@ -46,17 +46,6 @@
         type="primary"
         @click="continueClick">{{ loginBtnName }}</el-button>
     </div>
-
-    <div class="other-login">
-      <div class="other-login-or">或</div>
-      <button @click.prevent="$emit('toggle', 'loginCode')">使用验证码登录</button>
-    </div>
-
-    <div class="other-handle">
-      <el-button type="text" @click="$emit('toggle', 'forgetPwd')">忘记密码</el-button>
-      <span>·</span>
-      <el-button type="text" @click="$router.push('/register')">注册账号</el-button>
-    </div>
   </el-form>
 </template>
 
@@ -87,7 +76,7 @@ export default {
       if (!this.loading) {
         callback()
       } else if (value === '') {
-        callback(new Error('手机号不能为空'))
+        callback(new Error('账号不能为空'))
       } else {
         callback()
       }
@@ -111,7 +100,7 @@ export default {
       },
       rules: {
         username: [
-          { required: true, message: '手机号不能为空', trigger: 'change' },
+          { required: true, message: '账号不能为空', trigger: 'change' },
           { validator: validateUsername, trigger: '' }
         ],
         password: [

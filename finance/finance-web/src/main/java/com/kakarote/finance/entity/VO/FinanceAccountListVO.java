@@ -13,6 +13,12 @@ import java.util.Date;
 @ApiModel("切换账套列表")
 public class FinanceAccountListVO {
 
+    @ApiModelProperty("客户公司ID")
+    private Long clientId;
+
+    @ApiModelProperty("客户公司名称")
+    private String clientName;
+
     @ApiModelProperty(value = "账套ID")
     private Long accountId;
 

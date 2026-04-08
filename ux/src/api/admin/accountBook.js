@@ -1,10 +1,12 @@
 import request from '@/utils/request'
 
 // 查询账套管理列表页数据
-export function queryPageList() {
+export function queryPageList(data) {
   return request({
     url: 'financeAccountSet/queryPageList',
-    method: 'post'
+    method: 'post',
+    data,
+    headers: { 'Content-Type': 'application/json' }
   })
 }
 // 查询账单授权员工根据id
@@ -98,7 +100,8 @@ export function saveAccountSet(data) {
 export function getAccountSetListAPI(data) {
   return request({
     url: '/financeAccountSet/getAccountSetList',
-    method: 'post'
+    method: 'post',
+    params: data
   })
 }
 

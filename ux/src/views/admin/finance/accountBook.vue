@@ -14,6 +14,22 @@
           data-id="338" />
       </template>
     </xr-header>
+    <div class="toolbar">
+      <el-select
+        v-if="userInfo.isAdmin"
+        v-model="selectedClientId"
+        clearable
+        placeholder="请选择客户公司"
+        class="toolbar-item"
+        @change="getData">
+        <el-option
+          v-for="item in clientOptions"
+          :key="item.clientId"
+          :label="item.clientName"
+          :value="item.clientId" />
+      </el-select>
+      <span v-else class="toolbar-client">{{ userInfo.clientName || '当前客户公司' }}</span>
+    </div>
     <flexbox-item class="container">
       <flexbox
         align="flex-start"
@@ -201,14 +217,11 @@
     </el-dialog>
 
     <!-- 选择员工 -->
-    <wk-dep-user-dialog
+    <client-user-select-dialog
       v-if="relateEmployeeShow"
       :visible.sync="relateEmployeeShow"
-      :props="{
-        showDisableUser: false,
-        showDept: false,
-      }"
-      @change="employeesSave" />
+      :client-id="currentClientId"
+      @confirm="employeesSave" />
 
     <!-- 初始化账套 -->
     <account-step-dialog
@@ -227,11 +240,11 @@ import {
   saveAccountAuth
 } from '@/api/admin/accountBook'
 import { getFinanceRoleByTypeAPI } from '@/api/admin/accountBook'
-
-import WkDepUserDialog from '@/components/NewCom/WkUserDialogSelect/Dialog'
+import { queryClientCompanySelectableListAPI } from '@/api/admin/clientCompany'
 import CreateSections from '@/components/CreateSections'
 import AccountStepDialog from './components/AccountStepDialog'
 import XrHeader from '@/components/XrHeader'
+import ClientUserSelectDialog from '../components/ClientUserSelectDialog'
 
 import { mapGetters } from 'vuex'
 
@@ -239,14 +252,16 @@ export default {
   name: 'AccountBook',
   components: {
     CreateSections,
-    WkDepUserDialog,
     AccountStepDialog,
-    XrHeader
+    XrHeader,
+    ClientUserSelectDialog
   },
   data() {
     return {
       loading: false,
       accountList: [], // 账套列表
+      clientOptions: [],
+      selectedClientId: null,
       accountItem: null, // 当前选中的账套
       accountUserList: [], // 账套下的员工列表
       financeRoleList: [], // 财务角色列表
@@ -294,7 +309,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['userInfo'])
+    ...mapGetters(['userInfo']),
+    currentClientId() {
+      return this.userInfo.isAdmin ? this.selectedClientId : this.userInfo.clientId
+    }
   },
   watch: {
     accountUserList: {
@@ -312,17 +330,36 @@ export default {
     }
   },
   created() {
-    this.getData()
+    this.loadClientOptions()
   },
   methods: {
+    loadClientOptions() {
+      queryClientCompanySelectableListAPI().then(res => {
+        this.clientOptions = res.data || []
+        if (this.userInfo.isAdmin) {
+          this.selectedClientId = this.clientOptions.length ? this.clientOptions[0].clientId : null
+        }
+        this.getData()
+      }).catch(() => {
+        this.getData()
+      })
+    },
     /**
      * 查询全部账套列表
      */
     getData() {
+      if (this.userInfo.isAdmin && !this.selectedClientId) {
+        this.accountList = []
+        return
+      }
       this.loading = true
-      queryPageList().then(res => {
+      queryPageList({
+        clientId: this.currentClientId
+      }).then(res => {
         this.loading = false
         this.accountList = res.data
+      }).catch(() => {
+        this.loading = false
       })
     },
 
@@ -336,14 +373,8 @@ export default {
      * @param item
      */
     async openTally(item) {
-      const res = await getUserByaccountId({ accountId: item.accountId })
-      console.log('用户信息', res, item.accountId, this.userInfo.userId)
-      const findItem = res.data.userList.find(item => {
-        return item.userId === this.userInfo.userId
-      })
-      if (findItem) { // 证明本用户有该账套的权限
+      if (this.userInfo.isAdmin) {
         if (item.status == 1) {
-          this.$message.success('跳转至现有记账')
           this.$router.push({
             path: '/fm/workbench',
             query: {
@@ -356,7 +387,24 @@ export default {
           this.showAccount = true
         }
       } else {
-        this.$message.error('您没有该账套的权限')
+        const res = await getUserByaccountId({ accountId: item.accountId })
+        const findItem = res.data.userList.find(item => item.userId === this.userInfo.userId)
+        if (findItem) {
+          if (item.status == 1) {
+            this.$router.push({
+              path: '/fm/workbench',
+              query: {
+                id: item.accountId
+              }
+            })
+          } else {
+            this.companyInfo.companyName = item.companyName
+            this.companyInfo.accountId = item.accountId
+            this.showAccount = true
+          }
+        } else {
+          this.$message.error('您没有该账套的权限')
+        }
       }
     },
 
@@ -403,6 +451,10 @@ export default {
      * 新建账套
      */
     handleToCreateAccount() {
+      if (!this.currentClientId) {
+        this.$message.error('请先选择客户公司')
+        return
+      }
       this.accountDialogTitle = '新建账套'
       this.accountItem = null
       this.dialogVisible = true
@@ -440,6 +492,7 @@ export default {
           const request = this.accountItem ? updateAccount : addAccount
           request({
             ...(this.accountItem || {}),
+            clientId: this.currentClientId,
             ...this.accountForm,
             ...this.contactForm
           }).then(res => {
@@ -464,6 +517,10 @@ export default {
      * @param accountItem
      */
     handleToEditAuth(accountItem) {
+      if (!this.currentClientId) {
+        this.$message.error('请先选择客户公司')
+        return
+      }
       this.accountItem = accountItem
       this.getUserListByAccount(accountItem.accountId)
       this.getRoleList()
@@ -521,7 +578,7 @@ export default {
     /**
      * 关联员工确定
      */
-    employeesSave(_, deptIds, userList) {
+    employeesSave(userList) {
       this.addUserToList(userList, true)
       this.relateEmployeeShow = false
     },
@@ -576,6 +633,22 @@ export default {
 
 .app-container {
   padding: 15px 40px 0;
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+
+  .toolbar-item {
+    width: 280px;
+  }
+
+  .toolbar-client {
+    font-size: 14px;
+    color: $--color-text-primary;
+  }
 
   .container {
     width: 100%;

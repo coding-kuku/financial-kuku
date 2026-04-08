@@ -7,21 +7,22 @@ import com.kakarote.common.entity.UserInfo;
 import com.kakarote.common.utils.UserUtil;
 import com.kakarote.core.servlet.BaseServiceImpl;
 import com.kakarote.finance.common.AccountSet;
-import com.kakarote.finance.constant.FinanceConst;
 import com.kakarote.finance.entity.PO.AdminMenu;
+import com.kakarote.finance.entity.PO.AdminRole;
 import com.kakarote.finance.entity.PO.FinanceAccountUser;
+import com.kakarote.finance.entity.PO.LocalUser;
 import com.kakarote.finance.mapper.FinanceAccountUserMapper;
 import com.kakarote.finance.service.IAdminMenuService;
 import com.kakarote.finance.service.IAdminRoleService;
+import com.kakarote.finance.service.IClientAccessService;
 import com.kakarote.finance.service.IFinanceAccountUserService;
+import com.kakarote.finance.mapper.LocalUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import com.kakarote.core.common.Const;
 
 /**
  * <p>
@@ -39,6 +40,12 @@ public class FinanceAccountUserServiceImpl extends BaseServiceImpl<FinanceAccoun
 
     @Autowired
     private IAdminRoleService adminRoleService;
+
+    @Autowired
+    private IClientAccessService clientAccessService;
+
+    @Autowired
+    private LocalUserMapper localUserMapper;
 
     public List<Long> getRoleList() {
         Long userId = UserUtil.getUserId();
@@ -66,10 +73,46 @@ public class FinanceAccountUserServiceImpl extends BaseServiceImpl<FinanceAccoun
         if (userId == null && UserUtil.getUser() != null) {
             userId = UserUtil.getUser().getUserId();
         }
-        JSONObject auth = adminRoleService.auth(userId);
         JSONObject result = new JSONObject();
-        if (ObjectUtil.isNotNull(auth) && ObjectUtil.isNotNull(auth.getJSONObject(FinanceConst.FINANCE_SERVICE))) {
-            result.put(FinanceConst.FINANCE_SERVICE, auth.getJSONObject(FinanceConst.FINANCE_SERVICE));
+        if (userId == null) {
+            return result;
+        }
+        LocalUser user = localUserMapper.selectById(userId);
+
+        // Platform super admin always has full finance access
+        if (user != null && clientAccessService.isPlatformSuperAdmin(user)) {
+            result.put("finance", fullFinanceAuth());
+            return result;
+        }
+
+        // If an account set is already selected in session, use role-based auth for it
+        if (AccountSet.getAccountSetId() != null) {
+            FinanceAccountUser founderRelation = lambdaQuery()
+                    .eq(FinanceAccountUser::getAccountId, AccountSet.getAccountSetId())
+                    .eq(FinanceAccountUser::getUserId, userId)
+                    .eq(FinanceAccountUser::getIsFounder, 1)
+                    .last("limit 1")
+                    .one();
+            if (founderRelation != null) {
+                result.put("finance", fullFinanceAuth());
+                return result;
+            }
+            List<Long> roleIds = getRoleList();
+            if (!CollUtil.isEmpty(roleIds)) {
+                List<AdminRole> roles = roleIds.stream()
+                        .map(adminRoleService::getById)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+                result.put("finance", buildRoleFinanceAuth(roles));
+                return result;
+            }
+        }
+
+        // No account set selected yet — check if user has access to any account
+        Long clientId = (user != null) ? user.getClientId() : null;
+        List<Long> accessibleAccountIds = clientAccessService.getReadableAccountIds(user, clientId);
+        if (!CollUtil.isEmpty(accessibleAccountIds)) {
+            result.put("finance", fullFinanceAuth());
         }
         return result;
     }
@@ -118,5 +161,64 @@ public class FinanceAccountUserServiceImpl extends BaseServiceImpl<FinanceAccoun
             }
         });
         return jsonObject;
+    }
+
+    private JSONObject buildRoleFinanceAuth(List<AdminRole> roles) {
+        boolean fullAccess = roles.stream().anyMatch(role -> {
+            String roleName = role.getRoleName();
+            return "主管".equals(roleName) || "会计".equals(roleName);
+        });
+        if (fullAccess) {
+            return fullFinanceAuth();
+        }
+        return readOnlyFinanceAuth();
+    }
+
+    private JSONObject fullFinanceAuth() {
+        JSONObject finance = new JSONObject();
+        finance.put("subject", createActionMap("read", "save", "update", "delete", "import", "export", "print"));
+        finance.put("voucherWord", createActionMap("save", "update", "delete", "read"));
+        finance.put("currency", createActionMap("save", "update", "delete", "read"));
+        finance.put("systemParam", createActionMap("read", "update"));
+        finance.put("financialInitial", createActionMap("read", "update", "export", "import"));
+        finance.put("voucher", createActionMap("read", "save", "update", "delete", "export", "print", "import", "insert", "arrangement", "examine", "noExamine"));
+        finance.put("voucherSummary", createActionMap("read", "export"));
+        finance.put("generalLedger", createActionMap("read", "export", "print"));
+        finance.put("subLedger", createActionMap("read", "export", "print"));
+        finance.put("accountBalance", createActionMap("read", "export", "print"));
+        finance.put("multiColumn", createActionMap("read", "export", "print"));
+        finance.put("balanceSheet", createActionMap("read", "update", "export", "print"));
+        finance.put("profit", createActionMap("read", "update", "export", "print"));
+        finance.put("cashFlow", createActionMap("read", "update", "export", "print"));
+        finance.put("checkOut", createActionMap("generate", "profitAndLoss", "checkOut", "cancelClosing"));
+        return finance;
+    }
+
+    private JSONObject readOnlyFinanceAuth() {
+        JSONObject finance = new JSONObject();
+        finance.put("subject", createActionMap("read", "export", "print"));
+        finance.put("voucherWord", createActionMap("read"));
+        finance.put("currency", createActionMap("read"));
+        finance.put("systemParam", createActionMap("read"));
+        finance.put("financialInitial", createActionMap("read", "export"));
+        finance.put("voucher", createActionMap("read", "print", "export"));
+        finance.put("voucherSummary", createActionMap("read", "export"));
+        finance.put("generalLedger", createActionMap("read", "export", "print"));
+        finance.put("subLedger", createActionMap("read", "export", "print"));
+        finance.put("accountBalance", createActionMap("read", "export", "print"));
+        finance.put("multiColumn", createActionMap("read", "export", "print"));
+        finance.put("balanceSheet", createActionMap("read", "export", "print"));
+        finance.put("profit", createActionMap("read", "export", "print"));
+        finance.put("cashFlow", createActionMap("read", "export", "print"));
+        finance.put("checkOut", new JSONObject());
+        return finance;
+    }
+
+    private JSONObject createActionMap(String... actions) {
+        JSONObject object = new JSONObject();
+        for (String action : actions) {
+            object.put(action, true);
+        }
+        return object;
     }
 }

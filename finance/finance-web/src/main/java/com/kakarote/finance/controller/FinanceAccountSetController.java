@@ -10,6 +10,7 @@ import com.kakarote.common.log.enums.OperateObjectEnum;
 import com.kakarote.common.log.enums.OperateTypeEnum;
 import com.kakarote.core.common.Result;
 import com.kakarote.finance.entity.BO.FinanceAccountAuthSaveBO;
+import com.kakarote.finance.entity.BO.FinanceAccountSetQueryBO;
 import com.kakarote.finance.entity.BO.FinanceAccountSetBO;
 import com.kakarote.finance.entity.BO.FinanceNewAccountSetBO;
 import com.kakarote.finance.entity.PO.AdminRole;
@@ -43,8 +44,8 @@ public class FinanceAccountSetController {
 
     @PostMapping("/queryPageList")
     @ApiOperation("查询账套管理列表页数据")
-    public Result<List<FinanceAccountSet>> queryPageList() {
-        return Result.ok(accountSetService.queryPageList());
+    public Result<List<FinanceAccountSet>> queryPageList(@RequestBody(required = false) FinanceAccountSetQueryBO queryBO) {
+        return Result.ok(accountSetService.queryPageList(queryBO));
     }
 
     @PostMapping("/getAccountSetById")
@@ -102,8 +103,8 @@ public class FinanceAccountSetController {
 
     @PostMapping("/getAccountSetList")
     @ApiOperation("获取账套切换列表")
-    public Result<List<FinanceAccountListVO>> getAccountSetList() {
-        return Result.ok(accountSetService.getAccountSetList());
+    public Result<List<FinanceAccountListVO>> getAccountSetList(@RequestParam(value = "clientId", required = false) Long clientId) {
+        return Result.ok(accountSetService.getAccountSetList(clientId));
     }
 
     @PostMapping("/switchAccountSet")
@@ -127,4 +128,3 @@ public class FinanceAccountSetController {
     }
 
 }
-

@@ -2,6 +2,7 @@ package com.kakarote.finance.service;
 
 import com.kakarote.common.log.entity.OperationLog;
 import com.kakarote.core.servlet.BaseService;
+import com.kakarote.finance.entity.BO.FinanceAccountSetQueryBO;
 import com.kakarote.finance.entity.BO.FinanceAccountAuthSaveBO;
 import com.kakarote.finance.entity.BO.FinanceAccountSetBO;
 import com.kakarote.finance.entity.BO.FinanceNewAccountSetBO;
@@ -22,7 +23,7 @@ import java.util.List;
  */
 public interface IFinanceAccountSetService extends BaseService<FinanceAccountSet> {
 
-    List<FinanceAccountSet> queryPageList();
+    List<FinanceAccountSet> queryPageList(FinanceAccountSetQueryBO queryBO);
 
     FinanceAccountSet getAccountSetById(Long accountId);
 
@@ -36,7 +37,7 @@ public interface IFinanceAccountSetService extends BaseService<FinanceAccountSet
 
     void saveAccountSet(FinanceNewAccountSetBO accountSet);
 
-    List<FinanceAccountListVO> getAccountSetList();
+    List<FinanceAccountListVO> getAccountSetList(Long clientId);
 
     void switchAccountSet(Long accountId);
 

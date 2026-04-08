@@ -36,6 +36,10 @@ public class FinanceAccountSet implements Serializable {
     @TableId(value = "account_id", type = IdType.ASSIGN_ID)
     private Long accountId;
 
+    @ApiModelProperty("客户公司ID")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long clientId;
+
     @ApiModelProperty("公司编码")
     private String companyCode;
 

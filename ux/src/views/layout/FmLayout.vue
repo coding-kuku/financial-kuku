@@ -13,6 +13,22 @@
           <div class="text">快捷入口：</div>
           <quick-nav />
         </div>
+        <el-dropdown
+          v-if="userInfo && userInfo.isAdmin"
+          placement="top">
+          <div class="account-item switch-btn company-item">
+            <p class="name">{{ currentClientName }}</p>
+            <p class="time">客户公司</p>
+            <i class="el-icon-caret-bottom" />
+          </div>
+          <el-dropdown-menu slot="dropdown" class="account-select">
+            <el-dropdown-item
+              v-for="item in clientOptions"
+              :key="item.clientId"
+              @click.native="switchClient(item)"
+            >{{ item.clientName }}</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
         <el-dropdown placement="top">
           <div class="account-item switch-btn">
             <p class="name">{{ financeCurrentAccount.companyName }}</p>
@@ -94,6 +110,7 @@ import { Navbar/*, Sidebar, AppMain*/ } from './components'
 import WkContainer from './components/WkContainer'
 // import Breadcrumb from '@/components/Breadcrumb'
 import QuickNav from './components/QuickNav'
+import { queryClientCompanySelectableListAPI } from '@/api/admin/clientCompany'
 
 import { getNavMenus } from './components/utils'
 import path from 'path'
@@ -114,13 +131,16 @@ export default {
       sidebarPopoverVisible: false,
       loading: false,
       showMain: true,
-      sideMenus: []
+      sideMenus: [],
+      clientOptions: [],
+      currentClientId: null
     }
   },
   computed: {
     ...mapGetters([
       'fmRouters',
       'collapse',
+      'userInfo',
       'financeVisitedViewNames',
       'financeCurrentAccount',
       'financeAccountList'
@@ -128,6 +148,10 @@ export default {
     // 菜单
     menus() {
       return getNavMenus(this.fmRouters || [], '/fm')
+    },
+    currentClientName() {
+      const current = this.clientOptions.find(item => item.clientId === this.currentClientId)
+      return current ? current.clientName : '选择客户公司'
     },
     key() {
       return this.$route.path
@@ -173,6 +197,9 @@ export default {
   },
   watch: {
     financeCurrentAccount() {
+      if (this.financeCurrentAccount && this.financeCurrentAccount.clientId) {
+        this.currentClientId = this.financeCurrentAccount.clientId
+      }
       this.showMain = false
       this.$nextTick(() => {
         this.showMain = true
@@ -183,17 +210,39 @@ export default {
     }
   },
   mounted() {
-    console.log(this.$store)
     const accountId = this.$route.query.id || null
     this.loading = true
-    this.getAccountList(accountId || null).then(res => {
-      this.loading = false
-    }).catch(() => {
-      this.loading = false
-    })
+    this.initAccountContext(accountId)
   },
   methods: {
     ...mapActions(['getAccountList', 'switchAccount']),
+    initAccountContext(accountId) {
+      if (this.userInfo && this.userInfo.isAdmin) {
+        queryClientCompanySelectableListAPI().then(res => {
+          this.clientOptions = res.data || []
+          if (this.financeCurrentAccount && this.financeCurrentAccount.clientId) {
+            this.currentClientId = this.financeCurrentAccount.clientId
+          } else if (this.clientOptions.length) {
+            this.currentClientId = this.clientOptions[0].clientId
+          }
+          return this.getAccountList({ accountId, clientId: this.currentClientId })
+        }).finally(() => {
+          this.loading = false
+        })
+      } else {
+        this.currentClientId = this.userInfo ? this.userInfo.clientId : null
+        this.getAccountList({ accountId, clientId: this.currentClientId }).finally(() => {
+          this.loading = false
+        })
+      }
+    },
+    switchClient(client) {
+      this.currentClientId = client.clientId
+      this.loading = true
+      this.getAccountList({ clientId: this.currentClientId }).finally(() => {
+        this.loading = false
+      })
+    },
 
     /**
      * 菜单选择
@@ -279,6 +328,10 @@ export default {
 
 .account-select {
   width: 190px;
+}
+
+.company-item {
+  margin-right: 12px;
 }
 
 .aside-container {

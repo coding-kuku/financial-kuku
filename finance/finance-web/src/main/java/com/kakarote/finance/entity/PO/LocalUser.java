@@ -29,6 +29,15 @@ public class LocalUser implements Serializable {
 
     private Boolean isAdmin;
 
+    private Long clientId;
+
+    /**
+     * platform_super_admin / client_user
+     */
+    private String userType;
+
+    private Boolean isClientAdmin;
+
     private LocalDateTime createTime;
 
     private String phone;

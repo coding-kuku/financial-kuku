@@ -6,18 +6,7 @@
       </div>
 
       <login-by-pwd
-        v-if="loginType === 'loginPwd'"
         :username.sync="username"
-        @toggle="toggle"
-      />
-
-      <login-by-code
-        v-else-if="loginType === 'loginCode'"
-        @toggle="toggle"
-      />
-
-      <login-forget-pwd
-        v-else-if="loginType === 'forgetPwd'"
         @toggle="toggle"
       />
     </div>
@@ -33,18 +22,15 @@
 <script>
 import { adminSystemIndexAPI } from '@/api/admin/config'
 import LoginByPwd from './component/LoginByPwd'
-import LoginByCode from './component/LoginByCode'
-import LoginForgetPwd from './component/LoginForgetPwd'
 import Lockr from 'lockr'
 import { updateNavLinkName } from '@/utils'
 import { LOCAL_LOGIN_LOGO_NAME } from '@/utils/constants.js'
 
 export default {
   name: 'Login',
-  components: { LoginByPwd, LoginByCode, LoginForgetPwd },
+  components: { LoginByPwd },
   data() {
     return {
-      loginType: 'loginPwd',
       username: '',
       companyInfo: { name: '', logo: '' }
     }
@@ -54,9 +40,7 @@ export default {
     this.getLogoAndName()
   },
   methods: {
-    toggle(type) {
-      this.loginType = type
-    },
+    toggle() {},
     getLogoAndName() {
       adminSystemIndexAPI().then(res => {
         const resData = res.data

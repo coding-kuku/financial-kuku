@@ -3,17 +3,18 @@ package com.kakarote.finance.service.impl;
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.kakarote.common.utils.UserUtil;
 import com.kakarote.core.common.cache.AdminCacheKey;
-import com.kakarote.core.common.enums.DataAuthEnum;
 import com.kakarote.core.redis.Redis;
 import com.kakarote.core.servlet.BaseServiceImpl;
 import com.kakarote.finance.common.admin.AdminRoleTypeEnum;
 import com.kakarote.finance.entity.PO.AdminMenu;
 import com.kakarote.finance.entity.PO.AdminRole;
+import com.kakarote.finance.entity.PO.LocalUser;
 import com.kakarote.finance.mapper.AdminRoleMapper;
+import com.kakarote.finance.mapper.LocalUserMapper;
 import com.kakarote.finance.service.IAdminMenuService;
 import com.kakarote.finance.service.IAdminRoleService;
+import com.kakarote.finance.service.IPlatformPermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,12 @@ public class AdminRoleServiceImpl extends BaseServiceImpl<AdminRoleMapper, Admin
     @Autowired
     private Redis redis;
 
+    @Autowired
+    private LocalUserMapper localUserMapper;
+
+    @Autowired
+    private IPlatformPermissionService platformPermissionService;
+
     /**
      * 查询用户所属权限
      *
@@ -43,15 +50,15 @@ public class AdminRoleServiceImpl extends BaseServiceImpl<AdminRoleMapper, Admin
      */
     @Override
     public JSONObject auth(Long userId) {
-        List<AdminMenu> adminMenus = adminMenuService.queryMenuList(userId);
-        JSONObject jsonObject = createMenu(new HashSet<>(adminMenus), 0L);
         if (userId == null) {
-            return jsonObject;
+            return new JSONObject();
         }
         String cacheKey = AdminCacheKey.USER_AUTH_CACHE_KET + userId;
         if (redis.exists(cacheKey)) {
             return redis.get(cacheKey);
         }
+        LocalUser localUser = localUserMapper.selectById(userId);
+        JSONObject jsonObject = platformPermissionService.buildManageAuth(localUser);
         redis.setex(cacheKey, 300, jsonObject);
         return jsonObject;
     }

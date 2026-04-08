@@ -29,8 +29,10 @@ export default {
      * @param dispatch
      * @param accountId
      */
-    getAccountList({ commit, dispatch }, accountId = null) {
-      getAccountSetListAPI().then(res => {
+    getAccountList({ commit, dispatch }, payload = {}) {
+      const accountId = typeof payload === 'object' ? payload.accountId : payload
+      const clientId = typeof payload === 'object' ? payload.clientId : null
+      getAccountSetListAPI({ clientId }).then(res => {
         const vm = window.app
         const accountList = res.data || []
         commit('SET_ACCOUNT_LIST', accountList)
@@ -66,7 +68,7 @@ export default {
           return
         }
 
-        const defaultAccount = accountList.find(o => o.isDefault === 1)
+        const defaultAccount = accountList.find(o => o.isDefault === 1) || accountList[0]
         let findRes = null
         if (accountId) {
           if (defaultAccount.accountId === accountId) {

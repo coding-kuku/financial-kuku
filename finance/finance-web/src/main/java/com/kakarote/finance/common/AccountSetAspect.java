@@ -8,8 +8,12 @@ import com.kakarote.core.redis.Redis;
 import com.kakarote.core.servlet.ApplicationContextHolder;
 import com.kakarote.finance.entity.PO.FinanceAccountSet;
 import com.kakarote.finance.entity.PO.FinanceAccountUser;
+import com.kakarote.finance.entity.PO.LocalUser;
+import com.kakarote.finance.mapper.LocalUserMapper;
+import com.kakarote.finance.service.IClientAccessService;
 import com.kakarote.finance.service.IFinanceAccountSetService;
 import com.kakarote.finance.service.IFinanceAccountUserService;
+import com.kakarote.finance.service.ISelectedAccountService;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -44,6 +48,15 @@ public class AccountSetAspect {
     @Autowired
     private IFinanceAccountUserService accountUserService;
 
+    @Autowired
+    private ISelectedAccountService selectedAccountService;
+
+    @Autowired
+    private LocalUserMapper localUserMapper;
+
+    @Autowired
+    private IClientAccessService clientAccessService;
+
 
     @Around("execution(* com.kakarote.finance.controller..*.*(..)) && !execution(@(com.kakarote.core.common.ParamAspect) * *(..)) ")
     public Object before(ProceedingJoinPoint point) throws Throwable {
@@ -67,6 +80,17 @@ public class AccountSetAspect {
                 }
             }
             if (user == null || user.getUserId() == null) {
+                return point.proceed();
+            }
+            LocalUser localUser = localUserMapper.selectById(user.getUserId());
+            if (localUser != null && clientAccessService.isPlatformSuperAdmin(localUser)) {
+                Long selectedAccountId = selectedAccountService.getSelectedAccountId(user.getUserId());
+                if (selectedAccountId != null) {
+                    FinanceAccountSet selectedAccount = setService.getById(selectedAccountId);
+                    if (selectedAccount != null) {
+                        AccountSet.setAccountSet(selectedAccount);
+                    }
+                }
                 return point.proceed();
             }
             //查看当前登录用户是否有默认账套

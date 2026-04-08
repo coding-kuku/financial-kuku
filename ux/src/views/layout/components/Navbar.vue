@@ -56,11 +56,14 @@
         </el-dropdown-menu>
       </el-dropdown>
     </flexbox>
+
+    <change-password-dialog :visible.sync="passwordDialogVisible" />
   </div>
 </template>
 
 <script>
 import { systemMessageUnreadCountAPI } from '@/api/common'
+import ChangePasswordDialog from './ChangePasswordDialog'
 // eslint-disable-next-line
 import { mapGetters } from 'vuex'
 import { Loading } from 'element-ui'
@@ -78,6 +81,7 @@ export default {
     }
   },
   components: {
+    ChangePasswordDialog
   },
   props: {
     title: String,
@@ -100,7 +104,8 @@ export default {
       menuTab: '',
       appSideProps: null,
       helpSideShow: false, // 帮助中心
-      appreciationSideShow: false // 增值服务
+      appreciationSideShow: false, // 增值服务
+      passwordDialogVisible: false
     }
   },
   computed: {
@@ -122,6 +127,11 @@ export default {
         divided: false,
         label: '基本信息',
         icon: 'wk wk-user'
+      }, {
+        command: 'changePassword',
+        divided: false,
+        label: '修改密码',
+        icon: 'wk wk-lock'
       }]
 
       if (this.manage && Object.keys(this.manage).length > 0) {
@@ -302,6 +312,8 @@ export default {
             time
           }
         })
+      } else if (command === 'changePassword') {
+        this.passwordDialogVisible = true
       } else if (command == 'systemSet') {
         this.enterSystemSet()
       } else if (command == 'logOut') {
@@ -600,4 +612,3 @@ export default {
 //   }
 // }
 </style>
-
