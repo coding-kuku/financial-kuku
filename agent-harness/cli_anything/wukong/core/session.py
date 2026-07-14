@@ -49,6 +49,10 @@ def load_session() -> dict:
         "base_url": _DEFAULT_BASE_URL,
         "token": None,
         "account_id": None,
+        "user_type": None,
+        "is_client_admin": None,
+        "client_id": None,
+        "client_name": None,
     }
 
 
@@ -105,9 +109,25 @@ def set_base_url(url: str) -> dict:
     return sess
 
 
+def set_user_info(user_type: Optional[str], is_client_admin: Optional[bool],
+                  client_id: Optional[str], client_name: Optional[str]) -> dict:
+    """Cache user role info after login. Returns updated session."""
+    sess = load_session()
+    sess["user_type"] = user_type
+    sess["is_client_admin"] = is_client_admin
+    sess["client_id"] = client_id
+    sess["client_name"] = client_name
+    save_session(sess)
+    return sess
+
+
 def clear_session() -> None:
     """Clear authentication from session (logout)."""
     sess = load_session()
     sess["token"] = None
     sess["account_id"] = None
+    sess["user_type"] = None
+    sess["is_client_admin"] = None
+    sess["client_id"] = None
+    sess["client_name"] = None
     save_session(sess)

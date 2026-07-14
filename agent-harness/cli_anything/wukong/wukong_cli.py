@@ -111,6 +111,16 @@ def _to_yyyymm(period: str) -> str:
 # ── Context helpers ────────────────────────────────────────────────────
 
 
+def _require_client_admin(ctx: click.Context) -> None:
+    """Exit with a friendly message if the current user is not a client_admin."""
+    sess = _session.load_session()
+    is_client_admin = sess.get("is_client_admin")
+    # None means we don't know (old session without cached role) — allow through
+    if is_client_admin is False:
+        _err(ctx, "您没有权限执行此操作，请联系客户公司管理员。")
+        sys.exit(1)
+
+
 def _get_client(ctx: click.Context) -> WukongClient:
     """Build client from context (url + token from session).
 
@@ -319,6 +329,18 @@ def auth_login(ctx: click.Context, username: str, password: str):
     _session.set_token(token)
     if ctx.obj.get("url"):
         _session.set_base_url(ctx.obj["url"])
+    # Cache user role info so permission checks don't need extra API calls
+    try:
+        client2 = _get_client(ctx)
+        user = _auth.whoami(client2)
+        _session.set_user_info(
+            user_type=user.get("userType"),
+            is_client_admin=user.get("isClientAdmin"),
+            client_id=str(user.get("clientId")) if user.get("clientId") else None,
+            client_name=user.get("clientName"),
+        )
+    except WukongError:
+        pass  # Non-fatal: permission checks will fall back gracefully
     if ctx.obj.get("json"):
         _out(ctx, {"token": token, "username": username})
     else:
@@ -358,8 +380,13 @@ def auth_whoami(ctx: click.Context):
         if user.get("userId"):
             _skin.status("User ID", str(user.get("userId")))
             _skin.status("Username", user.get("username", ""))
-            _skin.status("Nickname", user.get("nickname", ""))
-            _skin.status("Admin", str(user.get("isAdmin", False)))
+            _skin.status("Nickname", user.get("nickname") or user.get("realname", ""))
+            _skin.status("User Type", user.get("userType", ""))
+            _skin.status("Client Admin", str(user.get("isClientAdmin", False)))
+            if user.get("clientId"):
+                _skin.status("Client ID", str(user.get("clientId")))
+            if user.get("clientName"):
+                _skin.status("Client Name", user.get("clientName", ""))
         else:
             _skin.warning("Not logged in")
 
@@ -471,6 +498,7 @@ def account_update(ctx: click.Context, account_id: int, company_code: Optional[s
                    company_name: Optional[str], contacts: Optional[str], mobile: Optional[str],
                    email: Optional[str], address: Optional[str], remark: Optional[str]):
     """编辑账套信息 (Update account set fields)."""
+    _require_client_admin(ctx)
     client = _get_client(ctx)
     try:
         info = _account.get_account(client, account_id)
@@ -512,6 +540,7 @@ def account_update(ctx: click.Context, account_id: int, company_code: Optional[s
 @click.pass_context
 def account_create(ctx: click.Context, company: str, start: str):
     """Create and activate a new account set."""
+    _require_client_admin(ctx)
     if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", start):
         _err(ctx, f"--start must be YYYY-MM (e.g. 2024-01), got: {start!r}")
         sys.exit(1)

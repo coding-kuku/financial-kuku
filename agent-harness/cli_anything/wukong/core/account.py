@@ -37,9 +37,9 @@ def switch_account(client: WukongClient, account_id: int) -> None:
 def create_account(client: WukongClient, company_name: str, start_time: str = "2026-01-01") -> int:
     """Create a new account set and return its ID.
 
-    Calls /financeAccountSet/addAccount which creates the account (status=0),
+    Calls /financeAccountSet/addAccount which creates the account,
     links the current user, and initializes RMB currency and default voucher words.
-    The account is not yet active; call configure_account() to activate it.
+    The account is not yet configured; call configure_account() to activate it.
 
     Returns:
         The new account set ID (int)
@@ -49,12 +49,13 @@ def create_account(client: WukongClient, company_name: str, start_time: str = "2
         "companyCode": company_name,
     })
     all_accounts = list_all_accounts(client)
+    # Match by name among all accounts (status=1 since the bug fix sets it on creation)
     for acc in reversed(all_accounts):
-        if acc.get("companyName") == company_name and acc.get("status") == 0:
+        if acc.get("companyName") == company_name:
             return int(acc["accountId"])
-    for acc in reversed(all_accounts):
-        if acc.get("status") == 0:
-            return int(acc["accountId"])
+    # Fallback: return the most recently created account
+    if all_accounts:
+        return int(all_accounts[-1]["accountId"])
     raise RuntimeError(f"Could not find newly created account set for '{company_name}'")
 
 

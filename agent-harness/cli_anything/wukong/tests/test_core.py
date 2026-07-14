@@ -98,6 +98,33 @@ class TestSession:
         assert sess["token"] is None
         assert sess["account_id"] is None
 
+    def test_set_user_info(self, tmp_session_dir):
+        from cli_anything.wukong.core.session import set_user_info, load_session
+        set_user_info("client_admin", True, "123", "创新科技集团")
+        sess = load_session()
+        assert sess["user_type"] == "client_admin"
+        assert sess["is_client_admin"] is True
+        assert sess["client_id"] == "123"
+        assert sess["client_name"] == "创新科技集团"
+
+    def test_clear_session_clears_user_info(self, tmp_session_dir):
+        from cli_anything.wukong.core.session import set_user_info, clear_session, load_session
+        set_user_info("client_user", False, "456", "测试公司")
+        clear_session()
+        sess = load_session()
+        assert sess["user_type"] is None
+        assert sess["is_client_admin"] is None
+        assert sess["client_id"] is None
+        assert sess["client_name"] is None
+
+    def test_load_session_defaults_include_user_fields(self, tmp_session_dir):
+        from cli_anything.wukong.core.session import load_session
+        sess = load_session()
+        assert "user_type" in sess
+        assert "is_client_admin" in sess
+        assert sess["user_type"] is None
+        assert sess["is_client_admin"] is None
+
 
 # ── wukong_backend.py tests ───────────────────────────────────────────
 
@@ -576,3 +603,74 @@ class TestStatement:
         body = mock_post.call_args.kwargs.get("json", {})
         assert body["type"] == 2
         assert body["certificateTime"] == "2024-01-31"
+
+
+# ── Permission check tests ─────────────────────────────────────────────
+
+class TestPermissionChecks:
+    """Tests for CLI-level permission pre-checks (client_admin vs client_user)."""
+
+    def test_account_create_blocked_for_client_user(self, tmp_session_dir):
+        from click.testing import CliRunner
+        from cli_anything.wukong.wukong_cli import cli
+        import cli_anything.wukong.core.session as sess_mod
+        sess_mod.set_user_info("client_user", False, "123", "测试公司")
+        sess_mod.set_token("fake-token")
+        runner = CliRunner()
+        result = runner.invoke(cli, ["account", "create", "--company", "新公司", "--start", "2024-01"])
+        assert result.exit_code != 0
+        assert "管理员" in result.output or "管理员" in (result.stderr if hasattr(result, 'stderr') else "")
+
+    def test_account_update_blocked_for_client_user(self, tmp_session_dir):
+        from click.testing import CliRunner
+        from cli_anything.wukong.wukong_cli import cli
+        import cli_anything.wukong.core.session as sess_mod
+        sess_mod.set_user_info("client_user", False, "123", "测试公司")
+        sess_mod.set_token("fake-token")
+        runner = CliRunner()
+        result = runner.invoke(cli, ["account", "update", "1", "--company-name", "新名称"])
+        assert result.exit_code != 0
+        assert "管理员" in result.output or "管理员" in (result.stderr if hasattr(result, 'stderr') else "")
+
+    def test_account_create_allowed_for_client_admin(self, tmp_session_dir):
+        from click.testing import CliRunner
+        from unittest.mock import patch, MagicMock
+        from cli_anything.wukong.wukong_cli import cli
+        import cli_anything.wukong.core.session as sess_mod
+        sess_mod.set_user_info("client_admin", True, "123", "测试公司")
+        sess_mod.set_token("fake-token")
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.side_effect = [
+            {"code": 0, "data": None, "msg": "ok"},           # addAccount
+            {"code": 0, "data": [{"accountId": 99, "companyName": "新公司", "status": 1}], "msg": "ok"},  # queryPageList
+            {"code": 0, "data": None, "msg": "ok"},           # switchAccountSet
+            {"code": 0, "data": [{"currencyId": 1, "homeCurrency": 1}], "msg": "ok"},  # queryAllList
+            {"code": 0, "data": None, "msg": "ok"},           # saveAccountSet
+        ]
+        runner = CliRunner()
+        with patch("requests.post", return_value=mock_resp):
+            result = runner.invoke(cli, ["account", "create", "--company", "新公司", "--start", "2024-01"])
+        assert "管理员" not in result.output
+
+    def test_account_create_allowed_when_role_unknown(self, tmp_session_dir):
+        """If is_client_admin is None (old session), allow through — don't block."""
+        from click.testing import CliRunner
+        from unittest.mock import patch, MagicMock
+        from cli_anything.wukong.wukong_cli import cli
+        import cli_anything.wukong.core.session as sess_mod
+        sess_mod.set_token("fake-token")
+        # is_client_admin not set (None) — should not block
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.side_effect = [
+            {"code": 0, "data": None, "msg": "ok"},
+            {"code": 0, "data": [{"accountId": 99, "companyName": "新公司", "status": 1}], "msg": "ok"},
+            {"code": 0, "data": None, "msg": "ok"},
+            {"code": 0, "data": [{"currencyId": 1, "homeCurrency": 1}], "msg": "ok"},
+            {"code": 0, "data": None, "msg": "ok"},
+        ]
+        runner = CliRunner()
+        with patch("requests.post", return_value=mock_resp):
+            result = runner.invoke(cli, ["account", "create", "--company", "新公司", "--start", "2024-01"])
+        assert "管理员" not in result.output

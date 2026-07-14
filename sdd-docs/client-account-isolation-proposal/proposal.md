@@ -246,6 +246,64 @@
 12. 平台超级管理员在财务视图中应先切换客户公司，再切换该公司的账套。
 13. 本次交付不依赖手机验证码能力，账号密码链路可独立闭环运行。
 
+## 10. CLI 侧需求（client-account-isolation 同步）
+
+### 10.1 目标用户
+
+CLI 面向**客户公司管理员（client_admin）**和**客户公司普通用户（client_user）**，不支持平台超级管理员。
+
+### 10.2 现有能力保持不变
+
+所有现有 CLI 命令继续支持，包括：`auth`、`account`、`subject`、`voucher`、`certificate`、`adjuvant`、`ledger`、`report`、`statement`。
+
+### 10.3 变更点
+
+#### 10.3.1 auth login — 登录后缓存用户角色
+
+登录成功后，自动调用 `whoami` 并将 `userType`、`isClientAdmin` 写入 `session.json`，供后续权限判断使用，无需每次命令额外请求。
+
+#### 10.3.2 auth whoami — 展示新字段
+
+新增展示以下字段：
+
+- `userType`（platform_super_admin / client_admin / client_user）
+- `isClientAdmin`
+- `clientId`
+- `clientName`
+
+这些字段对 Agent 判断自身能力范围有直接价值。
+
+#### 10.3.3 account create — 权限前置检查
+
+`client_user` 不可创建账套。执行前检查 session 中的 `isClientAdmin`，若为 false，输出提示并退出，不调用后端。
+
+提示语：`您没有权限创建账套，请联系客户公司管理员。`
+
+`account create` 不需要传 `--client-id` 参数，后端自动使用当前登录用户的 `clientId`。
+
+#### 10.3.4 account update — 权限前置检查
+
+`client_user` 不可修改账套信息。执行前检查 session 中的 `isClientAdmin`，若为 false，输出提示并退出。
+
+提示语：`您没有权限修改账套信息，请联系客户公司管理员。`
+
+#### 10.3.5 account list / account switch — 行为变化说明
+
+后端已按 `clientId` 过滤：
+
+- `account list` 只返回当前用户所属客户公司的已授权账套。
+- `account switch` 在切换前会先校验目标账套是否在可访问列表中，跨客户公司切换会被拒绝。
+
+CLI 无需额外处理，行为由后端保证。
+
+#### 10.3.6 账套内操作（subject、certificate、statement、adjuvant 等）
+
+这类操作的权限由**账套角色**决定，与 `client_admin` / `client_user` 身份无关。CLI 不做预检，后端报错时直接透传给用户。
+
+### 10.4 本次不在范围内
+
+- 客户用户管理（clientUser CRUD）：查看、创建、编辑、重置密码等用户管理命令暂不实现。
+
 ## 9. 总结
 
 本次需求不是简单补几个权限点，而是要把当前系统升级为“客户公司隔离 + 客户内账套授权”的模型。
