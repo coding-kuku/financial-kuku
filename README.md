@@ -1,28 +1,5 @@
 # Wukong_Accounting
 
-### 🌐Read This in [English](README_EN.md)
-
-体验地址：[https://www.72crm.com](http://www.72crm.com)
-
-## 悟空财务系统介绍
-
-悟空财务系统可满足不同角色的跨级人员能处理日常业务，通过系统编制收款、付款、转账凭证、期末记账与结账等，自动形成总分类账、明细账和财务报表，自动进行财务分析，提高企业财务核算效率的同时，又能够反映业务运营状况。
-
-官网地址：[http://www.5kcrm.com](http://www.5kcrm.com/)
-
-扫码添加小悟官方客服微信，邀您加入千人微信交流群：
-
-<img src="https://images.gitee.com/uploads/images/2019/1231/115927_f9c580c8_345098.png" width="120">
-
-关注悟空CRM公众号，了解更多悟空资讯
-
-<img src="https://images.gitee.com/uploads/images/2019/1202/135713_d3566c6a_345098.jpeg" width="120">
-
-扫码加入微信群，在线客服解答疑问
-
-<img src="https://github.com/WuKongOpenSource/Wukong_Accounting/blob/main/img/b1.png" width="120">
-
-:boom:  :boom:  :boom: 注：悟空财务系统采用全新的前后端分离模式，本仓库代码中已集成前端vue打包后文件，  **可免去打包操作，无需运行前端**
 
 # 悟空项目管理目录结构
 
